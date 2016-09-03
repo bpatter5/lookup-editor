@@ -845,7 +845,6 @@ define([
     	        			  this.renderLookup(data);
         				  }
 	        			  
-	        			  
 	        			  var elapsed = new Date().getTime()-populateStart;
 	        			  console.info("Lookup loaded and rendered in " + elapsed + "ms");
 	        			  
