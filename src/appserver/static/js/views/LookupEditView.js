@@ -2334,7 +2334,6 @@ define([
         		this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type);
         	}
         	
-        	
         	// Get a list of users to show from which to load the context
             $.when(this.getUsers(this.owner)).done(function(users){
             	console.info("Rendering users list");
