@@ -20,6 +20,18 @@ from splunk.appserver.mrsparkle.lib import jsonresponse
 from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 from splunk.appserver.mrsparkle.lib.decorators import expose_page
 
+def prune_sys_path(app_name):
+    # Prune directories from other apps so that we don't step on each other with our imports (see http://lukemurphey.net/issues/1281)
+    paths_to_remove = []
+    for path in sys.path:
+        if ('/etc/apps/' in path and not ('/etc/apps/' + app_name) in path) or ('\\etc\\apps\\' in path and not ('\\etc\\apps\\' + app_name) in path):
+            paths_to_remove.append(path)
+    
+    for path in paths_to_remove:
+        sys.path.remove(path)
+
+prune_sys_path('lookup_editor')
+
 bin_dir = os.path.join(util.get_apps_dir(), __file__.split('.')[-2], 'bin')
 
 if not bin_dir in sys.path:
