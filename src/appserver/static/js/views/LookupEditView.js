@@ -845,7 +845,6 @@ define([
     	        			  this.renderLookup(data);
         				  }
 	        			  
-	        			  
 	        			  var elapsed = new Date().getTime()-populateStart;
 	        			  console.info("Lookup loaded and rendered in " + elapsed + "ms");
 	        			  
@@ -2333,7 +2332,6 @@ define([
         	else{
         		this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type);
         	}
-        	
         	
         	// Get a list of users to show from which to load the context
             $.when(this.getUsers(this.owner)).done(function(users){
