@@ -639,7 +639,7 @@ class LookupEditor(controllers.BaseController):
         else:
             return key
             
-    def flatten_dict(self, dict_source, output=None, prefix=''):
+    def flatten_dict(self, dict_source, output=None, prefix='', fields=None):
         """
         Flatten a dictionary to an array
         """
@@ -650,14 +650,24 @@ class LookupEditor(controllers.BaseController):
         
         # Convert each entry in the dictionary
         for key in dict_source:
-            
             value = dict_source[key]
             
-            # If the value is a dictionary ...
-            if isinstance(value, dict) or isinstance(value, collections.OrderedDict):
-                self.flatten_dict(value, output, self.append_if_not_none(prefix, key))
-                
-            #
+            # Determine if this entry needs to turned into a test blob (such as converting a dictionary or array into a string)
+            if fields is not None and self.append_if_not_none(prefix, key) in fields:
+                treat_as_text_blob = True
+            else:
+                treat_as_text_blob = False
+            
+            # If this isn't a listed column, then just include the raw JSON
+            # This is necessary when a KV store has recognition for many of the fields but some are expected to be JSON within a field, _not_ seperate fields.
+            if treat_as_text_blob and (isinstance(value, dict) or isinstance(value, collections.OrderedDict) or (isinstance(value, collections.Sequence) and not isinstance(value, basestring))):
+                output[self.append_if_not_none(prefix, key)] = json.dumps(value)
+            
+            # Flatten out this dictionary or array entry
+            elif isinstance(value, dict) or isinstance(value, collections.OrderedDict):
+                self.flatten_dict(value, output, self.append_if_not_none(prefix, key), fields=fields)
+                    
+            # If the value is a single item
             else:
                 output[self.append_if_not_none(prefix, key)] = value
                 
@@ -698,7 +708,7 @@ class LookupEditor(controllers.BaseController):
             for row in rows:
                 new_row = []
                 
-                flattened_row = self.flatten_dict(row)
+                flattened_row = self.flatten_dict(row, fields=fields)
                 
                 for field in fields:
                     if field in flattened_row:

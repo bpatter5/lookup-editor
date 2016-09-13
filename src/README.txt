@@ -106,4 +106,6 @@ Change History
 | 2.3.1   | Fixed some issues on the lookup creation page                                                                    |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 2.3.2   | Added ability to edit blank CSV files                                                                            |
+|         | Editor now works even if ES is installed                                                                         |
+|         | JSON blobs within columns can now be edited                                                                      |
 +---------+------------------------------------------------------------------------------------------------------------------+
