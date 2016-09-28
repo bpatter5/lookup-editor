@@ -1373,7 +1373,13 @@ define([
         	var row_data = this.handsontable.getDataAtRow(row);
         	var _key = row_data[0];
         	
-        	// Second, we need to do a post to remove the row
+        	// Second, make sure the _key is valid
+        	if(!_key && _key.length < 0){
+        		console.error("Attempt to delete an entry without a valid key");
+        		return false;
+        	}
+        	
+        	// Third, we need to do a post to remove the row
         	$.ajax({
         		url: Splunk.util.make_url("/splunkd/servicesNS/" + this.owner + "/" + this.namespace +  "/storage/collections/data/" + this.lookup + "/" + _key),
         		type: "DELETE",
@@ -1819,6 +1825,9 @@ define([
         		this.addEmptyRows(data, data[0].length, 5);
         	}
         	
+        	// Make a variable that defines the this point so that it can be used in the scope of the handsontable handlers
+        	self = this;
+        	
         	// Make the handsontable instance
         	this.handsontable = new Handsontable($("#lookup-table")[0], {
         		  data: this.lookup_type === "kv" ? data.slice(1) : data,
@@ -1858,13 +1867,13 @@ define([
         		  beforeRemoveRow: function(index, amount){
         			  
         			  // Don't allow deletion of all cells
-        			  if( (this.countRows() - amount) <= 0){
+        			  if( (this.countRows() - amount) <= 0 && self.lookup_type !== "kv"){
         				  alert("A valid lookup file requires at least one row (for the header).");
         				  return false;
         			  }
         			  
         			  // Warn about the header being deleted and make sure the user wants to proceed.
-        			  if(index == 0){
+        			  if(index == 0 && self.lookup_type !== "kv"){
         				  var continue_with_deletion = confirm("Are you sure you want to delete the header row?\n\nNote that a valid lookup file needs at least a header.");
         				  
         				  if (!continue_with_deletion){
@@ -1886,6 +1895,13 @@ define([
         		  afterRemoveCol: function(index, amount){
         			  if(this.countCols() == 0){
         				  alert("You must have at least one cell to have a valid lookup");
+        			  }
+        		  },
+        		  
+        		  // If all rows have been removed, all in some blank ones
+        		  afterRemoveRow: function(index, amount){
+        			  if(this.countRows() == 0){
+        				  self.renderLookup(self.getDefaultData());
         			  }
         		  },
         		  
