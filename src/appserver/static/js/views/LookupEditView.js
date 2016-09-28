@@ -1901,7 +1901,7 @@ define([
         		  // If all rows have been removed, all in some blank ones
         		  afterRemoveRow: function(index, amount){
         			  if(this.countRows() == 0){
-        				  self.renderLookup(self.getDefaultData());
+        				  self.loadLookupContents(self.lookup, self.namespace, self.owner, self.lookup_type, false);
         			  }
         		  },
         		  
@@ -2255,7 +2255,6 @@ define([
                 app_dropdown.on("change", function(newValue) {
                 	this.validateForm();
                 }.bind(this));
-                
                 
                 // Make the user-only lookup checkbox
                 var user_only_checkbox = new CheckboxGroupInput({
