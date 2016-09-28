@@ -7,6 +7,7 @@ require.config({
         csv: '../app/lookup_editor/js/lib/csv',
         kv_store_field_editor: '../app/lookup_editor/js/views/KVStoreFieldEditor',
         clippy: '../app/lookup_editor/js/lib/clippy',
+        moment: '../app/lookup_editor/js/lib/moment.min',
     },
     shim: {
         'handsontable': {
@@ -35,6 +36,7 @@ define([
     "splunkjs/mvc/simpleform/input/checkboxgroup",
     "text!../app/lookup_editor/js/templates/LookupEdit.html",
     "kv_store_field_editor",
+    "moment",
     "clippy",
     "csv",
     "bootstrap.dropdown",
@@ -56,7 +58,8 @@ define([
     DropdownInput,
     CheckboxGroupInput,
     Template,
-    KVStoreFieldEditor
+    KVStoreFieldEditor,
+    moment
 ){
 	
 	var Apps = SplunkDsBaseCollection.extend({
