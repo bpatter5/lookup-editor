@@ -108,4 +108,8 @@ Change History
 | 2.3.2   | Added ability to edit blank CSV files                                                                            |
 |         | Editor now works even if ES is installed                                                                         |
 |         | JSON blobs within columns can now be edited                                                                      |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 2.3.3   | Fixed issue where KV store lookups with boolean values didn't work on some versions of Splunk                    |
+|         | Added support for Splunk 6.5                                                                                     |
+|         | Fixed issue where you couldn't delete the first row on KV store lookups                                          |
 +---------+------------------------------------------------------------------------------------------------------------------+
