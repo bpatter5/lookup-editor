@@ -416,8 +416,8 @@ class LookupEditor(controllers.BaseController):
             destination_lookup_path_only, _ = os.path.split(destination_lookup_full_path)
             
             try:
-                os.umask(0) # http://bytes.com/topic/python/answers/572176-os-mkdir-mode
                 os.makedirs(destination_lookup_path_only, 0755)
+                os.chmod(destination_lookup_path_only, 0755)
             except OSError:
                 # The directory already existed, no need to create it
                 logger.debug("Destination path of lookup already existed, no need to create it; destination_lookup_path=%s", destination_lookup_path_only)
