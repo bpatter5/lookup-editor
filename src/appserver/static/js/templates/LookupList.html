@@ -104,6 +104,8 @@
 				<a href="../../../custom/lookup_editor/lookup_edit/get_original_lookup_file?namespace=<%- lookups[i].namespace %>&owner=<%- lookups[i].owner %>&lookup_file=<%- lookups[i].name %>&type=<%- lookups[i].type %>">Export</a>
 				<% if (lookups[i].type == "csv") { %>
 					| <a target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- lookups[i].name %>">Open in Search</a>
+				<% } else if (lookups[i].type == "kv" && getLookupTransform(lookups[i].name)) { %>
+					| <a target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- getLookupTransform(lookups[i].name) %>">Open in Search</a>
 				<% } %>
 			</td>
         </tr>

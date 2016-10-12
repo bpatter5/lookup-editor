@@ -44,6 +44,13 @@ define([
 	    }
 	});
 	
+	var LookupTransforms = SplunkDsBaseCollection.extend({
+	    url: "data/transforms/lookups?count=-1",
+	    initialize: function() {
+	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
+	    }
+	});
+	
 	var CSVLookups = SplunkDsBaseCollection.extend({
 		//url: 'data/lookup-table-files?count=-1',
 		url: '/servicesNS/' + Splunk.util.getConfigValue("USERNAME") + '/-/data/lookup-table-files?count=-1',
@@ -132,6 +139,19 @@ define([
                 },
                 error: function() {
                   console.error("Unable to fetch the apps");
+                }
+            });
+        	
+        	// Get the lookup transforms
+        	this.lookup_transforms = new LookupTransforms();
+        	this.lookup_transforms.on('reset', this.gotLookupTransforms.bind(this), this);
+        	
+        	this.lookup_transforms.fetch({
+                success: function() {
+                  console.info("Successfully retrieved the list of lookup transforms");
+                },
+                error: function() {
+                  console.error("Unable to fetch the lookup transforms");
                 }
             });
         },
@@ -330,9 +350,16 @@ define([
         },
         
         /**
-         * Get the apps
+         * Got the apps
          */
         gotApps: function(){
+        	this.renderLookupsList();
+        },
+        
+        /**
+         * Got the lookup transforms
+         */
+        gotLookupTransforms: function(){
         	this.renderLookupsList();
         },
         
@@ -466,6 +493,62 @@ define([
         },
         
         /**
+         * Get the lookup transforms in JSON format.
+         */
+        getLookupTransformsJSON: function(){
+        	
+        	// If we don't have the lookup transforms yet, then just return an empty list for now
+        	if(!this.lookup_transforms){
+        		return [];
+        	}
+        	
+        	var transforms = [];
+        	
+        	for(var c = 0; c < this.lookup_transforms.models.length; c++){
+        		
+        		// Add entries for the KV store
+        		if(this.lookup_transforms.models[c].entry.associated.content.attributes.type == "kvstore"){
+        			transforms.push({
+            			'transform': this.lookup_transforms.models[c].entry.attributes.name,
+            			'collection': this.lookup_transforms.models[c].entry.associated.content.attributes.collection
+            		})
+        		}
+        		
+        		// Add entries for the CSV files
+        		else if(this.lookup_transforms.models[c].entry.associated.content.attributes.type == "file"){
+        			transforms.push({
+            			'transform': this.lookup_transforms.models[c].entry.attributes.name,
+            			'filename': this.lookup_transforms.models[c].entry.associated.content.attributes.filename
+            		})
+        		}
+        	}
+        	
+        	return transforms;
+        },
+        
+        /**
+         * Get the transform name of the given lookup.
+         */
+        getLookupTransform: function(lookup_name){
+        	
+        	var transforms = this.getLookupTransformsJSON();
+        	
+        	for(var c = 0; c < transforms.length; c++){
+        		
+        		// Lookup KV store lookups
+        		if(transforms[c].collection === lookup_name){
+        			return transforms[c].transform;
+        		}
+        		
+        		// Lookup CSV store lookups
+        		if(transforms[c].filename === lookup_name){
+        			return transforms[c].transform;
+        		}
+        		
+        	}
+        },
+        
+        /**
          * Render the list of lookups.
          */
         renderLookupsList: function(){
@@ -476,8 +559,10 @@ define([
         	$('#content', this.$el).html(_.template(lookup_list_template, {
         		'lookups' : this.getLookupsJSON(),
         		'apps' : this.getAppsJSON(),
+        		'transforms' : this.getLookupTransformsJSON(),
         		'kv_lookups_supported' : this.kv_lookups_supported,
-        		'getAppDescriptionFromName' : this.getAppDescriptionFromName.bind(this)
+        		'getAppDescriptionFromName' : this.getAppDescriptionFromName.bind(this),
+        		'getLookupTransform' : this.getLookupTransform.bind(this)
         	}));
         	
             // Make the table filterable, sortable and paginated with data-tables
