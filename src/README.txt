@@ -112,4 +112,6 @@ Change History
 | 2.3.3   | Fixed issue where KV store lookups with boolean values didn't work on some versions of Splunk                    |
 |         | Added support for Splunk 6.5                                                                                     |
 |         | Fixed issue where you couldn't delete the first row on KV store lookups                                          |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 2.3.4   | Fixed issue where the app could cause Splunk to make world writable files                                        |
 +---------+------------------------------------------------------------------------------------------------------------------+
