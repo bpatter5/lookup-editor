@@ -116,4 +116,5 @@ Change History
 | 2.3.4   | Fixed issue where the app could cause Splunk to make world writable files                                        |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 2.4.0   | Added ability to open lookups in search                                                                          |
+|         | Fixed issue where a KV store lookup with missing fields might cause the rows to not line up with the header      |
 +---------+------------------------------------------------------------------------------------------------------------------+

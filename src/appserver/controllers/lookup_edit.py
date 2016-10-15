@@ -550,6 +550,10 @@ class LookupEditor(controllers.BaseController):
         """
     
     def isLookupInUsersPath(self, lookup_file_path):
+        """
+        Determine if the lookup is within the user's path as opposed to being within the apps path.
+        """
+        
         if "etc/users/" in lookup_file_path:
             return True
         else:
@@ -652,14 +656,14 @@ class LookupEditor(controllers.BaseController):
         for key in dict_source:
             value = dict_source[key]
             
-            # Determine if this entry needs to turned into a test blob (such as converting a dictionary or array into a string)
+            # Determine if this entry needs to turned into a text blob (such as converting a dictionary or array into a string)
             if fields is not None and self.append_if_not_none(prefix, key) in fields:
                 treat_as_text_blob = True
             else:
                 treat_as_text_blob = False
             
             # If this isn't a listed column, then just include the raw JSON
-            # This is necessary when a KV store has recognition for many of the fields but some are expected to be JSON within a field, _not_ seperate fields.
+            # This is necessary when a KV store has recognition for many of the fields but some are expected to be JSON within a field, _not_ separate fields.
             if treat_as_text_blob and (isinstance(value, dict) or isinstance(value, collections.OrderedDict) or (isinstance(value, collections.Sequence) and not isinstance(value, basestring))):
                 output[self.append_if_not_none(prefix, key)] = json.dumps(value)
             
@@ -708,11 +712,21 @@ class LookupEditor(controllers.BaseController):
             for row in rows:
                 new_row = []
                 
+                # Convert the JSON style format of the row and convert it down to chunk of text
                 flattened_row = self.flatten_dict(row, fields=fields)
                 
+                # Add each field to the table row
                 for field in fields:
+                    
+                    # If the field was found, add it
                     if field in flattened_row:
                         new_row.append(flattened_row[field])
+                        
+                    # If the field wasn't found, add a blank string. We need to do this to make sure that the number of columns is consistent.
+                    # We can't have fewer data columns than we do header columns. Otherwise, the header won't line up with the field since the
+                    # number of columns items in the header won't match the number of columns in the rows.
+                    else:
+                        new_row.append("")
             
                 lookup_contents.append(new_row)
                 
