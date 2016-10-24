@@ -13,11 +13,11 @@
 	padding: 0px !important;
 }
 
-td:nth-of-type(1){
+.dataTable td:nth-of-type(1){
 	font-size: 14px;
 }
 
-td:first-child{
+.dataTable td:first-child{
 	width: 16px;
 }
 
