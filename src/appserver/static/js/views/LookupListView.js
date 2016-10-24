@@ -23,6 +23,7 @@ define([
     "splunkjs/mvc/simplesplunkview",
     "text!../app/lookup_editor/js/templates/LookupList.html",
     "bootstrapDataTables",
+    "util/splunkd_utils",
     "bootstrap.dropdown",
     "css!../app/lookup_editor/css/LookupList.css"
 ], function(
@@ -34,7 +35,8 @@ define([
     $,
     SimpleSplunkView,
     Template,
-    dataTable
+    dataTable,
+    splunkd_utils
 ){
 	
 	var Apps = SplunkDsBaseCollection.extend({
@@ -52,7 +54,6 @@ define([
 	});
 	
 	var CSVLookups = SplunkDsBaseCollection.extend({
-		//url: 'data/lookup-table-files?count=-1',
 		url: '/servicesNS/' + Splunk.util.getConfigValue("USERNAME") + '/-/data/lookup-table-files?count=-1',
 		initialize: function() {
 			SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
@@ -60,7 +61,7 @@ define([
 	});
 	
 	var KVLookups = SplunkDsBaseCollection.extend({
-	    url: '/servicesNS/nobody/-/storage/collections/config?count=-1',
+	    url: '/servicesNS/nobody/-/storage/collections/config?count=-1&search=disabled%3D0',
 	    initialize: function() {
 	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
 	    }
@@ -108,26 +109,7 @@ define([
         	
         	// Get the KV store lookups
         	this.kv_lookups_supported = true;
-        	this.kv_lookups = new KVLookups();
-        	this.kv_lookups.on('reset', this.gotKVLookups.bind(this), this);
-        	
-        	this.kv_lookups.fetch({
-                success: function() {
-                  console.info("Successfully retrieved the KV store lookup files");
-                },
-                error: function() {
-                  console.error("Unable to fetch the KV store lookup files");
-                },
-                complete: function(jqXHR, textStatus){
-                	if( jqXHR.status == 404){
-                		
-                		// The endpoint for KV store lookups doesn't exist; that's because this is a host that is too old to have KV store support
-                		this.hideKVStoreOptions();
-                		
-                		this.kv_lookups_supported = false;
-                	}
-                }.bind(this)
-            });
+        	this.getKVLookups();
         	
         	// Get the apps
         	this.apps = new Apps();
@@ -164,6 +146,36 @@ define([
         	"change #free-text-filter" : "applyFilter",
         	"keyup #free-text-filter" : "goFilter",
         	"keypress #free-text-filter" : "goFilter",
+        	
+        	// Options for removing lookups
+        	"click .remove-kv-lookup" : "openRemoveKVLookupDialog",
+        	"click #remove-this-lookup" : "removeLookup"
+        },
+        
+        /**
+         * Get the KV store lookups
+         */
+        getKVLookups: function(){
+        	this.kv_lookups = new KVLookups();
+        	this.kv_lookups.on('reset', this.gotKVLookups.bind(this), this);
+        	
+        	this.kv_lookups.fetch({
+                success: function() {
+                  console.info("Successfully retrieved the KV store lookup files");
+                },
+                error: function() {
+                  console.error("Unable to fetch the KV store lookup files");
+                },
+                complete: function(jqXHR, textStatus){
+                	if( jqXHR.status == 404){
+                		
+                		// The endpoint for KV store lookups doesn't exist; that's because this is a host that is too old to have KV store support
+                		this.hideKVStoreOptions();
+                		
+                		this.kv_lookups_supported = false;
+                	}
+                }.bind(this)
+            });
         },
         
         /**
@@ -268,6 +280,75 @@ define([
         	$('i', ev.currentTarget).removeClass('hide');
         	
         	this.applyFilter();
+        	
+        },
+        
+        /**
+         * Remove the given lookup. 
+         */
+        removeLookup: function(ev){
+        	
+        	// Get the lookup that is being requested to remove
+        	var lookup = $(ev.target).data("name");
+        	var namespace = $(ev.target).data("namespace");
+        	var owner = $(ev.target).data("owner");
+        	
+        	// Perform the call
+        	$.ajax({
+        			//url: splunkd_utils.fullpath(['/servicesNS', owner, namespace, 'admin/collections-conf', lookup].join('/')),
+        			url: splunkd_utils.fullpath(['/servicesNS', "nobody", namespace, 'storage/collections/config', lookup, 'disable'].join('/')),
+        			type: 'POST',
+        			
+        			// On success, populate the table
+        			success: function() {
+        				console.info('KV store lookup removed');
+        				
+        			}.bind(this),
+        		  
+        			// Handle cases where the file could not be found or the user did not have permissions
+        			complete: function(jqXHR, textStatus){
+        				if( jqXHR.status == 403){
+        					console.info('Inadequate permissions to remove collection');
+        				}
+        				else{
+        					$("#remove-lookup-modal", this.$el).modal('hide');
+        					this.getKVLookups();
+        				}
+        				
+        			}.bind(this),
+        		  
+        			// Handle errors
+        			error: function(jqXHR, textStatus, errorThrown){
+        				if( jqXHR.status != 403 ){
+        					console.info('KV store collection remove failed');
+        				}
+        			}.bind(this)
+        	});
+        	
+        },
+        
+        /**
+         * Open a dialog to remove the KV store lookup.
+         */
+        openRemoveKVLookupDialog: function(ev){
+        	
+        	// Get the lookup that is being requested to remove
+        	var lookup = $(ev.target).data("name");
+        	var namespace = $(ev.target).data("namespace");
+        	var owner = $(ev.target).data("owner");
+        	
+        	// Record the info about the lookup to remove
+        	$("#remove-this-lookup", this.$el).data("name", lookup);
+        	$("#remove-this-lookup", this.$el).data("namespace", namespace);
+        	$("#remove-this-lookup", this.$el).data("owner", owner);
+        	
+        	// Show the info about the lookup to remove
+        	$(".remove-lookup-name", this.$el).text(lookup);
+        	$(".remove-lookup-namespace", this.$el).text(namespace);
+        	$(".remove-lookup-owner", this.$el).text(owner);
+        	
+        	// Show the modal
+        	$("#remove-lookup-modal", this.$el).modal();
         	
         },
         

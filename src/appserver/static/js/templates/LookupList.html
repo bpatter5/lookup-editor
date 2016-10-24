@@ -12,6 +12,35 @@
     </div>
 </div>
 
+<div tabindex="-1" id="remove-lookup-modal" class="modal fade in hide">
+    <div class="modal-header">
+        <button type="button" class="close btn-dialog-close" data-dismiss="modal">x</button>
+        <h3 class="text-dialog-title">Remove KV Store Lookup</h3>
+    </div>
+    <div class="modal-body form form-horizontal modal-body-scrolling">
+        Are you sure you want to remove this lookup?
+        
+        <table class="remove-lookup-info-table">
+        	<tr>
+        		<td class="remove-lookup-info">Lookup</td>
+        		<td class="remove-lookup-name"></td>
+        	</tr>
+        	<tr>
+        		<td class="remove-lookup-info">Namespace</td>
+        		<td class="remove-lookup-namespace"></td>
+        	</tr>
+        	<tr>
+        		<td class="remove-lookup-info">Owner</td>
+        		<td class="remove-lookup-owner"></td>
+        	</tr>
+        </table>
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn btn-dialog-cancel pull-left" data-dismiss="modal" style="display: inline;">Cancel</a>
+        <a href="#" class="btn btn-primary" id="remove-this-lookup" data-dismiss="modal" style="display: inline;">Yes, Remove</a>
+    </div>
+</div>
+
 <div id="success_message" class="hide alert alert-info">
   <i class="icon-alert"></i><span id="success_text">The changes were successfully saved</span>
 </div>
@@ -104,8 +133,10 @@
 				<a href="../../../custom/lookup_editor/lookup_edit/get_original_lookup_file?namespace=<%- lookups[i].namespace %>&owner=<%- lookups[i].owner %>&lookup_file=<%- lookups[i].name %>&type=<%- lookups[i].type %>">Export</a>
 				<% if (lookups[i].type == "csv") { %>
 					| <a class="external" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- lookups[i].name %>">Open in Search</a>
-				<% } else if (lookups[i].type == "kv" && getLookupTransform(lookups[i].name)) { %>
+				<% } if (lookups[i].type == "kv" && getLookupTransform(lookups[i].name)) { %>
 					| <a class="external" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- getLookupTransform(lookups[i].name) %>">Open in Search</a>
+				<% } if (lookups[i].type == "kv") { %>
+					| <a class="remove-kv-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" href="#">Remove</a>
 				<% } %>
 			</td>
         </tr>
