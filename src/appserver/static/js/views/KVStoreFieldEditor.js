@@ -160,6 +160,20 @@ define([
         		return "Fields cannot have the same name";
         	}
         	
+        	// Make sure the field doesn't have $ or nulls
+        	var invalid_field_name = false;
+        	
+        	for(c = 0; c < this.field_views.length; c++){
+        		if(this.field_views[c].getFieldName().indexOf("$") > -1){
+        			this.field_views[c].showErrorMessage("The name cannot contain a $");
+        			invalid_field_name = true;
+        		}
+        	}
+        	
+        	if(invalid_field_name){
+        		return "Field names cannot contain $ characters";
+        	}
+        	
         	// No issues found, yay!
         	return true;
         },
