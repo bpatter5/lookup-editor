@@ -120,4 +120,5 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 2.5.0   | No longer allow KV store fields to be created with dollar-sign characters (not allowed by MongoDB)               |
 |         | KV store lookups can now be disabled                                                                             |
+|         | Fixed issue where a user-made lookup file that had it's permissions set to shared could not be opened            |
 +---------+------------------------------------------------------------------------------------------------------------------+
