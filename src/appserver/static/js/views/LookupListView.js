@@ -477,18 +477,29 @@ define([
         	
         	var lookups_json = [];
         	var new_entry = null;
+        	var endpoint_owner = null;
         	
         	// Add the CSV lookups
         	for(var c = 0; c < this.csv_lookups.models.length; c++){
         		
+        		// Determine what owner to use for loading the user's lookup
+        		if(this.csv_lookups.models[c].entry.acl.attributes.sharing === 'global' || this.csv_lookups.models[c].entry.acl.attributes.sharing === 'app'){
+        			endpoint_owner = 'nobody';
+        		}
+        		else{
+        			endpoint_owner = this.csv_lookups.models[c].entry.acl.attributes.owner;
+        		}
+        		
+        		// Make the entry
         		new_entry = {
         				'name': this.csv_lookups.models[c].entry.attributes.name,
         				'author': this.csv_lookups.models[c].entry.attributes.author,
         				'updated': this.csv_lookups.models[c].entry.attributes.updated,
         				'namespace': this.csv_lookups.models[c].entry.acl.attributes.app,
         				'owner': this.csv_lookups.models[c].entry.acl.attributes.owner,
-        				'type' : 'csv'
-        				
+        				'type' : 'csv',
+        				'sharing' : this.csv_lookups.models[c].entry.acl.attributes.sharing,
+        				'endpoint_owner' : endpoint_owner
         		};
         		
         		// Don't include KMZ files
@@ -506,7 +517,8 @@ define([
         				'updated': this.kv_lookups.models[c].entry.attributes.updated,
         				'namespace': this.kv_lookups.models[c].entry.acl.attributes.app,
         				'owner': this.kv_lookups.models[c].entry.acl.attributes.owner,
-        				'type' : 'kv'
+        				'type' : 'kv',
+        				'endpoint_owner' : this.kv_lookups.models[c].entry.acl.attributes.owner
         		};
         		
         		lookups_json.push(new_entry);

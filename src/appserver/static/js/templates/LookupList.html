@@ -125,12 +125,12 @@
 
         <% for (var i = 0; i < lookups.length; i++) { %>
         <tr data-lookup-name="<%- lookups[i].name %>">
-            <td><a href="lookup_edit?owner=<%- lookups[i].owner %>&namespace=<%- lookups[i].namespace %>&lookup=<%- lookups[i].name %>&type=<%- lookups[i].type %>"><%- lookups[i].name %></a></td>
+            <td><a href="lookup_edit?owner=<%- lookups[i].endpoint_owner %>&namespace=<%- lookups[i].namespace %>&lookup=<%- lookups[i].name %>&type=<%- lookups[i].type %>"><%- lookups[i].name %></a></td>
             <td><% if(lookups[i].type == "csv") { %>CSV File Lookup<% } else { %>KV Store Lookup<% } %></td>
 			<td><%- getAppDescriptionFromName(lookups[i].namespace) %></td>
 			<td><%- lookups[i].owner %></td>
 			<td>
-				<a href="../../../custom/lookup_editor/lookup_edit/get_original_lookup_file?namespace=<%- lookups[i].namespace %>&owner=<%- lookups[i].owner %>&lookup_file=<%- lookups[i].name %>&type=<%- lookups[i].type %>">Export</a>
+				<a href="../../../custom/lookup_editor/lookup_edit/get_original_lookup_file?namespace=<%- lookups[i].namespace %>&owner=<%- lookups[i].endpoint_owner %>&lookup_file=<%- lookups[i].name %>&type=<%- lookups[i].type %>">Export</a>
 				<% if (lookups[i].type == "csv") { %>
 					| <a class="external" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- lookups[i].name %>">Open in Search</a>
 				<% } if (lookups[i].type == "kv" && getLookupTransform(lookups[i].name)) { %>
