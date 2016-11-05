@@ -86,9 +86,10 @@
         Type
         <span class="caret"></span>
     </a>
-    <ul class="dropdown-menu" style="width: 120px;margin-left: -38px;margin-top: 2px;">
+    <ul class="dropdown-menu" style="margin-left: -38px;margin-top: 2px;">
 		<li><a href="#"><i class="icon-check" />All</a></li>
         <li><a href="#"><i class="icon-check hide" />KV Store Lookup</a></li>
+		<li><a href="#"><i class="icon-check hide" />Disabled KV Store Lookup</a></li>
 		<li><a href="#"><i class="icon-check hide" />CSV File Lookup</a></li>
     </ul>
 </div>
@@ -126,7 +127,7 @@
         <% for (var i = 0; i < lookups.length; i++) { %>
         <tr data-lookup-name="<%- lookups[i].name %>">
             <td><a href="lookup_edit?owner=<%- lookups[i].endpoint_owner %>&namespace=<%- lookups[i].namespace %>&lookup=<%- lookups[i].name %>&type=<%- lookups[i].type %>"><%- lookups[i].name %></a></td>
-            <td><% if(lookups[i].type == "csv") { %>CSV File Lookup<% } else { %>KV Store Lookup<% } %></td>
+            <td><% if(lookups[i].type == "csv") { %>CSV File Lookup<% } else if(lookups[i].disabled) { %>Disabled KV Store Lookup<% } else { %>KV Store Lookup<% } %></td>
 			<td><%- getAppDescriptionFromName(lookups[i].namespace) %></td>
 			<td><%- lookups[i].owner %></td>
 			<td>
@@ -135,8 +136,10 @@
 					| <a class="external" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- lookups[i].name %>">Open in Search</a>
 				<% } if (lookups[i].type == "kv" && getLookupTransform(lookups[i].name)) { %>
 					| <a class="external" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- getLookupTransform(lookups[i].name) %>">Open in Search</a>
-				<% } if (lookups[i].type == "kv") { %>
-					| <a class="remove-kv-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" href="#">Remove</a>
+				<% } if (lookups[i].type == "kv" && !lookups[i].disabled) { %>
+					| <a class="remove-kv-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" href="#">Disable</a>
+				<% } if (lookups[i].type == "kv" && lookups[i].disabled) { %>
+					| <a class="enable-kv-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" href="#">Enable</a>
 				<% } %>
 			</td>
         </tr>

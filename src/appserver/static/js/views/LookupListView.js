@@ -61,7 +61,7 @@ define([
 	});
 	
 	var KVLookups = SplunkDsBaseCollection.extend({
-	    url: '/servicesNS/nobody/-/storage/collections/config?count=-1&search=disabled%3D0',
+	    url: '/servicesNS/nobody/-/storage/collections/config?count=-1',
 	    initialize: function() {
 	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
 	    }
@@ -149,7 +149,10 @@ define([
         	
         	// Options for removing lookups
         	"click .remove-kv-lookup" : "openRemoveKVLookupDialog",
-        	"click #remove-this-lookup" : "removeLookup"
+        	"click #remove-this-lookup" : "removeLookup",
+        		
+            // Options for enabling lookups
+            "click .enable-kv-lookup" : "enableLookup"
         },
         
         /**
@@ -280,6 +283,49 @@ define([
         	$('i', ev.currentTarget).removeClass('hide');
         	
         	this.applyFilter();
+        	
+        },
+        
+        /**
+         * Enable the given lookup. 
+         */
+        enableLookup: function(ev){
+        	
+        	// Get the lookup that is being requested to remove
+        	var lookup = $(ev.target).data("name");
+        	var namespace = $(ev.target).data("namespace");
+        	var owner = $(ev.target).data("owner");
+        	
+        	// Perform the call
+        	$.ajax({
+        			//url: splunkd_utils.fullpath(['/servicesNS', owner, namespace, 'admin/collections-conf', lookup].join('/')),
+        			url: splunkd_utils.fullpath(['/servicesNS', "nobody", namespace, 'storage/collections/config', lookup, 'enable'].join('/')),
+        			type: 'POST',
+        			
+        			// On success, populate the table
+        			success: function() {
+        				console.info('KV store lookup enabled');
+        				
+        			}.bind(this),
+        		  
+        			// Handle cases where the file could not be found or the user did not have permissions
+        			complete: function(jqXHR, textStatus){
+        				if( jqXHR.status == 403){
+        					console.info('Inadequate permissions to enable collection');
+        				}
+        				else{
+        					this.getKVLookups();
+        				}
+        				
+        			}.bind(this),
+        		  
+        			// Handle errors
+        			error: function(jqXHR, textStatus, errorThrown){
+        				if( jqXHR.status != 403 ){
+        					console.info('KV store collection enablement failed');
+        				}
+        			}.bind(this)
+        	});
         	
         },
         
@@ -518,7 +564,8 @@ define([
         				'namespace': this.kv_lookups.models[c].entry.acl.attributes.app,
         				'owner': this.kv_lookups.models[c].entry.acl.attributes.owner,
         				'type' : 'kv',
-        				'endpoint_owner' : this.kv_lookups.models[c].entry.acl.attributes.owner
+        				'endpoint_owner' : this.kv_lookups.models[c].entry.acl.attributes.owner,
+        				'disabled': this.kv_lookups.models[c].entry.associated.content.attributes.disabled
         		};
         		
         		lookups_json.push(new_entry);
