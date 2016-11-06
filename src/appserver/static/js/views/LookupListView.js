@@ -215,12 +215,14 @@ define([
          */
         doFilter: function(filter_name, prefix, value){
         	
+        	// Determine the value that should be checked
         	var valueToSet = value;
         	
         	if(value === null){
         		valueToSet = "All";
         	}
         	
+        	// Set the text of the filter dropdown
         	this.setFilterText(filter_name, prefix, valueToSet);
         	
         	// Show the checked icon on the selected entry and only on that entry
@@ -233,6 +235,7 @@ define([
         		}
         	});
         	
+        	// Apply the filter to the results
         	this.applyFilter();
         },
         
