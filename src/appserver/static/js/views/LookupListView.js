@@ -93,6 +93,9 @@ define([
             
             // The reference to the data-table
             this.data_table = null;
+            
+            // This indicates if data-table's state should be retained
+            this.retain_state = false;
         	
         	// Get the CSV lookups
         	this.csv_lookups = new CSVLookups();
@@ -355,6 +358,7 @@ define([
         					console.info('Inadequate permissions to enable collection');
         				}
         				else{
+        					this.retain_state = true;
         					this.getKVLookups();
         				}
         				
@@ -397,6 +401,7 @@ define([
         				}
         				else{
         					$("#disable-lookup-modal", this.$el).modal('hide');
+        					this.retain_state = true;
         					this.getKVLookups();
         				}
         				
@@ -668,6 +673,11 @@ define([
         		
         	}
         	
+        	// Deduplicate the list
+        	var apps_json = _.uniq(apps_json, function(item, key, a) { 
+        	    return item.name;
+        	});
+        	
         	return apps_json;
         },
         
@@ -730,7 +740,12 @@ define([
         /**
          * Render the list of lookups.
          */
-        renderLookupsList: function(){
+        renderLookupsList: function(retainState){
+        	
+        	// Load a default for the retainState parameter
+        	if( typeof retainState == 'undefined' ){
+        		retainState = this.retain_state;
+        	}
         	
         	// Get the template
             var lookup_list_template = $('#lookup-list-template', this.$el).text();
@@ -753,7 +768,7 @@ define([
                 "bLengthChange": false,
                 "searching": true,
                 "aLengthMenu": [[ 25, 50, 100, -1], [25, 50, 100, "All"]],
-                "bStateSave": false,
+                "bStateSave": retainState,
                 "aaSorting": [[ 1, "asc" ]],
                 "aoColumns": [
                               null,                   // Name
