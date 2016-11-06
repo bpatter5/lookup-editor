@@ -140,16 +140,16 @@ define([
         
         events: {
         	// Filtering
-        	"click .type-filter > .dropdown-menu > li > a" : "setTypeFilter",
-        	"click .app-filter > .dropdown-menu > li > a" : "setAppFilter",
-        	"click .scope-filter > .btn" : "setScopeFilter",
+        	"click .type-filter > .dropdown-menu > li > a" : "onClickTypeFilter",
+        	"click .app-filter > .dropdown-menu > li > a" : "onClickAppFilter",
+        	"click .scope-filter > .btn" : "onClickScopeFilter",
         	"change #free-text-filter" : "applyFilter",
         	"keyup #free-text-filter" : "goFilter",
         	"keypress #free-text-filter" : "goFilter",
         	
-        	// Options for removing lookups
-        	"click .remove-kv-lookup" : "openRemoveKVLookupDialog",
-        	"click #remove-this-lookup" : "removeLookup",
+        	// Options for disabling lookups
+        	"click .disable-kv-lookup" : "openDisableKVLookupDialog",
+        	"click #disable-this-lookup" : "disableLookup",
         		
             // Options for enabling lookups
             "click .enable-kv-lookup" : "enableLookup"
@@ -211,10 +211,43 @@ define([
         },
         
         /**
+         * Perform the operation to perform a filter.
+         */
+        doFilter: function(filter_name, prefix, value){
+        	
+        	var valueToSet = value;
+        	
+        	if(value === null){
+        		valueToSet = "All";
+        	}
+        	
+        	this.setFilterText(filter_name, prefix, valueToSet);
+        	
+        	// Show the checked icon on the selected entry and only on that entry
+        	$('.' + filter_name + ' > .dropdown-menu > li > a').each(function() {
+        		if($(this).text() === valueToSet){
+        			$("i", this).removeClass('hide');
+        		}
+        		else{
+        			$("i", this).addClass('hide');
+        		}
+        	});
+        	
+        	this.applyFilter();
+        },
+        
+        /**
+         * Apply the type filter on click.
+         */
+        onClickTypeFilter: function(ev){
+        	var filter = $(ev.target).text();
+        	this.setTypeFilter(filter);
+        },
+        
+        /**
          * Set the type filter
          */
-        setTypeFilter: function(ev){
-        	var filter = $(ev.target).text();
+        setTypeFilter: function(filter){
         	
         	if(filter === "All"){
         		this.filter_type = null;
@@ -223,49 +256,63 @@ define([
         		this.filter_type = filter;
         	}
         	
-        	this.setFilterText('type-filter', 'Type', filter);
+        	this.doFilter('type-filter', 'Type', filter);
         	
-        	// Remove the checked icon from any existing entries
-        	$('.type-filter > .dropdown-menu > li > a > i').addClass('hide');
-        	  
-        	// Show the checked icon on this entry
-        	$('i', ev.currentTarget).removeClass('hide');
-        	
-        	this.applyFilter();
-        	
+        },
+        
+        /**
+         * Apply the scope filter on click.
+         */
+        onClickScopeFilter: function(ev){
+        	var filter = $(ev.target).text();
+        	this.setScopeFilter(filter);
         },
         
         /**
          * Set the scope filter
          */
-        setScopeFilter: function(ev){
-        	var filter = $(ev.target).text();
+        setScopeFilter: function(filter){
         	
-        	if(filter === "All"){
+        	var filterText = "All";
+        	
+        	if(filter === "All" || filter === null){
         		this.filter_scope = null;
         	}
         	else if( filter.indexOf("Global") >= 0 ){
         		this.filter_scope = "nobody";
+        		filterText = "Global";
         	}
         	else{
         		this.filter_scope = Splunk.util.getConfigValue("USERNAME");
+        		filterText = "Mine";
         	}
         	
-        	// Remove the "active" class from any existing entries
-        	$('.scope-filter > .btn.active').removeClass('active');
-        	
-        	// Set the "active" class on this entry
-        	$(ev.currentTarget).addClass('active');
+        	// Show the button as active on the selected entry and only on that entry
+        	$('.scope-filter > .btn').each(function() {
+        		if($(this).text() === filterText){
+        			$(this).addClass('active');
+        		}
+        		else{
+        			$(this).removeClass('active');
+        		}
+        	});
         	
         	this.applyFilter();
         	
         },
         
         /**
+         * Apply the app filter on click.
+         */
+        onClickAppFilter: function(ev){
+        	var filter = $(ev.target).text();
+        	this.setAppFilter(filter);
+        },
+        
+        /**
          * Set the app filter
          */
-        setAppFilter: function(ev){
-        	var filter = $(ev.target).text();
+        setAppFilter: function(filter){
         	
         	if(filter === "All"){
         		this.filter_app = null;
@@ -274,15 +321,7 @@ define([
         		this.filter_app = filter;
         	}
         	
-        	this.setFilterText('app-filter', 'App', filter);
-        	
-        	// Remove the checked icon from any existing entries
-        	$('.app-filter > .dropdown-menu > li > a > i').addClass('hide');
-        	  
-        	// Show the checked icon on this entry
-        	$('i', ev.currentTarget).removeClass('hide');
-        	
-        	this.applyFilter();
+        	this.doFilter('app-filter', 'App', filter);
         	
         },
         
@@ -291,14 +330,13 @@ define([
          */
         enableLookup: function(ev){
         	
-        	// Get the lookup that is being requested to remove
+        	// Get the lookup that is being requested to enable
         	var lookup = $(ev.target).data("name");
         	var namespace = $(ev.target).data("namespace");
         	var owner = $(ev.target).data("owner");
         	
         	// Perform the call
         	$.ajax({
-        			//url: splunkd_utils.fullpath(['/servicesNS', owner, namespace, 'admin/collections-conf', lookup].join('/')),
         			url: splunkd_utils.fullpath(['/servicesNS', "nobody", namespace, 'storage/collections/config', lookup, 'enable'].join('/')),
         			type: 'POST',
         			
@@ -330,34 +368,32 @@ define([
         },
         
         /**
-         * Remove the given lookup. 
+         * Disable the given lookup. 
          */
-        removeLookup: function(ev){
+        disableLookup: function(ev){
         	
-        	// Get the lookup that is being requested to remove
+        	// Get the lookup that is being requested to disable
         	var lookup = $(ev.target).data("name");
         	var namespace = $(ev.target).data("namespace");
         	var owner = $(ev.target).data("owner");
         	
         	// Perform the call
         	$.ajax({
-        			//url: splunkd_utils.fullpath(['/servicesNS', owner, namespace, 'admin/collections-conf', lookup].join('/')),
         			url: splunkd_utils.fullpath(['/servicesNS', "nobody", namespace, 'storage/collections/config', lookup, 'disable'].join('/')),
         			type: 'POST',
         			
-        			// On success, populate the table
+        			// On success
         			success: function() {
-        				console.info('KV store lookup removed');
-        				
+        				console.info('KV store lookup disabled');
         			}.bind(this),
         		  
         			// Handle cases where the file could not be found or the user did not have permissions
         			complete: function(jqXHR, textStatus){
         				if( jqXHR.status == 403){
-        					console.info('Inadequate permissions to remove collection');
+        					console.info('Inadequate permissions to disable collection');
         				}
         				else{
-        					$("#remove-lookup-modal", this.$el).modal('hide');
+        					$("#disable-lookup-modal", this.$el).modal('hide');
         					this.getKVLookups();
         				}
         				
@@ -366,7 +402,7 @@ define([
         			// Handle errors
         			error: function(jqXHR, textStatus, errorThrown){
         				if( jqXHR.status != 403 ){
-        					console.info('KV store collection remove failed');
+        					console.info('KV store collection disablement failed');
         				}
         			}.bind(this)
         	});
@@ -374,9 +410,9 @@ define([
         },
         
         /**
-         * Open a dialog to remove the KV store lookup.
+         * Open a dialog to disable the KV store lookup.
          */
-        openRemoveKVLookupDialog: function(ev){
+        openDisableKVLookupDialog: function(ev){
         	
         	// Get the lookup that is being requested to remove
         	var lookup = $(ev.target).data("name");
@@ -384,17 +420,17 @@ define([
         	var owner = $(ev.target).data("owner");
         	
         	// Record the info about the lookup to remove
-        	$("#remove-this-lookup", this.$el).data("name", lookup);
-        	$("#remove-this-lookup", this.$el).data("namespace", namespace);
-        	$("#remove-this-lookup", this.$el).data("owner", owner);
+        	$("#disable-this-lookup", this.$el).data("name", lookup);
+        	$("#disable-this-lookup", this.$el).data("namespace", namespace);
+        	$("#disable-this-lookup", this.$el).data("owner", owner);
         	
         	// Show the info about the lookup to remove
-        	$(".remove-lookup-name", this.$el).text(lookup);
-        	$(".remove-lookup-namespace", this.$el).text(namespace);
-        	$(".remove-lookup-owner", this.$el).text(owner);
+        	$(".disable-lookup-name", this.$el).text(lookup);
+        	$(".disable-lookup-namespace", this.$el).text(namespace);
+        	$(".disable-lookup-owner", this.$el).text(owner);
         	
         	// Show the modal
-        	$("#remove-lookup-modal", this.$el).modal();
+        	$("#disable-lookup-modal", this.$el).modal();
         	
         },
         
@@ -702,7 +738,10 @@ define([
         		'transforms' : this.getLookupTransformsJSON(),
         		'kv_lookups_supported' : this.kv_lookups_supported,
         		'getAppDescriptionFromName' : this.getAppDescriptionFromName.bind(this),
-        		'getLookupTransform' : this.getLookupTransform.bind(this)
+        		'getLookupTransform' : this.getLookupTransform.bind(this),
+        		'filter_app': this.filter_app,
+        		'filter_type' : this.filter_type,
+        		'filter_scope': this.filter_scope
         	}));
         	
             // Make the table filterable, sortable and paginated with data-tables
@@ -723,8 +762,13 @@ define([
             } );
             
             // Update the filter text
-            this.setFilterText('type-filter', 'Type');
-            this.setFilterText('app-filter', 'App');
+            this.setTypeFilter(this.filter_type);
+            
+            // Update the app filter
+            this.setAppFilter(this.filter_app);
+            
+            // Update the scope filter
+            this.setScopeFilter(this.filter_scope);
         },
         
         /**
