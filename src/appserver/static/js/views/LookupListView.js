@@ -25,7 +25,8 @@ define([
     "bootstrapDataTables",
     "util/splunkd_utils",
     "bootstrap.dropdown",
-    "css!../app/lookup_editor/css/LookupList.css"
+    "css!../app/lookup_editor/css/LookupList.css",
+    "css!../app/lookup_editor/css/SplunkDataTables.css"
 ], function(
     _,
     Backbone,
@@ -88,7 +89,12 @@ define([
             this.filter_app = null;
             this.filter_type = null;
             this.filter_scope = null;
+            this.filter_text = null;
             
+            // This tracks the filter that was applied
+            this.applied_filter = null;
+            
+            // This stores the list of apps
             this.apps = null;
             
             // The reference to the data-table
@@ -216,7 +222,12 @@ define([
         /**
          * Perform the operation to perform a filter.
          */
-        doFilter: function(filter_name, prefix, value){
+        doFilter: function(filter_name, prefix, value, apply_filter){
+        	
+        	// Load a default for the apply_filter parameter
+        	if( typeof apply_filter == 'undefined' ){
+        		apply_filter = true;
+        	}
         	
         	// Determine the value that should be checked
         	var valueToSet = value;
@@ -239,7 +250,10 @@ define([
         	});
         	
         	// Apply the filter to the results
-        	this.applyFilter();
+        	if(apply_filter){
+        		this.applyFilter();
+        	}
+        	
         },
         
         /**
@@ -262,6 +276,7 @@ define([
         		this.filter_type = filter;
         	}
         	
+        	// Execute the filter
         	this.doFilter('type-filter', 'Type', filter);
         	
         },
@@ -372,6 +387,7 @@ define([
         			}.bind(this)
         	});
         	
+        	return false;
         },
         
         /**
@@ -440,6 +456,8 @@ define([
         	// Show the modal
         	$("#disable-lookup-modal", this.$el).modal();
         	
+        	return false;
+        	
         },
         
         /**
@@ -460,6 +478,16 @@ define([
          * Apply a filter to the table
          */
         applyFilter: function(){
+        	
+        	// Determine if we even need to apply this filter
+        	var applied_filter_signature = "" + this.filter_type + ":" + this.filter_app + ":" + this.filter_scope + ":" + $('#free-text-filter').val();
+        	
+        	if(applied_filter_signature === this.applied_filter){
+        		return;
+        	}
+        	
+        	// Persist the signature for this filter
+        	this.applied_filter = applied_filter_signature;
         	
         	// Get the type filter
         	if( this.filter_type !== null ){
@@ -485,7 +513,8 @@ define([
         		this.data_table.columns(3).search( "" );
         	}
         	
-        	// Apply the filter
+        	// Apply the text filter
+        	this.filter_text = $('#free-text-filter').val();
         	this.data_table.columns(0).search( $('#free-text-filter').val() ).draw();
         },
         
@@ -759,7 +788,8 @@ define([
         		'getLookupTransform' : this.getLookupTransform.bind(this),
         		'filter_app': this.filter_app,
         		'filter_type' : this.filter_type,
-        		'filter_scope': this.filter_scope
+        		'filter_scope': this.filter_scope,
+        		'filter_text': this.filter_text
         	}));
         	
             // Make the table filterable, sortable and paginated with data-tables
@@ -768,7 +798,10 @@ define([
                 "bLengthChange": false,
                 "searching": true,
                 "aLengthMenu": [[ 25, 50, 100, -1], [25, 50, 100, "All"]],
-                "bStateSave": retainState,
+                "bStateSave": true,
+                "fnStateLoadParams": function (oSettings, oData) {
+                	return retainState;
+                },
                 "aaSorting": [[ 1, "asc" ]],
                 "aoColumns": [
                               null,                   // Name

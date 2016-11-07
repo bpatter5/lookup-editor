@@ -1,47 +1,20 @@
-#table_filter{ float:right }
-table.dataTable tr.odd { background-color: #f5f5f5 !important; }
-table.dataTable tr.odd{ background-color: #f5f5f5 !important; }
-table.dataTable tr.odd{ background-color: #f5f5f5 !important; }
-table.dataTable tr.even { background-color: #ffffff !important; }
-table.dataTable tr.even { background-color: #ffffff !important; }
-table.dataTable tr.even { background-color: #ffffff !important; }
-table.dataTable > tbody > tr > td, table.dataTable > thead > tr > th { padding: 3px 10px 3px 10px; }
-table.dataTable.no-footer{border-bottom: rgb(204, 204, 204) solid 1px; margin-bottom: 16px !important;}
-
-table.dataTable thead .sorting,
-table.dataTable thead .sorting_asc,
-table.dataTable thead .sorting_desc {
-  cursor: pointer;
-  *cursor: hand;
-}
-table.dataTable thead .sorting,
-table.dataTable thead .sorting_asc,
-table.dataTable thead .sorting_desc,
-table.dataTable thead .sorting_asc_disabled,
-table.dataTable thead .sorting_desc_disabled {
-  background-repeat: no-repeat;
-  background-position: center right;
-}
-table.dataTable thead .sorting {
-  background-image: url("../images/DataTables/sort_both.png");
-}
-table.dataTable thead .sorting_asc {
-  background-image: url("../images/DataTables/sort_asc.png");
-}
-table.dataTable thead .sorting_desc {
-  background-image: url("../images/DataTables/sort_desc.png");
-}
-table.dataTable thead .sorting_asc_disabled {
-  background-image: url("../images/DataTables/sort_asc_disabled.png");
-}
-table.dataTable thead .sorting_desc_disabled {
-  background-image: url("../images/DataTables/sort_desc_disabled.png");
+.sorting:after {
+    font-family: Splunk Icons;
+    content: "\2195";
+    padding-left: 5px;
+    color: #bbb;
 }
 
-#table_paginate{
-  float: right;
+.sorting_asc:after {
+    font-family: Splunk Icons;
+    content: "\21A5";
+    padding-left: 5px;
+    color: black;
 }
 
-#table_length, #table_info{
-  margin-left: 16px;
+.sorting_desc:after {
+    font-family: Splunk Icons;
+    content: "\21A7";
+    padding-left: 5px;
+    color: black;
 }
