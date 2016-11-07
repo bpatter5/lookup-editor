@@ -590,6 +590,20 @@ define([
         },
         
         /**
+         * Get a count of the lookups that exist.
+         */
+        getLookupsCount: function(){
+        	var lookups = this.getLookupsJSON();
+        	
+        	if(lookups){
+        		return lookups.length;
+        	}
+        	else{
+        		return 0;
+        	}
+        },
+        
+        /**
          * Get the lookups list in JSON format
          */
         getLookupsJSON: function(){
@@ -789,7 +803,8 @@ define([
         		'filter_app': this.filter_app,
         		'filter_type' : this.filter_type,
         		'filter_scope': this.filter_scope,
-        		'filter_text': this.filter_text
+        		'filter_text': this.filter_text,
+        		'lookups_count' : this.getLookupsCount()
         	}));
         	
             // Make the table filterable, sortable and paginated with data-tables

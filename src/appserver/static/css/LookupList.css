@@ -90,6 +90,11 @@ td{
 	margin-left: 2px;
 }
 
+.lookups-count{
+	padding-top: 12px;
+	padding-left: 12px;
+}
+
 /*
  * Fix highlight color on the dropdown button
  */
