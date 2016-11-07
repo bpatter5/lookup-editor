@@ -119,6 +119,8 @@ Change History
 |         | Fixed issue where a KV store lookup with missing fields might cause the rows to not line up with the header      |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 2.5.0   | No longer allow KV store fields to be created with dollar-sign characters (not allowed by MongoDB)               |
-|         | KV store lookups can now be disabled                                                                             |
+|         | KV store lookups can now be disabled and enabled                                                                 |
 |         | Fixed issue where a user-made lookup file that had it's permissions set to shared could not be opened            |
+|         | Improved the styling of the lookups list page                                                                    |
+|         | Updated the descriptions of the types of lookups on the new lookups page                                         |
 +---------+------------------------------------------------------------------------------------------------------------------+
