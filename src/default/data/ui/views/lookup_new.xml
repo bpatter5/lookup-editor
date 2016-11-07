@@ -12,6 +12,7 @@
 					<li>Want to import from Excel or an existing CSV file</li>
 					<li>Want to maintain a revision history of user's edits to the file</li>
 					<li>Want to have a lookup that is specific to a user (not global)</li>
+					<li>Need to perform case-sensitive lookups</li>
 				</ul>
 				</div>
 			</div>
