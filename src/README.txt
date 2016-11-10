@@ -123,4 +123,5 @@ Change History
 |         | Fixed issue where a user-made lookup file that had it's permissions set to shared could not be opened            |
 |         | Improved the styling of the lookups list page                                                                    |
 |         | Updated the descriptions of the types of lookups on the new lookups page                                         |
+|         | Fixed incompatibilty with the Mobile Access Add-on                                                               |
 +---------+------------------------------------------------------------------------------------------------------------------+
