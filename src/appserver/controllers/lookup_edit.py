@@ -30,14 +30,14 @@ def prune_sys_path(app_name):
     for path in paths_to_remove:
         sys.path.remove(path)
 
-prune_sys_path('lookup_editor')
+#prune_sys_path('lookup_editor')
 
 bin_dir = os.path.join(util.get_apps_dir(), __file__.split('.')[-2], 'bin')
 
 if not bin_dir in sys.path:
     sys.path.append(dir)
 
-import lookupfiles
+from lookup_editor import lookupfiles
 
 # The default of the csv module is 128KB; upping to 10MB. See SPL-12117 for 
 # the background on issues surrounding field sizes. 
