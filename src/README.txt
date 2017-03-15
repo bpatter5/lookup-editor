@@ -126,4 +126,5 @@ Change History
 |         | Fixed incompatibilty with the Mobile Access Add-on                                                               |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 2.5.1   | Added ability to refresh the lookup                                                                              |
+|         | Fixed misaligned dropdown on the lookup list page                                                                |
 +---------+------------------------------------------------------------------------------------------------------------------+

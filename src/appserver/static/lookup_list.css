@@ -30,3 +30,9 @@
 .btn-primary.pull-right{
 	margin-right: 16px
 }
+
+.create-new-lookup-dropdown{
+	width: 220px;
+	margin-left: -143px;
+	margin-top: 2px;
+}
