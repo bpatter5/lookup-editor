@@ -95,6 +95,7 @@
 				<button class="btn" id="import-file">Import</button>
 				<% if(!is_new) { %>
 				<button class="btn" id="export-file">Export</button>
+				<button class="btn" id="refresh">Refresh</button>
 				<a class="btn dropdown-toggle right-offset-button" data-toggle="dropdown" href="#">
         			Revert to previous version
         			<span class="caret"></span>
@@ -107,6 +108,7 @@
 			<% } else if(lookup_type === "kv" && !is_new) { %>
 				<div id="load-user-context" class="btn-group pull-right right-offset-button">
 					<button class="btn" id="export-file">Export</button>
+					<button class="btn" id="refresh">Refresh</button>
 					<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
 		        		Showing entries for: <span id="loaded-user-context"></span>
 		        		<span class="caret"></span>

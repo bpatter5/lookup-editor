@@ -156,7 +156,8 @@ define([
         	"click #import-file"        : "openFileImportModal",
         	"change #import-file-input" : "importFile",
         	"dragenter #lookup-table"   : "onDragFileEnter",
-        	"dragleave #lookup-table"   : "onDragFileEnd"
+        	"dragleave #lookup-table"   : "onDragFileEnd",
+			"click #refresh"            : "refreshLookup"
         },
         
         /**
@@ -2195,11 +2196,18 @@ define([
     		          ];
         },
         
+		/**
+		 * Refresh the lookup.
+		 */
+		refreshLookup: function(){
+			this.render();
+		},
+
         /**
          * Render the page.
          */
         render: function () {
-        	
+        	console.log("Rendering...");
         	// Get the information from the lookup to load
         	this.lookup = this.getParameterByName("lookup");
         	this.namespace = this.getParameterByName("namespace");

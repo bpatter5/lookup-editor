@@ -124,4 +124,6 @@ Change History
 |         | Improved the styling of the lookups list page                                                                    |
 |         | Updated the descriptions of the types of lookups on the new lookups page                                         |
 |         | Fixed incompatibilty with the Mobile Access Add-on                                                               |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 2.5.1   | Added ability to refresh the lookup                                                                              |
 +---------+------------------------------------------------------------------------------------------------------------------+
