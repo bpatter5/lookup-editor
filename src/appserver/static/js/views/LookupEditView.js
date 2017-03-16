@@ -869,14 +869,17 @@ define([
         			  if( jqXHR.status == 404){
         				  console.info('Lookup file was not found');
         				  this.showWarningMessage("The requested lookup file does not exist", true);
+						  $('.show-when-editing', this.$el).hide();
         			  }
         			  else if( jqXHR.status == 403){
         				  console.info('Inadequate permissions');
         				  this.showWarningMessage("You do not have permission to view this lookup file", true);
+						  $('.show-when-editing', this.$el).hide();
         			  }
         			  else if( jqXHR.status == 420){
         				  console.info('File is too large');
         				  this.showWarningMessage("The file is too big to be edited (must be less than 10 MB)");
+						  $('.show-when-editing', this.$el).hide();
         			  }
         			  
         			  // Hide the loading message

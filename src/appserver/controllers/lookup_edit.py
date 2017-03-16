@@ -224,7 +224,8 @@ class LookupEditor(controllers.BaseController):
             return self.render_error_json("The lookup filename contains disallowed characters")
 
         # Get a reference to the file
-        full_lookup_filename = self.resolve_lookup_filename(lookup_file, namespace, owner, get_default_csv=True, version=version)
+        full_lookup_filename = self.resolve_lookup_filename(lookup_file, namespace, owner,
+                                                            get_default_csv=True, version=version)
 
         # Below is the description of the file
         desc = {}
@@ -686,62 +687,72 @@ class LookupEditor(controllers.BaseController):
         Get the contents of a KV store lookup.
         """
 
-        try:
+        if owner is None:
+            owner = 'nobody'
 
-            if owner is None:
-                owner = 'nobody'
+        # Get the session key
+        session_key = cherrypy.session.get('sessionKey')
+        lookup_contents = []
 
-            # Get the session key
-            session_key = cherrypy.session.get('sessionKey')
-            lookup_contents = []
+        # Get the fields so that we can compose the header
+        # Note: this call must be done with the user context of "nobody".
+        response, content = splunk.rest.simpleRequest('/servicesNS/nobody/' + namespace +
+                                                        '/storage/collections/config/' +
+                                                        lookup_file,
+                                                        sessionKey=session_key,
+                                                        getargs={'output_mode': 'json'})
 
-            # Get the fields so that we can compose the header
-            # Note: this call must be done with the user context of "nobody".
-            _, content = splunk.rest.simpleRequest('/servicesNS/nobody/' + namespace + '/storage/collections/config/' + lookup_file, sessionKey=session_key, getargs={'output_mode': 'json'})
-            header = json.loads(content)
+        if response.status == 403:
+            raise PermissionDeniedException("You do not have permission to view this lookup")
 
-            fields = ['_key']
+        header = json.loads(content)
 
-            for field in header['entry'][0]['content']:
-                if field.startswith('field.'):
-                    fields.append(field[6:])
+        fields = ['_key']
 
-            lookup_contents.append(fields)
+        for field in header['entry'][0]['content']:
+            if field.startswith('field.'):
+                fields.append(field[6:])
 
-            # Get the contents
-            _, content = splunk.rest.simpleRequest('/servicesNS/' + owner + '/' + namespace + '/storage/collections/data/' + lookup_file, sessionKey=session_key, getargs={'output_mode': 'json'})
+        lookup_contents.append(fields)
 
-            rows = json.loads(content)
+        # Get the contents
+        response, content = splunk.rest.simpleRequest('/servicesNS/' + owner + '/' + namespace +
+                                                        '/storage/collections/data/' + lookup_file,
+                                                        sessionKey=session_key,
+                                                        getargs={'output_mode': 'json'})
 
-            for row in rows:
-                new_row = []
+        if response.status == 403:
+            raise PermissionDeniedException("You do not have permission to view this lookup")
 
-                # Convert the JSON style format of the row and convert it down to chunk of text
-                flattened_row = self.flatten_dict(row, fields=fields)
+        rows = json.loads(content)
 
-                # Add each field to the table row
-                for field in fields:
+        for row in rows:
+            new_row = []
 
-                    # If the field was found, add it
-                    if field in flattened_row:
-                        new_row.append(flattened_row[field])
+            # Convert the JSON style format of the row and convert it down to chunk of text
+            flattened_row = self.flatten_dict(row, fields=fields)
 
-                    # If the field wasn't found, add a blank string. We need to do this to make
-                    # sure that the number of columns is consistent. We can't have fewer data
-                    # columns than we do header columns. Otherwise, the header won't line up with
-                    # the field since the number of columns items in the header won't match the
-                    # number of columns in the rows.
-                    else:
-                        new_row.append("")
+            # Add each field to the table row
+            for field in fields:
 
-                lookup_contents.append(new_row)
+                # If the field was found, add it
+                if field in flattened_row:
+                    new_row.append(flattened_row[field])
 
-            return lookup_contents
+                # If the field wasn't found, add a blank string. We need to do this to make
+                # sure that the number of columns is consistent. We can't have fewer data
+                # columns than we do header columns. Otherwise, the header won't line up with
+                # the field since the number of columns items in the header won't match the
+                # number of columns in the rows.
+                else:
+                    new_row.append("")
 
-        except:
-            logger.exception("KV store lookup could not be loaded")
+            lookup_contents.append(new_row)
 
-    def get_lookup(self, lookup_file, namespace="lookup_editor", owner=None, get_default_csv=True, version=None, throw_exception_if_too_big=False):
+        return lookup_contents
+
+    def get_lookup(self, lookup_file, namespace="lookup_editor", owner=None, get_default_csv=True,
+                   version=None, throw_exception_if_too_big=False):
         """
         Get a file handle to the associated lookup file.
         """
@@ -749,25 +760,30 @@ class LookupEditor(controllers.BaseController):
         logger.debug("Version is:" + str(version))
 
         # Get the user's name and session
-        user = cherrypy.session['user']['name'] 
+        user = cherrypy.session['user']['name']
         session_key = cherrypy.session.get('sessionKey')
 
         # Check capabilities
         LookupEditor.check_capabilities(lookup_file, user, session_key)
 
         # Get the file path
-        file_path = self.resolve_lookup_filename(lookup_file, namespace, owner, get_default_csv, version)
+        file_path = self.resolve_lookup_filename(lookup_file, namespace, owner, get_default_csv,
+                                                 version)
 
         if throw_exception_if_too_big:
 
             try:
                 file_size = os.path.getsize(file_path)
-                logger.info('Size of lookup file determined, file_size=%s, path=%s', file_size, file_path)
+
+                logger.info('Size of lookup file determined, file_size=%s, path=%s',
+                            file_size, file_path)
+
                 if file_size > LookupEditor.MAXIMUM_EDITABLE_SIZE:
                     raise LookupFileTooBigException(file_size)
 
             except os.error:
-                logger.exception("Exception generated when attempting to determine size of requested lookup file")
+                logger.exception("Exception generated when attempting to determine size of " +
+                                 "requested lookup file")
 
         logger.info("Loading lookup file from path=%s", file_path)
 
@@ -775,16 +791,19 @@ class LookupEditor(controllers.BaseController):
         return open(file_path, 'rb')
 
     @expose_page(must_login=True, methods=['GET'])
-    def get_lookup_contents(self, lookup_file, namespace="lookup_editor", owner=None, header_only=False, version=None, lookup_type=None, **kwargs):
+    def get_lookup_contents(self, lookup_file, namespace="lookup_editor", owner=None,
+                            header_only=False, version=None, lookup_type=None, **kwargs):
         """
         Provides the contents of a lookup file as JSON.
         """
 
-        logger.info("Retrieving lookup contents, namespace=%s, lookup=%s, type=%s, owner=%s, version=%s", namespace, lookup_file, lookup_type, owner, version)
+        logger.info("Retrieving lookup contents, namespace=%s, lookup=%s, type=%s, owner=%s,"
+                    " version=%s", namespace, lookup_file, lookup_type, owner, version)
 
         if lookup_type is None or len(lookup_type) == 0:
             lookup_type = "csv"
-            logger.warning("No type for the lookup provided when attempting to load a lookup file, it will default to CSV")
+            logger.warning("No type for the lookup provided when attempting to load a lookup" +
+                           " file, it will default to CSV")
 
         if header_only in ["1", "true", 1, True]:
             header_only = True
@@ -800,7 +819,9 @@ class LookupEditor(controllers.BaseController):
             # Load the CSV lookup
             elif lookup_type == "csv":
 
-                with self.get_lookup(lookup_file, namespace, owner, version=version, throw_exception_if_too_big=True) as csv_file:
+                with self.get_lookup(lookup_file, namespace, owner, version=version,
+                                     throw_exception_if_too_big=True) as csv_file:
+
                     csv_reader = csv.reader(csv_file)
 
                     # Convert the content to JSON
@@ -825,7 +846,7 @@ class LookupEditor(controllers.BaseController):
             cherrypy.response.status = 404
             return self.render_error_json("Unable to find the lookup")
 
-        except PermissionDeniedException as e:
+        except (AuthorizationFailed, PermissionDeniedException) as e:
             logger.warning("Access to lookup denied")
             cherrypy.response.status = 403
             return self.render_error_json(str(e))
