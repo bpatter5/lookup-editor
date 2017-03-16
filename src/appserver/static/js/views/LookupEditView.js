@@ -2146,16 +2146,17 @@ define([
         			description = 'entries visible from search';
         		}
         		
-        		// Add the user
-            	users.push({
-            		'name' : user.name,
-            		'readable_name' : user.content.realname.length > 0 ? user.content.realname : user.name,
-            		'description' : description
-            	});
+        		// Add the user. If the this user is the owner, put them at the top.
+				users.push({
+					'name' : user.name,
+					'readable_name' : user.content.realname.length > 0 ? user.content.realname : user.name,
+					'description' : description
+				});
         	}
         	
         	// If we didn't get users, then populate it manually
         	if(users_list_from_splunk.length === 0){
+
             	// Add the owner
             	users.push({
             		'name' : owner,
@@ -2178,9 +2179,44 @@ define([
         		'description' : 'entries visible from search'
         	});
         	
-        	return _.uniq(users, function(item, key, a) { 
+			// Uniqify the list
+        	users = _.uniq(users, function(item, key, a) { 
         	    return item.name;
         	});
+			
+			var users_to_prioritze = ['nobody', owner, Splunk.util.getConfigValue("USERNAME")];
+
+			// Sort the list
+			function compare(usera, userb) {
+
+				var usera_name = usera.name.toLowerCase();
+				var userb_name = userb.name.toLowerCase();
+
+				// Give priority to the users in the priority list
+				for(var c = 0; c < users_to_prioritze.length; c++){
+					if(usera.name == users_to_prioritze[c]){
+						return -1;
+					}
+
+					if(userb.name == users_to_prioritze[c]){
+						return 1;
+					}
+				}
+
+				// Otherwise, sort them alphabectically
+				if (usera_name < userb_name) {
+					return -1;
+				}
+				if (usera_name > userb_name) {
+					return 1;
+				}
+				// usera must be equal to userb
+				return 0;
+			}
+
+			users.sort(compare);
+
+			return users;
         },
         
         /**

@@ -143,10 +143,10 @@ input[type=text]{
 
 /* Set the size of the drop-down */
 .dropdown-menu{
-	width: 220px;
-	margin-left: -38px;
 	margin-top: 2px;
 	background-color: white;
+	overflow-x: hidden;
+	max-height: 200px;
 }
 
 /*
