@@ -125,6 +125,9 @@ Change History
 |         | Updated the descriptions of the types of lookups on the new lookups page                                         |
 |         | Fixed incompatibilty with the Mobile Access Add-on                                                               |
 |---------|------------------------------------------------------------------------------------------------------------------|
-| 2.5.1   | Added ability to refresh the lookup                                                                              |
+| 2.6.0   | Added ability to refresh the lookup                                                                              |
 |         | Fixed misaligned dropdown on the lookup list page                                                                |
+|         | Added link to edit lookup permissions from the list page                                                         |
+|         | Improved the list of users on the KV lookup editor to make it easier to use when lots of users exist             |
+|         | Improved the icon                                                                                                |
 +---------+------------------------------------------------------------------------------------------------------------------+
