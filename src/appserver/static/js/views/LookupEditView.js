@@ -157,7 +157,8 @@ define([
         	"change #import-file-input" : "importFile",
         	"dragenter #lookup-table"   : "onDragFileEnter",
         	"dragleave #lookup-table"   : "onDragFileEnd",
-			"click #refresh"            : "refreshLookup"
+			"click #refresh"            : "refreshLookup",
+			"click #edit-acl"           : "editACLs"
         },
         
         /**
@@ -2236,9 +2237,64 @@ define([
         },
         
 		/**
+		 * Adjust the permissions on the collection.
+		 */
+		changeCollectionACL: function(owner, app, collection, sharing, read, write){
+
+			// Convert the read perms into a string
+			if(read.isArray()){
+				read = read.join(",");
+			}
+
+			// Convert the write perms into a string
+			if(write.isArray()){
+				write = write.join(",");
+			}
+
+			// Make the arguments
+			var data = {
+				"output_mode": "json",
+				"perms.read" : "*",
+				"perms.write" : "*",
+				"sharing" : sharing,
+				"owner" : owner
+			}
+
+			// Do the operation
+			$.ajax({
+        			url: splunkd_utils.fullpath('/servicesNS/' + owner + '/' + app + '/storage/collections/config/' + collection + '/acl'),
+        			data: data,
+        			type: 'POST',
+        			
+        			// On success, populate the table
+        			success: function(data) {
+						console.info("ACL successfully updated");
+					}
+
+			});
+		},
+
+		/**
+		 * Edit the ACLs.
+		 */
+		editACLs: function(){
+
+			if(this.lookup_type == 'kv'){
+				var uri = '/servicesNS/nobody/' + this.namespace + '/storage/collections/config/' + this.lookup;
+				document.location = '/en-US/manager/permissions/' + this.namespace + '/storage/collections/config/' + this.lookup + '?uri=' + encodeURIComponent(uri);
+			}
+			else{
+				var uri = '/servicesNS/' + this.owner + '/' + this.namespace + '/data/lookup-table-files/' + this.lookup;
+				document.location = '/en-US/manager/permissions/' + this.namespace + '/data/lookup-table-files/' + this.lookup + '?uri=' + encodeURIComponent(uri);
+			}
+
+		},
+
+		/**
 		 * Refresh the lookup.
 		 */
 		refreshLookup: function(){
+			this.changeCollectionACL();
 			this.render();
 		},
 

@@ -584,7 +584,7 @@ define([
         	}
         	
         	else{
-        		return true
+        		return true;
         	}
         	
         },
