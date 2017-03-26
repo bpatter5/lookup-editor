@@ -1,4 +1,4 @@
-<nav search_view="search">
+<nav color="#858585" search_view="search">
   <view name="lookup_list" default="true" />
   <view name="lookup_new" />
 </nav>
