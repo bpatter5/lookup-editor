@@ -2294,7 +2294,6 @@ define([
 		 * Refresh the lookup.
 		 */
 		refreshLookup: function(){
-			this.changeCollectionACL();
 			this.render();
 		},
 
