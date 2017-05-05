@@ -130,4 +130,7 @@ Change History
 |         | Added link to edit lookup permissions from the list page                                                         |
 |         | Improved the list of users on the KV lookup editor to make it easier to use when lots of users exist             |
 |         | Improved the icon                                                                                                |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 2.6.1   | Improving styling on Splunk 6.6                                                                                  |
+|         | Fixing refresh button on the lookup editor page which didn't work in some case                                   |
 +---------+------------------------------------------------------------------------------------------------------------------+
