@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="http://127.0.0.1:8000/en-US/app/lookup_editor/" />
+<title>new_lookup_csv</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">new_lookup_csv</td></tr>
+</thead><tbody>
+<tr>
+	<td>open</td>
+	<td>lookup_new</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForCssCount</td>
+	<td>css=.lookup-link</td>
+	<td>2</td>
+</tr>
+<tr>
+	<td>clickAndWait</td>
+	<td>link=Create CSV Lookup...</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForText</td>
+	<td>css=.dashboard-title.dashboard-header-title</td>
+	<td>Lookup Edit</td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>css=.dashboard-title.dashboard-header-title</td>
+	<td>Lookup Edit</td>
+</tr>
+<tr>
+	<td>storeEval</td>
+	<td>window.location.protocol + &quot;//&quot; + window.location.hostname + &quot;:&quot; + window.location.port + window.location.pathname</td>
+	<td>base_url</td>
+</tr>
+<tr>
+	<td>echo</td>
+	<td>${base_url}</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertLocation</td>
+	<td>${base_url}?action=new&amp;type=csv</td>
+	<td></td>
+</tr>
+
+</tbody></table>
+</body>
+</html>

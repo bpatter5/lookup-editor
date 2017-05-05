@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="http://127.0.0.1:8000/en-US/app/lookup_editor/" />
+<title>editor_load_csv</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">editor_load_csv</td></tr>
+</thead><tbody>
+<tr>
+	<td>openAndWait</td>
+	<td>lookup_edit?owner=admin&amp;namespace=lookup_editor&amp;lookup=ui_test.csv&amp;type=csv</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForCssCount</td>
+	<td>.ht_master.handsontable</td>
+	<td>1</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=save</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForText</td>
+	<td>css=#info-message &gt; .message</td>
+	<td>Lookup file saved successfully</td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>css=#info-message &gt; .message</td>
+	<td>Lookup file saved successfully</td>
+</tr>
+<!--Revert to a previous version and make sure it loads-->
+<tr>
+	<td>click</td>
+	<td>link=Revert to previous version</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>css=#backup-versions &gt; li &gt; a</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertConfirmation</td>
+	<td>This version the lookup file will now be loaded.<br /><br />Unsaved changes will be overridden.</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForText</td>
+	<td>css=#info-message &gt; .message</td>
+	<td>Backup file was loaded successfully</td>
+</tr>
+<tr>
+	<td>assertText</td>
+	<td>css=#info-message &gt; .message</td>
+	<td>Backup file was loaded successfully</td>
+</tr>
+</tbody></table>
+</body>
+</html>
