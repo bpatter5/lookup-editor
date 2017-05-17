@@ -8,6 +8,7 @@ import sys
 import json
 import shutil
 import csv
+import codecs
 import cherrypy
 import re
 import time
@@ -788,7 +789,9 @@ class LookupEditor(controllers.BaseController):
         logger.info("Loading lookup file from path=%s", file_path)
 
         # Get the file handle
-        return open(file_path, 'rb')
+        # Note that we are assuming that the file is in UTF-8. Any characters that don't match
+        # will be replaced.
+        return codecs.open(file_path, 'rb', encoding='utf-8', errors='replace')
 
     @expose_page(must_login=True, methods=['GET'])
     def get_lookup_contents(self, lookup_file, namespace="lookup_editor", owner=None,
