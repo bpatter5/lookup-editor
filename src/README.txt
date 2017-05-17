@@ -7,12 +7,27 @@ This app provides a user-interface for editing lookup files in Splunk.
 
 
 ================================================
+Configuring Splunk
+================================================
+Install this app into Splunk by doing the following:
+
+  1. Log in to Splunk Web and navigate to "Apps » Manage Apps" via the app dropdown at the top left of Splunk's user interface
+  2. Click the "install app from file" button
+  3. Upload the file by clicking "Choose file" and selecting the app
+  4. Click upload
+  5. Restart Splunk if a dialog asks you to
+
+Once the app is installed, you can use can open the "Lookup Editor" app from the main launcher.
+
+
+
+================================================
 Known Limitations
 ================================================
 
 1) The lookup editor is limited to editing files up to 10 MB. Files larger than this cannot be edited because it consume too much memory on some browsers.
 
-2) The lookup editor does not enforce concurrency. This means that if two users edit a lookup file at the same time, someone will lose changes.
+2) The lookup editor does not enforce concurrency with CSV files. This means that if two users edit a lookup file at the same time, someone will lose changes.
 
 
 
@@ -133,4 +148,7 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 2.6.1   | Improving styling on Splunk 6.6                                                                                  |
 |         | Fixing refresh button on the lookup editor page which didn't work in some case                                   |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 2.7.0   | CSV lookups with invalid characters can now be loaded                                                            |
+|         | Added the search views to the navigation                                                                         |
 +---------+------------------------------------------------------------------------------------------------------------------+
