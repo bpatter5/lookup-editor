@@ -8,6 +8,7 @@ require.config({
         kv_store_field_editor: '../app/lookup_editor/js/views/KVStoreFieldEditor',
         clippy: '../app/lookup_editor/js/lib/clippy',
         moment: '../app/lookup_editor/js/lib/moment.min',
+		kvstore: "../app/lookup_editor/js/contrib/kvstore"
     },
     shim: {
         'handsontable': {
@@ -37,6 +38,7 @@ define([
     "text!../app/lookup_editor/js/templates/LookupEdit.html",
     "kv_store_field_editor",
     "moment",
+	"kvstore",
     "clippy",
     "csv",
     "bootstrap.dropdown",
@@ -59,7 +61,8 @@ define([
     CheckboxGroupInput,
     Template,
     KVStoreFieldEditor,
-    moment
+    moment,
+	KVStore
 ){
 	
 	var Apps = SplunkDsBaseCollection.extend({
@@ -584,9 +587,53 @@ define([
 	     },
 
 		 /**
+		  * Import the daat into the KV store.
+		  */
+		 importKVRow: function(data, offset){
+
+			// Make sure the KV store model was initialized
+			if(typeof this.kvStoreModel === 'undefined'){
+				debugger;
+				this.kvStoreModel = KVStore.Model.extend({
+					collectionName: this.lookup_name
+				});
+			}
+
+			// Stop if we hit the end (the base case)
+			if(offset > data.length){
+				return;
+			}
+
+			// Grab the next row
+			var row = data[offset];
+
+			//var model = new this.kvStoreModel({ _key: '5447fb752dbbb628d0224132' });
+			var model_data = {};
+
+			for(var c = 0; c < row.length; c++){
+				// TODO convert formats as necessary; see makeRowJSON
+				// Match up the format
+				// TODO: GET COIRRECT HEADER ROW
+				model_data[data[0]] = row[c];
+			}
+			debugger;
+			var model = new this.kvStoreModel(row);
+			/*
+	        // Save the model
+	        model.save().done(function(){
+				this.importKVRow(offset+1);
+	        }.bind(this))
+			*/
+		 },
+
+		 /**
           * Import the given file into the KV store lookup.
           */
 		 importKVFile: function(data){
+			
+			this.kvStoreModel = KVStore.Model.extend({
+				collectionName: this.lookup_name
+			});
 
 			// Stop if the file has no rows
 			if(data.length === 0){
@@ -604,7 +651,7 @@ define([
 					field_found = true;
 				}
 
-				// Stop of the field could not be found
+				// Stop if the field could not be found
 				if(!field_found){
 					this.showWarningMessage("Unable to import the file since the KV store schema doesn't include the field: " + data[0][c]);
 					return;
@@ -623,7 +670,10 @@ define([
 				existing_data.push(new_row); // Add the new row
 			}
 
-			return data;
+			// Start the importation
+			this.importKVRow(existing_data, 0);
+
+			//return data;
 		 },
 
          /**
@@ -686,14 +736,16 @@ define([
 					data = this.importKVFile(data);
 				}
             	
-            	// Render the lookup file
-            	this.renderLookup(data);
-            	
-            	// Hide the import dialog
-            	$('#import-file-modal', this.$el).modal('hide');
-            	
-            	// Show a message noting that the file was imported
-            	this.showInfoMessage("File imported successfully");
+				else{
+					// Render the lookup file
+					this.renderLookup(data);
+					
+					// Hide the import dialog
+					$('#import-file-modal', this.$el).modal('hide');
+					
+					// Show a message noting that the file was imported
+					this.showInfoMessage("File imported successfully");
+				}
             	
         	}.bind(this);
         	
