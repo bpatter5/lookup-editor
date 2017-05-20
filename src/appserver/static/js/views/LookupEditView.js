@@ -582,18 +582,63 @@ define([
 	         div.appendChild(document.createTextNode(str));
 	         return div.innerHTML;
 	     },
-        
-        /**
-         * Import the given file into the lookup.
-         */
-        importFile: function(evt){
+
+		 /**
+          * Import the given file into the KV store lookup.
+          */
+		 importKVFile: function(data){
+
+			// Stop if the file has no rows
+			if(data.length === 0){
+				this.showWarningMessage("Unable to import the file since it has no rows");
+				return;
+			}
+
+			// Verify that the schema is the same
+			for(var c = 0; c < data[0].length; c++){
+
+				var field_found = false;
+
+				// See if the KV store schema has this field
+				if(this.field_types[data[0][c]] !== undefined){
+					field_found = true;
+				}
+
+				// Stop of the field could not be found
+				if(!field_found){
+					this.showWarningMessage("Unable to import the file since the KV store schema doesn't include the field: " + data[0][c]);
+					return;
+				}
+			}
+
+			// Append the data to the existing table
+			// Make sure that the header is not re-included and make sure the columns
+			// go into the correct cells
+			var existing_data = this.handsontable.getData();
+			var new_row = null;
+
+			for(c = 1; c < data[0].length; c++){
+				new_row = [""]; // Start with an empty _key
+				new_row = new_row.concat(data[c]); // Add the imported data
+				existing_data.push(new_row); // Add the new row
+			}
+
+			return data;
+		 },
+
+         /**
+          * Import the given file into the lookup.
+          */
+         importFile: function(evt){
         	
         	// Stop if this is a KV collection; importing isn't yet supported
+			/*
         	if(this.lookup_type !== "csv"){
         		this.showWarningMessage("Drag & drop importing on KV store lookups is not currently supported");
         		console.info("Drag and dropping on a KV store lookup being ignored");
         		return false;
         	}
+			*/
         	
         	// Stop if this is read-only
         	if(this.read_only){
@@ -635,7 +680,11 @@ define([
                 var filecontent = evt.target.result;
                 
                 // Import the file into the view
-            	var data = new CSV(filecontent, { }).parse();
+				var data = new CSV(filecontent, {}).parse();
+
+				if(this.lookup_type === "kv"){
+					data = this.importKVFile(data);
+				}
             	
             	// Render the lookup file
             	this.renderLookup(data);
