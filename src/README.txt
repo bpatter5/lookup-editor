@@ -149,6 +149,6 @@ Change History
 | 2.6.1   | Improving styling on Splunk 6.6                                                                                  |
 |         | Fixing refresh button on the lookup editor page which didn't work in some case                                   |
 |---------|------------------------------------------------------------------------------------------------------------------|
-| 2.7.0   | CSV lookups with invalid characters can now be loaded                                                            |
-|         | Added the search views to the navigation                                                                         |
+| 2.6.2   | CSV lookups with invalid characters can now be loaded                                                            |
+|         | Added the search views to the app's navigation                                                                   |
 +---------+------------------------------------------------------------------------------------------------------------------+
