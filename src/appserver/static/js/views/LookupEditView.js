@@ -674,7 +674,7 @@ define([
 				return;
 			}
 
-			// Verify that the schema is the same
+			// Verify that the input file columns are in the schema
 			for(var c = 0; c < data[0].length; c++){
 
 				// Ignore the _key field
