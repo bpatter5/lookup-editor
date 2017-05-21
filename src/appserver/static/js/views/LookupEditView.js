@@ -85,7 +85,6 @@ define([
 	    model: Backup
 	});
 	
-	
     // Define the custom view class
     var LookupEditView = SimpleSplunkView.extend({
         className: "LookupEditView",
@@ -589,18 +588,21 @@ define([
 		 /**
 		  * Import the daat into the KV store.
 		  */
-		 importKVRow: function(data, offset){
+		 importKVRow: function(data, offset, promise){
 
-			// Make sure the KV store model was initialized
-			if(typeof this.kvStoreModel === 'undefined'){
-				debugger;
-				this.kvStoreModel = KVStore.Model.extend({
-					collectionName: this.lookup_name
-				});
+			// Get a promise ready
+			if(typeof promise === 'undefined'){
+				promise = jQuery.Deferred();	
 			}
 
+			// Make sure the KV store model was initialized
+			this.kvStoreModel = KVStore.Model.extend({
+				collectionName: this.lookup
+			});
+
 			// Stop if we hit the end (the base case)
-			if(offset > data.length){
+			if(offset >= data.length){
+				promise.resolve();
 				return;
 			}
 
@@ -613,17 +615,18 @@ define([
 			for(var c = 0; c < row.length; c++){
 				// TODO convert formats as necessary; see makeRowJSON
 				// Match up the format
-				// TODO: GET COIRRECT HEADER ROW
-				model_data[data[0]] = row[c];
+				model_data[data[0][c]] = row[c];
 			}
-			debugger;
-			var model = new this.kvStoreModel(row);
-			/*
+
+			var model = new this.kvStoreModel(model_data);
+
 	        // Save the model
 	        model.save().done(function(){
-				this.importKVRow(offset+1);
-	        }.bind(this))
-			*/
+				this.importKVRow(data, offset+1, promise);
+	        }.bind(this));
+
+			// Return the promise
+			return promise;
 		 },
 
 		 /**
@@ -671,7 +674,10 @@ define([
 			}
 
 			// Start the importation
-			this.importKVRow(existing_data, 0);
+			this.importKVRow(data, 1).done(function(){
+				debugger;
+				this.refreshLookup();
+			}.bind(this));
 
 			//return data;
 		 },
