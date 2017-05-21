@@ -8,6 +8,7 @@ require.config({
         kv_store_field_editor: '../app/lookup_editor/js/views/KVStoreFieldEditor',
         clippy: '../app/lookup_editor/js/lib/clippy',
         moment: '../app/lookup_editor/js/lib/moment.min',
+		kvstore: "../app/lookup_editor/js/contrib/kvstore"
     },
     shim: {
         'handsontable': {
@@ -37,6 +38,7 @@ define([
     "text!../app/lookup_editor/js/templates/LookupEdit.html",
     "kv_store_field_editor",
     "moment",
+	"kvstore",
     "clippy",
     "csv",
     "bootstrap.dropdown",
@@ -59,7 +61,8 @@ define([
     CheckboxGroupInput,
     Template,
     KVStoreFieldEditor,
-    moment
+    moment,
+	KVStore
 ){
 	
 	var Apps = SplunkDsBaseCollection.extend({
@@ -81,7 +84,6 @@ define([
 	    url: Splunk.util.make_full_url("/custom/lookup_editor/lookup_edit/get_lookup_backups_list"),
 	    model: Backup
 	});
-	
 	
     // Define the custom view class
     var LookupEditView = SimpleSplunkView.extend({
@@ -147,18 +149,24 @@ define([
         },
         
         events: {
-        	// Filtering
-        	"click #save"               : "doSaveLookup",
-        	"click .backup-version"     : "doLoadBackup",
-        	"click .user-context"       : "doLoadUserContext",
-        	"click #export-file"        : "doExport",
-        	"click #choose-import-file" : "chooseImportFile",
-        	"click #import-file"        : "openFileImportModal",
-        	"change #import-file-input" : "importFile",
-        	"dragenter #lookup-table"   : "onDragFileEnter",
-        	"dragleave #lookup-table"   : "onDragFileEnd",
-			"click #refresh"            : "refreshLookup",
-			"click #edit-acl"           : "editACLs"
+        	"click #save"                                  : "doSaveLookup",
+        	"click .backup-version"                        : "doLoadBackup",
+        	"click .user-context"                          : "doLoadUserContext",
+        	"click #export-file"                           : "doExport",
+
+			// Import related
+        	"click #choose-import-file"                    : "chooseImportFile",
+        	"click #import-file"                           : "openFileImportModal",
+        	"change #import-file-input"                    : "importFile",
+        	"dragenter #lookup-table"                      : "onDragFileEnter",
+        	"dragleave #lookup-table"                      : "onDragFileEnd",
+			"click #import-file-modal .btn-dialog-cancel"  : "cancelImport",
+			"click #import-file-modal .btn-dialog-close"   : "cancelImport",
+			
+			//"hidden #import-file-modal"                  : "cancelImport",
+
+			"click #refresh"                               : "refreshLookup",
+			"click #edit-acl"                              : "editACLs",
         },
         
         /**
@@ -389,6 +397,11 @@ define([
         	
         	$('.dragging').removeClass('dragging');
         	
+			// Make sure we are showing the import dialog
+			$('#import-in-process', this.$el).hide();
+			$('#import-main', this.$el).show();
+
+			// Open the modal
         	$('#import-file-modal', this.$el).modal();
         	
         	// Setuo handlers for drag & drop
@@ -582,18 +595,130 @@ define([
 	         div.appendChild(document.createTextNode(str));
 	         return div.innerHTML;
 	     },
-        
-        /**
-         * Import the given file into the lookup.
-         */
-        importFile: function(evt){
+
+	     /* 
+	      * Cancel an import that is in-progress.
+	      */
+	     cancelImport: function(){
+			this.cancel_import = true;
+		 },
+
+		 /**
+		  * Import the daat into the KV store.
+		  */
+		 importKVRow: function(data, offset, promise){
+
+			// Get a promise ready
+			if(typeof promise === 'undefined'){
+				promise = jQuery.Deferred();
+			}
+
+			// Make sure the KV store model was initialized
+			this.kvStoreModel = KVStore.Model.extend({
+				collectionName: this.lookup,
+				namespace: {
+					'owner' : this.owner
+				}
+			});
+
+			// Update the progress bar
+			$('#import-in-process', this.$el).show();
+			$('#import-main', this.$el).hide();
+			$('#import-file-modal .modal-body', this.$el).removeClass("dragging");
+			$('#import-progress', this.$el).css('width', 100*(offset/data.length) + "%");
+
+			// Stop if we hit the end (the base case)
+			if(offset >= data.length || this.cancel_import){
+				promise.resolve();
+				return;
+			}
+
+			// Grab the next row
+			var row = data[offset];
+
+			var model_data = {};
+
+			for(var c = 0; c < row.length; c++){
+				// TODO convert formats as necessary; see makeRowJSON
+				// Match up the format
+				if(data[0][c] !== '_key'){
+					model_data[data[0][c]] = row[c];
+				}
+			}
+
+			var model = new this.kvStoreModel(model_data);
+
+	        // Save the model
+	        model.save().done(function(){
+				this.importKVRow(data, offset+1, promise);
+	        }.bind(this));
+
+			// Return the promise
+			return promise;
+		 },
+
+		 /**
+          * Import the given file into the KV store lookup.
+          */
+		 importKVFile: function(data){
+			
+			// Make a promise
+			var promise = jQuery.Deferred();
+
+			// Clear the cancel indicator
+			this.cancel_import = false;
+
+			// Stop if the file has no rows
+			if(data.length === 0){
+				this.showWarningMessage("Unable to import the file since it has no rows");
+				return;
+			}
+
+			// Verify that the input file columns are in the schema
+			for(var c = 0; c < data[0].length; c++){
+
+				// Ignore the _key field
+				if(data[0][c] === '_key'){
+					continue;
+				}
+
+				var field_found = false;
+
+				// See if the KV store schema has this field
+				if(this.field_types[data[0][c]] !== undefined){
+					field_found = true;
+				}
+
+				// Stop if the field could not be found
+				if(!field_found){
+					this.showWarningMessage("Unable to import the file since the KV store schema doesn't include the field: " + data[0][c]);
+					return;
+				}
+			}
+
+			// Start the importation
+			this.importKVRow(data, 1).done(function(){
+				promise.resolve();
+				this.refreshLookup();
+			}.bind(this));
+
+			// Return the promise
+			return promise;
+		 },
+
+         /**
+          * Import the given file into the lookup.
+          */
+         importFile: function(evt){
         	
         	// Stop if this is a KV collection; importing isn't yet supported
+			/*
         	if(this.lookup_type !== "csv"){
         		this.showWarningMessage("Drag & drop importing on KV store lookups is not currently supported");
         		console.info("Drag and dropping on a KV store lookup being ignored");
         		return false;
         	}
+			*/
         	
         	// Stop if this is read-only
         	if(this.read_only){
@@ -635,16 +760,25 @@ define([
                 var filecontent = evt.target.result;
                 
                 // Import the file into the view
-            	var data = new CSV(filecontent, { }).parse();
+				var data = new CSV(filecontent, {}).parse();
+
+				if(this.lookup_type === "kv"){
+					$('#import-file-modal', this.$el).modal();
+					data = this.importKVFile(data).done(function(){
+						$('#import-file-modal', this.$el).modal('hide');
+					});
+				}
             	
-            	// Render the lookup file
-            	this.renderLookup(data);
-            	
-            	// Hide the import dialog
-            	$('#import-file-modal', this.$el).modal('hide');
-            	
-            	// Show a message noting that the file was imported
-            	this.showInfoMessage("File imported successfully");
+				else{
+					// Render the lookup file
+					this.renderLookup(data);
+					
+					// Hide the import dialog
+					$('#import-file-modal', this.$el).modal('hide');
+					
+					// Show a message noting that the file was imported
+					this.showInfoMessage("File imported successfully");
+				}
             	
         	}.bind(this);
         	
