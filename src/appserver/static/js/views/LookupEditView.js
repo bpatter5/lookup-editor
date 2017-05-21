@@ -597,7 +597,10 @@ define([
 
 			// Make sure the KV store model was initialized
 			this.kvStoreModel = KVStore.Model.extend({
-				collectionName: this.lookup
+				collectionName: this.lookup,
+				namespace: {
+					'owner' : this.owner
+				}
 			});
 
 			// Stop if we hit the end (the base case)
@@ -675,7 +678,6 @@ define([
 
 			// Start the importation
 			this.importKVRow(data, 1).done(function(){
-				debugger;
 				this.refreshLookup();
 			}.bind(this));
 
