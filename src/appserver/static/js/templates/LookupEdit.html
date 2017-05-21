@@ -4,20 +4,30 @@
 	        <h3>Import File</h3>
 	    </div>
 	    <div class="modal-body form form-horizontal modal-body-scrolling">
-	        <span>
-	        Import the contents of a CSV file into this lookup file.
-	        </span>
-	        
-	        <input type="file" id="import-file-input" />
-	        <button class="btn active btn-primary" id="choose-import-file">Select file to import</button>
-	        
-	        <div class="drag-and-drop-tip">
-	        	<strong>Tip:</strong> You can drag and drop a CSV file onto the editor or this dialog to import it directly
-	        </div>
+
+			<div id="import-main">
+				<span>
+				Import the contents of a CSV file into this lookup file.
+				</span>
+				
+				<input type="file" id="import-file-input" />
+				<button class="btn active btn-primary" id="choose-import-file">Select file to import</button>
+				
+				<div class="drag-and-drop-tip">
+					<strong>Tip:</strong> You can drag and drop a CSV file onto the editor or this dialog to import it directly
+				</div>
+			</div>
+
+			<div id="import-in-process" style="display:none">
+				Please wait while the file is imported into the KV store lookup.
+				<div class="progress">
+					<div id="import-progress" class="bar" style="width: 0%;"></div>
+				</div>
+			</div>
 	        
 	    </div>
 	    <div class="modal-footer">
-	        <a href="#" class="btn btn-dialog-cancel label_from_data" data-dismiss="modal" style="display: inline;">Close</a>
+	        <a href="#" class="btn btn-dialog-cancel label_from_data" data-dismiss="modal" style="display: inline;">Cancel</a>
 	    </div>
 	</div>
 	

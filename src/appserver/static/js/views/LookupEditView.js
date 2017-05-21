@@ -149,18 +149,24 @@ define([
         },
         
         events: {
-        	// Filtering
-        	"click #save"               : "doSaveLookup",
-        	"click .backup-version"     : "doLoadBackup",
-        	"click .user-context"       : "doLoadUserContext",
-        	"click #export-file"        : "doExport",
-        	"click #choose-import-file" : "chooseImportFile",
-        	"click #import-file"        : "openFileImportModal",
-        	"change #import-file-input" : "importFile",
-        	"dragenter #lookup-table"   : "onDragFileEnter",
-        	"dragleave #lookup-table"   : "onDragFileEnd",
-			"click #refresh"            : "refreshLookup",
-			"click #edit-acl"           : "editACLs"
+        	"click #save"                                  : "doSaveLookup",
+        	"click .backup-version"                        : "doLoadBackup",
+        	"click .user-context"                          : "doLoadUserContext",
+        	"click #export-file"                           : "doExport",
+
+			// Import related
+        	"click #choose-import-file"                    : "chooseImportFile",
+        	"click #import-file"                           : "openFileImportModal",
+        	"change #import-file-input"                    : "importFile",
+        	"dragenter #lookup-table"                      : "onDragFileEnter",
+        	"dragleave #lookup-table"                      : "onDragFileEnd",
+			"click #import-file-modal .btn-dialog-cancel"  : "cancelImport",
+			"click #import-file-modal .btn-dialog-close"   : "cancelImport",
+			
+			//"hidden #import-file-modal"                  : "cancelImport",
+
+			"click #refresh"                               : "refreshLookup",
+			"click #edit-acl"                              : "editACLs",
         },
         
         /**
@@ -391,6 +397,11 @@ define([
         	
         	$('.dragging').removeClass('dragging');
         	
+			// Make sure we are showing the import dialog
+			$('#import-in-process', this.$el).hide();
+			$('#import-main', this.$el).show();
+
+			// Open the modal
         	$('#import-file-modal', this.$el).modal();
         	
         	// Setuo handlers for drag & drop
@@ -585,6 +596,13 @@ define([
 	         return div.innerHTML;
 	     },
 
+	     /* 
+	      * Cancel an import that is in-progress.
+	      */
+	     cancelImport: function(){
+			this.cancel_import = true;
+		 },
+
 		 /**
 		  * Import the daat into the KV store.
 		  */
@@ -603,8 +621,14 @@ define([
 				}
 			});
 
+			// Update the progress bar
+			$('#import-in-process', this.$el).show();
+			$('#import-main', this.$el).hide();
+			$('#import-file-modal .modal-body', this.$el).removeClass("dragging");
+			$('#import-progress', this.$el).css('width', 100*(offset/data.length) + "%");
+
 			// Stop if we hit the end (the base case)
-			if(offset >= data.length){
+			if(offset >= data.length || this.cancel_import){
 				promise.resolve();
 				return;
 			}
@@ -640,6 +664,9 @@ define([
 			
 			// Make a promise
 			var promise = jQuery.Deferred();
+
+			// Clear the cancel indicator
+			this.cancel_import = false;
 
 			// Stop if the file has no rows
 			if(data.length === 0){
@@ -736,6 +763,7 @@ define([
 				var data = new CSV(filecontent, {}).parse();
 
 				if(this.lookup_type === "kv"){
+					$('#import-file-modal', this.$el).modal();
 					data = this.importKVFile(data).done(function(){
 						$('#import-file-modal', this.$el).modal('hide');
 					});
