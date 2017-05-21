@@ -1520,7 +1520,7 @@ define([
         	
         	// Third, we need to do a post to remove the row
         	$.ajax({
-        		url: Splunk.util.make_url("/splunkd/servicesNS/" + this.owner + "/" + this.namespace +  "/storage/collections/data/" + this.lookup + "/" + _key),
+        		url: Splunk.util.make_url("/splunkd/__raw/servicesNS/" + this.owner + "/" + this.namespace +  "/storage/collections/data/" + this.lookup + "/" + _key),
         		type: "DELETE",
         		
       		  	// On success
@@ -1545,6 +1545,7 @@ define([
       		  		this.showWarningMessage("An entry could not be removed from the KV store lookup", true);
       		  	}.bind(this)
         	});
+
         },
         
         /**
