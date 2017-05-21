@@ -592,7 +592,7 @@ define([
 
 			// Get a promise ready
 			if(typeof promise === 'undefined'){
-				promise = jQuery.Deferred();	
+				promise = jQuery.Deferred();
 			}
 
 			// Make sure the KV store model was initialized
@@ -612,13 +612,14 @@ define([
 			// Grab the next row
 			var row = data[offset];
 
-			//var model = new this.kvStoreModel({ _key: '5447fb752dbbb628d0224132' });
 			var model_data = {};
 
 			for(var c = 0; c < row.length; c++){
 				// TODO convert formats as necessary; see makeRowJSON
 				// Match up the format
-				model_data[data[0][c]] = row[c];
+				if(data[0][c] !== '_key'){
+					model_data[data[0][c]] = row[c];
+				}
 			}
 
 			var model = new this.kvStoreModel(model_data);
@@ -637,9 +638,8 @@ define([
           */
 		 importKVFile: function(data){
 			
-			this.kvStoreModel = KVStore.Model.extend({
-				collectionName: this.lookup_name
-			});
+			// Make a promise
+			var promise = jQuery.Deferred();
 
 			// Stop if the file has no rows
 			if(data.length === 0){
@@ -649,6 +649,11 @@ define([
 
 			// Verify that the schema is the same
 			for(var c = 0; c < data[0].length; c++){
+
+				// Ignore the _key field
+				if(data[0][c] === '_key'){
+					continue;
+				}
 
 				var field_found = false;
 
@@ -664,24 +669,14 @@ define([
 				}
 			}
 
-			// Append the data to the existing table
-			// Make sure that the header is not re-included and make sure the columns
-			// go into the correct cells
-			var existing_data = this.handsontable.getData();
-			var new_row = null;
-
-			for(c = 1; c < data[0].length; c++){
-				new_row = [""]; // Start with an empty _key
-				new_row = new_row.concat(data[c]); // Add the imported data
-				existing_data.push(new_row); // Add the new row
-			}
-
 			// Start the importation
 			this.importKVRow(data, 1).done(function(){
+				promise.resolve();
 				this.refreshLookup();
 			}.bind(this));
 
-			//return data;
+			// Return the promise
+			return promise;
 		 },
 
          /**
@@ -741,7 +736,9 @@ define([
 				var data = new CSV(filecontent, {}).parse();
 
 				if(this.lookup_type === "kv"){
-					data = this.importKVFile(data);
+					data = this.importKVFile(data).done(function(){
+						$('#import-file-modal', this.$el).modal('hide');
+					});
 				}
             	
 				else{
