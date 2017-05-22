@@ -150,7 +150,7 @@
                         edit_acls_uri = '../../manager/permissions/' + lookups[i].namespace + '/data/lookup-table-files/' + lookups[i].name + '?uri=' + encodeURIComponent(uri_parameter);
                     }
                 %>
-                <a class="action-link" href="<%- edit_acls_uri %>">Edit Permissions</a>
+                <a class="action-link external" target="_blank" href="<%- edit_acls_uri %>">Edit Permissions</a>
                 
                 <% if (lookups[i].type == "csv") { %>
 					<a class="action-link external" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- lookups[i].name %>">Open in Search</a>
