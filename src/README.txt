@@ -151,4 +151,9 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 2.6.2   | CSV lookups with invalid characters can now be loaded                                                            |
 |         | Added the search views to the app's navigation                                                                   |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 2.7.0   | Importing CSV files into KV store lookups is now supported                                                       |
+|         | KV store lookup files will be opened in the "nobody" owner context by default now                                |
+|         | Fixed error message when deleting KV store row entries on Splunk 6.6                                             |
+|         | Edit ACLs page now opens in a new page                                                                           |
 +---------+------------------------------------------------------------------------------------------------------------------+
