@@ -663,10 +663,35 @@ define([
 			// Stop if the file has no rows
 			if(data.length === 0){
 				this.showWarningMessage("Unable to import the file since it has no rows");
-				return;
+				promise.reject();
+				return promise;
 			}
 
-			// Verify that the input file columns are in the schema
+			// Verify that the input file matches the KV store collection
+			// A file can only be imported if the import file has all of the columns of the schema (no gaps)
+			for(var field in this.field_types){
+
+				// See if the field exists in the input file
+				if(field !== "undefined"){
+
+					var field_found = false;
+
+					for(var c = 0; c < data[0].length; c++){
+						if(data[0][c] === field){
+							field_found = true;
+						}
+					}
+
+					// Stop if the field could not be found
+					if(!field_found){
+						this.showWarningMessage("Unable to import the file since the input file is missing the column: " + field);
+						promise.reject();
+						return promise;
+					}
+				}
+			}
+			/*
+			// Verify that all of columns in the import file columns are in the schema
 			for(var c = 0; c < data[0].length; c++){
 
 				// Ignore the _key field
@@ -687,6 +712,10 @@ define([
 					return;
 				}
 			}
+			*/
+
+			// Open the import modal
+			$('#import-file-modal', this.$el).modal();
 
 			// Start the importation
 			this.importKVRow(data, 1).done(function(){
@@ -755,7 +784,6 @@ define([
 				var data = new CSV(filecontent, {}).parse();
 
 				if(this.lookup_type === "kv"){
-					$('#import-file-modal', this.$el).modal();
 					data = this.importKVFile(data).done(function(){
 						$('#import-file-modal', this.$el).modal('hide');
 					});
