@@ -1701,6 +1701,9 @@ define([
         
         /**
          * Do the creation of a row (for KV store lookups since edits are dynamic).
+		 * 
+		 * @param row The row number to add to
+		 * @param count The number of rows to add
          */
         doCreateRows: function(row, count){
         	
@@ -1815,6 +1818,10 @@ define([
         
         /**
          * Add some empty rows to the lookup data.
+		 * 
+		 * @param data An array of rows that the empty cells will be added to
+		 * @param column_count The number of columns to add
+		 * @param row_count The number of rows to add
          */
         addEmptyRows: function(data, column_count, row_count){
         	var row =[];
@@ -1879,6 +1886,14 @@ define([
         
         /**
          * Escape HTML content
+		 * 
+		 * @param instance The instance of the Handsontable
+		 * @param td The TD element
+		 * @param row The row number
+		 * @param col The column number
+		 * @param prop
+		 * @param value The value of the cell
+		 * @param cellProperties
          */
         escapeHtmlRenderer: function(instance, td, row, col, prop, value, cellProperties) {
         	td.innerHTML = this.escapeHtml(Handsontable.helper.stringify(value));
@@ -1888,6 +1903,8 @@ define([
         
         /**
          * Format the time into the standard format.
+		 * 
+		 * @param value The value of the time (a number) to convert into a string
          */
         formatTime: function(value){
         	if(/^\d+$/.test(value)){
@@ -1900,6 +1917,14 @@ define([
         
         /**
          * Render time content (converts the epochs to times)
+		 * 
+		 * @param instance The instance of the Handsontable
+		 * @param td The TD element
+		 * @param row The row number
+		 * @param col The column number
+		 * @param prop
+		 * @param value The value of the cell
+		 * @param cellProperties
          */
         timeRenderer: function(instance, td, row, col, prop, value, cellProperties) {
         	value = this.escapeHtml(Handsontable.helper.stringify(value));
@@ -1911,6 +1936,8 @@ define([
         
         /**
          * Render the lookup.
+		 * 
+		 * @param data The array of arrays that represents the data to render
          */
         renderLookup: function(data){
         	
@@ -2168,6 +2195,8 @@ define([
         
         /**
          * Get the parameter with the given name.
+		 * 
+		 * @param name The name of the parameter 
          */
         getParameterByName: function(name) {
             name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
@@ -2180,6 +2209,8 @@ define([
         
         /**
          * Hide the given item while retaining the display value
+		 * 
+		 * @param selector A jQuery selector of the element to process
          */
         hide: function(selector){
         	selector.css("display", "none");
@@ -2190,6 +2221,8 @@ define([
          * Un-hide the given item.
          * 
          * Note: this removes all custom styles applied directly to the element.
+		 * 
+		 * @param selector A jQuery selector of the element to process
          */
         unhide: function(selector){
         	selector.removeClass("hide");
@@ -2262,6 +2295,8 @@ define([
         
         /**
          * Get a list of users.
+		 * 
+		 * @param owner The name of the owner of the lookup (so that the list can denote which of the users in the list is the owner)
          */
         getUsers: function(owner){
         	
@@ -2290,18 +2325,11 @@ define([
         },
         
         /**
-         * Update the 
+         * Render the list of users
+		 * 
+		 * @param users The list of users that should be rendered in the list
          */
         renderUserList: function(users){
-        	
-        	// Create the list
-        	
-        	
-        	
-        	// Update the current user info
-        	
-        	// Purge the existing list
-        	//$('#load-user-context > ul').remove();
         	
         	// Make the list
         	var userTemplate = 	'<% for(var c = 0; c < users.length; c++){ %> \
@@ -2319,16 +2347,13 @@ define([
         		'users' : users
         	}));
         	
-        	//$('#load-user-context > ul').append("<li></li>");
-        	
-	        // Update the UI to note which user context is loaded
-	        //$('#loaded-user-context').text(this.owner);
-        	
-        	
         },
         
         /**
          * Create a list of users for the lookup context dialog
+		 * 
+		 * @param owner The name of the owner of the lookup (so that the list can denote which of the users in the list is the owner)
+		 * @param users_list_from_splunk The list of users as enumerated from Splunk
          */
         makeUsersList: function(owner, users_list_from_splunk){
         	
@@ -2443,6 +2468,13 @@ define([
         
 		/**
 		 * Adjust the permissions on the collection.
+		 * 
+		 * @param owner The name of the owner of the collection
+		 * @param app The app context of the collection
+		 * @param collection The name of the collection to modify
+		 * @param sharing Indicates whether the app is shared in app or globally
+		 * @param read The string representing who should be given read acccess (like "*")
+		 * @param write The string representing who should be given write acccess (like "*")
 		 */
 		changeCollectionACL: function(owner, app, collection, sharing, read, write){
 
