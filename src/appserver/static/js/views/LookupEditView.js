@@ -194,6 +194,11 @@ define([
         	
         },
         
+		/**
+		 * Setup a drag and handler on an element.
+		 * 
+		 * @param drop_zone An element to setup a drop-zone on.
+		 */
         setupDragDropHandlerOnElement: function(drop_zone){
         	
         	drop_zone.ondragover = function (e) {
@@ -210,6 +215,8 @@ define([
         
         /**
          * Get the field name for the column.
+		 * 
+		 * @param col The column to get the table header information from.
          */
         getFieldForColumn: function(col){
         	
@@ -220,6 +227,8 @@ define([
         
         /**
          * Get the table header.
+		 * 
+		 * @param use_cached Use the cached version of the table-header.
          */
         getTableHeader: function(use_cached){
         	
@@ -247,6 +256,8 @@ define([
         
         /**
          * Get the column that has a given field name.
+		 * 
+		 * @param field_name The name of the field to get the header for
          */
         getColumnForField: function(field_name){
         	
@@ -264,6 +275,10 @@ define([
         
         /**
          * Determine if the cell type is invalid for KV cells that have enforced data-types.
+		 * 
+		 * @param row The row number of the cell to be validated
+		 * @param col The column number of the cell to be validated
+		 * @param value The value to validate
          */
         isCellTypeInvalid: function(row, col, value){
         	
@@ -290,6 +305,8 @@ define([
         
         /**
          * Get the type associated with the given field.
+		 * 
+		 * @param column The name of the field to get the type of
          */
         getFieldType: function(column){
         	
@@ -316,6 +333,14 @@ define([
         
         /**
          * Cell renderer for HandsOnTable
+		 * 
+		 * @param instance The instance of the Handsontable
+		 * @param td The TD element
+		 * @param row The row number
+		 * @param col The column number
+		 * @param prop
+		 * @param value The value of the cell
+		 * @param cellProperties
          */
         lookupRenderer: function(instance, td, row, col, prop, value, cellProperties) {
         	
@@ -507,6 +532,8 @@ define([
         
         /**
          * Show a warning noting that something bad happened.
+		 * 
+		 * @param message The message to show
          */
         showWarningMessage: function(message){
         	$("#warning-message > .message", this.$el).text(message);
@@ -515,6 +542,8 @@ define([
         
         /**
          * Show a warning noting that something bad happened.
+		 * 
+		 * @param message The message to show
          */
         showInfoMessage: function(message){
         	$("#info-message > .message", this.$el).text(message);
@@ -555,12 +584,22 @@ define([
         	
         },
         
+		/**
+		 * The handler for fil-dragging.
+		 * 
+		 * @param evt The event
+		 */
         onDragFile: function(evt){
         	evt.stopPropagation();
             evt.preventDefault();
             evt.dataTransfer.dropEffect = 'copy'; // Make it clear this is a copy
         },
         
+		/**
+		 *  The handler for beginning to drag a file.
+		 * 
+		 *  @param evt The event
+		 */
         onDragFileEnter: function(evt){
         	evt.preventDefault();
         	//$('#drop-zone', this.$el).show();
@@ -569,6 +608,9 @@ define([
         	return false;
         },
         
+		/**
+		 * Upon stopping a file drag.
+		 */
         onDragFileEnd: function(){
         	console.log("Dragging stopped");
         	this.$el.removeClass('dragging');
@@ -587,8 +629,10 @@ define([
             this.importFile(evt);
         },
         
-	     /* 
+	     /** 
 	      * Use the browser's built-in functionality to quickly and safely escape a string of HTML.
+		  * 
+		  * @param str The string to escape
 	      */
 	     escapeHtml: function(str) {
 	         var div = document.createElement('div');
@@ -605,6 +649,10 @@ define([
 
 		 /**
 		  * Import the daat into the KV store.
+		  * 
+		  * @param data The data to import (an array of arrays)
+		  * @param offset An integer indicating the row to import
+		  * @param promise A promise to resolve or reject when done
 		  */
 		 importKVRow: function(data, offset, promise){
 
@@ -659,6 +707,8 @@ define([
 
 		 /**
           * Import the given file into the KV store lookup.
+		  *
+		  * @param data The data to import
           */
 		 importKVFile: function(data){
 			
@@ -722,17 +772,10 @@ define([
 
          /**
           * Import the given file into the lookup.
+		  *
+		  * @param evt The event for handling file imports
           */
          importFile: function(evt){
-        	
-        	// Stop if this is a KV collection; importing isn't yet supported
-			/*
-        	if(this.lookup_type !== "csv"){
-        		this.showWarningMessage("Drag & drop importing on KV store lookups is not currently supported");
-        		console.info("Drag and dropping on a KV store lookup being ignored");
-        		return false;
-        	}
-			*/
         	
         	// Stop if this is read-only
         	if(this.read_only){
@@ -872,6 +915,10 @@ define([
 
         /**
          * Make a new KV store lookup
+		 * 
+		 * @param namespace The namespace of the file
+		 * @param lookup_file The name of the lookup
+		 * @param owner The owner of the file
          */
         makeKVStoreLookup: function(namespace, lookup_file, owner){
         	
@@ -1076,6 +1123,8 @@ define([
         
         /**
          * Hide the editing controls
+		 * 
+		 * @param hide A boolean indicating that the controls should be hidden or shown
          */
         hideEditingControls: function(hide){
         	
@@ -1198,6 +1247,8 @@ define([
         
         /**
          * Set the title of the save button
+		 * 
+		 * @param title The title of the save button
          */
         setSaveButtonTitle: function(title){
         	
@@ -1212,6 +1263,9 @@ define([
         
         /**
          * Pad an integer with zeroes.
+		 * 
+		 * @param num The number to pad
+		 * @param size How many characters to pad it with
          */
         pad: function(num, size) {
             var s = num+"";
@@ -1235,6 +1289,8 @@ define([
         
         /**
          * Load the selected backup.
+		 * 
+		 * @param evt The event object
          */
         doLoadBackup: function(evt){
         	var version = evt.currentTarget.dataset.backupTime;
@@ -1251,6 +1307,8 @@ define([
         
         /**
          * Load the lookup from the selected user context.
+		 * 
+		 * @param evt The event object
          */
         doLoadUserContext: function(evt){
         	var user = evt.currentTarget.dataset.user;
@@ -1276,6 +1334,7 @@ define([
         /**
          * Perform the operation to save the lookup
          * 
+		 * @param evt The event object
          * @returns {Boolean}
          */
         doSaveLookup: function(evt){
@@ -1457,6 +1516,10 @@ define([
         
         /**
          * Do an edit to a row cell (for KV store lookups since edits are dynamic).
+		 * 
+		 * @param row The number of the row
+		 * @param col The column number
+		 * @param new_value The new value
          */
         doEditCell: function(row, col, new_value){
         	
@@ -1514,6 +1577,8 @@ define([
         
         /**
          * Do the removal of a row (for KV store lookups since edits are dynamic).
+		 * 
+		 * @param row The row number
          */
         doRemoveRow: function(row){
         	
@@ -1560,6 +1625,10 @@ define([
         
         /**
          * Add the given field to the data with the appropriate hierarchy.
+		 * 
+		 * @param json_data The JSON object to add the information to
+		 * @param field The name of the field
+		 * @param value The value to set
          */
         addFieldToJSON: function(json_data, field, value){
         	
@@ -1592,6 +1661,8 @@ define([
         
         /**
          * Make JSON for the given row.
+		 * 
+		 * @param row The number to convert
          */
         makeRowJSON: function(row){
         	
