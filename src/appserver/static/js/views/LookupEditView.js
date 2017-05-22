@@ -613,14 +613,6 @@ define([
 				promise = jQuery.Deferred();
 			}
 
-			// Make sure the KV store model was initialized
-			this.kvStoreModel = KVStore.Model.extend({
-				collectionName: this.lookup,
-				namespace: {
-					'owner' : this.owner
-				}
-			});
-
 			// Update the progress bar
 			$('#import-in-process', this.$el).show();
 			$('#import-main', this.$el).hide();
@@ -844,6 +836,19 @@ define([
         	
         },
         
+		/**
+		 * Initialize a class for KV store editing.
+		 */
+		initializeKVStoreModel: function(){
+            this.kvStoreModel = KVStore.Model.extend({
+                collectionName: this.lookup,
+                namespace: {
+                    'owner' : this.owner,
+					'app' : this.namespace
+                }
+            });
+		},
+
         /**
          * Make a new KV store lookup
          */
@@ -874,6 +879,8 @@ define([
         				this.namespace = namespace;
         				this.owner = owner;
         				this.lookup_type = "kv";
+
+						this.initializeKVStoreModel();
         				
         				this.kv_store_fields_editor.modifyKVStoreLookupSchema(this.namespace, this.lookup, 'nobody', function(){
         					this.showInfoMessage("Lookup created successfully");
@@ -992,6 +999,8 @@ define([
 	        	          this.namespace = namespace;
 	        	          this.owner = user;
 	        	          this.lookup_type = lookup_type;
+
+						  this.initializeKVStoreModel();
 	        	          
 	        	          // Update the UI to note which user context is loaded
 	        	          $('#loaded-user-context').text(this.owner);
@@ -1446,25 +1455,13 @@ define([
         	
         	// Second, we need to get all of the data from the given row because we must re-post all of the cell data
         	var record_data = this.makeRowJSON(row);
-        	
-        	// If _key doesn't exist, then we will create a new row
-        	var url = Splunk.util.make_url("/splunkd/servicesNS/" + this.owner + "/" + this.namespace +  "/storage/collections/data/" + this.lookup + "/" + _key);
-        	
-        	if(!_key){
-        		url = Splunk.util.make_url("/splunkd/servicesNS/" + this.owner + "/" + this.namespace +  "/storage/collections/data/" + this.lookup);
-        	}
+			record_data._key = _key;
         	
         	// Third, we need to do a post to update the row
-        	$.ajax({
-        		url: url,
-        		type: "POST",
-        		dataType: "json",
-        		data: JSON.stringify(record_data),
-        		contentType: "application/json; charset=utf-8",
-        		
-      		  	// On success
-      		  	success: function(data) {
-      		  		
+            var model = new this.kvStoreModel(record_data);
+
+            model.save({wait: true})
+                .done(function(data) {
       		  		this.hideWarningMessage();
       		  		
       		  		// If this is a new row, then populate the _key
@@ -1478,24 +1475,20 @@ define([
       		  		}
       		  		
       		  		this.updateTimeModified();
-      		  		
-      		  	}.bind(this),
-      		  
-      		  	// On complete
-      		  	complete: function(jqXHR, textStatus){
-      		  		
-      		  		if( jqXHR.status == 403){
+                }.bind(this))
+				.error(function(jqXHR){
+
+					// Detect cases where the user has inadequate permission
+      		  		if(jqXHR.status == 403){
       		  			console.info('Inadequate permissions');
       		  			this.showWarningMessage("You do not have permission to edit this lookup", true);
       		  		}
-      		  	
-      		  	}.bind(this),
-      		  	
-      		  	// Handle errors
-      		  	error: function(jqXHR, textStatus, errorThrown){
-      		  		this.showWarningMessage("Entry could not be saved to the KV store lookup; make sure the value matches the expected type", true);
-      		  	}.bind(this)
-        	});
+
+					// Detect other errors
+					else{
+						this.showWarningMessage("Entry could not be saved to the KV store lookup; make sure the value matches the expected type", true);
+					}
+				}.bind(this));
         },
         
         /**
@@ -1519,33 +1512,29 @@ define([
         	}
         	
         	// Third, we need to do a post to remove the row
-        	$.ajax({
-        		url: Splunk.util.make_url("/splunkd/__raw/servicesNS/" + this.owner + "/" + this.namespace +  "/storage/collections/data/" + this.lookup + "/" + _key),
-        		type: "DELETE",
-        		
-      		  	// On success
-      		  	success: function(data) {
-      		  		console.info('KV store entry removal completed for entry ' + _key);
-      		  		this.hideWarningMessage();
-      		  		this.updateTimeModified();
-      		  	}.bind(this),
-      		  	
-      		  	// On complete
-      		  	complete: function(jqXHR, textStatus){
-      		  		
+
+			// Make an instance of the model to delete the row
+            var model = new this.kvStoreModel({_key: _key});
+
+            model.destroy({wait: true})
+                .done(function() {
+                        console.info('KV store entry removal completed for entry ' + _key);
+                        this.hideWarningMessage();
+                        this.updateTimeModified();
+                }.bind(this))
+				.error(function(jqXHR){
+
+					// Detect cases where the user has inadequate permission
       		  		if( jqXHR.status == 403){
       		  			console.info('Inadequate permissions');
       		  			this.showWarningMessage("You do not have permission to edit this lookup", true);
       		  		}
-      		  	
-      		  	}.bind(this),
-      		  
-      		  	// Handle errors
-      		  	error: function(jqXHR, textStatus, errorThrown){
-      		  		this.showWarningMessage("An entry could not be removed from the KV store lookup", true);
-      		  	}.bind(this)
-        	});
 
+					// Detect other errors
+					else{
+						this.showWarningMessage("An entry could not be removed from the KV store lookup", true);
+					}
+				}.bind(this));
         },
         
         /**
@@ -1636,41 +1625,30 @@ define([
         	}
         	
         	// Third, we need to do a post to create the row
-        	$.ajax({
-        		url: Splunk.util.make_url("/splunkd/servicesNS/" + this.owner + "/" + this.namespace +  "/storage/collections/data/" + this.lookup + "/batch_save"),
-        		type: "POST",
-        		dataType: "json",
-        		data: JSON.stringify(record_data),
-        		contentType: "application/json; charset=utf-8",
-        		
-      		  	// On success
-      		  	success: function(data) {
-      		  		// Update the _key values in the cells
-      		  		for(var c=0; c < data.length; c++){
-      		  			this.handsontable.setDataAtCell(row + c, this.getColumnForField("_key"), data[c], "key_update")
-      		  		}
+            var model = new this.kvStoreModel(record_data);
+
+            model.save({wait: true})
+                .done(function(data) {
+      		  		// Update the _key values in the cell
+					this.handsontable.setDataAtCell(row, this.getColumnForField("_key"), data._key, "key_update")
       		  		
       		  		this.hideWarningMessage();
       		  		this.updateTimeModified();
-      		  		
-      		  	}.bind(this),
-      		  	
-      		  	// On complete
-      		  	complete: function(jqXHR, textStatus){
-      		  		
-      		  		if( jqXHR.status == 403){
+                }.bind(this))
+				.error(function(jqXHR){
+
+					// Detect cases where the user has inadequate permission
+      		  		if(jqXHR.status == 403){
       		  			console.info('Inadequate permissions');
       		  			this.showWarningMessage("You do not have permission to edit this lookup", true);
       		  		}
-      		  	
-      		  	}.bind(this),
-      		  
-      		  	// Handle errors
-      		  	error: function(jqXHR, textStatus, errorThrown){
-      		  		// This error can be thrown when the lookup requires a particular type
-      		  		//this.showWarningMessage("Entries could not be saved to the KV store lookup", true);
-      		  	}.bind(this)
-        	});
+
+					// Detect other errors
+					else{
+      		  			// This error can be thrown when the lookup requires a particular type
+      		  			//this.showWarningMessage("Entries could not be saved to the KV store lookup", true);
+					}
+				}.bind(this));
         },
         
         /**
