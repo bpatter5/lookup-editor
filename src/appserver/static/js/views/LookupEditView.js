@@ -1539,7 +1539,10 @@ define([
         	
         	// Second, we need to get all of the data from the given row because we must re-post all of the cell data
         	var record_data = this.makeRowJSON(row);
-			record_data._key = _key;
+
+			if(_key !== null && _key !== undefined && _key.length > 0){
+				record_data._key = _key;
+			}
         	
         	// Third, we need to do a post to update the row
             var model = new this.kvStoreModel(record_data);
@@ -1560,17 +1563,27 @@ define([
       		  		
       		  		this.updateTimeModified();
                 }.bind(this))
-				.error(function(jqXHR){
-
+				.error(function(jqXHR, result, message){
+					
 					// Detect cases where the user has inadequate permission
-      		  		if(jqXHR.status == 403){
+      		  		if(jqXHR !== null && jqXHR.status == 403){
       		  			console.info('Inadequate permissions');
       		  			this.showWarningMessage("You do not have permission to edit this lookup", true);
       		  		}
 
+					// Detect type errors
+					else if(jqXHR !== null && jqXHR.status == 400){
+						this.showWarningMessage("Entry could not be saved to the KV store lookup; make sure the value matches the expected type", true);
+					}
+
+					// Output errors
+					else if(message !== null){
+						this.showWarningMessage("Entry could not be saved to the KV store lookup: " + message , true);
+					}
+
 					// Detect other errors
 					else{
-						this.showWarningMessage("Entry could not be saved to the KV store lookup; make sure the value matches the expected type", true);
+						this.showWarningMessage("Entry could not be saved to the KV store lookup;", true);
 					}
 				}.bind(this));
         },
@@ -1598,8 +1611,6 @@ define([
         	}
         	
         	// Third, we need to do a post to remove the row
-
-			// Make an instance of the model to delete the row
             var model = new this.kvStoreModel({_key: _key});
 
             model.destroy({wait: true})
@@ -2525,6 +2536,7 @@ define([
          */
         render: function () {
         	console.log("Rendering...");
+	
         	// Get the information from the lookup to load
         	this.lookup = Splunk.util.getParameter("lookup");
         	this.namespace = Splunk.util.getParameter("namespace");
