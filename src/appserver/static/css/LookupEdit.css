@@ -97,6 +97,7 @@ input[type=text]{
     padding-right: 16px;
     display: inline-block;
     padding-top: 6px;
+	clear: both;
 }
 
 .modification-time-holder > i{
