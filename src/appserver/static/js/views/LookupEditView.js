@@ -2194,20 +2194,6 @@ define([
         },
         
         /**
-         * Get the parameter with the given name.
-		 * 
-		 * @param name The name of the parameter 
-         */
-        getParameterByName: function(name) {
-            name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-            
-            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-                results = regex.exec(location.search);
-            
-            return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
-        },
-        
-        /**
          * Hide the given item while retaining the display value
 		 * 
 		 * @param selector A jQuery selector of the element to process
@@ -2540,10 +2526,10 @@ define([
         render: function () {
         	console.log("Rendering...");
         	// Get the information from the lookup to load
-        	this.lookup = this.getParameterByName("lookup");
-        	this.namespace = this.getParameterByName("namespace");
-        	this.owner = this.getParameterByName("owner");
-        	this.lookup_type = this.getParameterByName("type");
+        	this.lookup = Splunk.util.getParameter("lookup");
+        	this.namespace = Splunk.util.getParameter("namespace");
+        	this.owner = Splunk.util.getParameter("owner");
+        	this.lookup_type = Splunk.util.getParameter("type");
         	
         	// Determine if we are making a new lookup
         	this.is_new = false;
