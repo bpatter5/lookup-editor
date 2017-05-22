@@ -14,6 +14,11 @@ input[type=text]{
 	overflow:hidden;
 }
 
+/* Split a block of characters with a line */
+.paragraph{
+	margin-top: 12px;
+}
+
 /* Style the button for selecting the file to import */
 #choose-import-file{
 	display: block;
