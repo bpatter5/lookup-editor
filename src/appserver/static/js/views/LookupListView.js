@@ -651,7 +651,7 @@ define([
         				'namespace': this.kv_lookups.models[c].entry.acl.attributes.app,
         				'owner': this.kv_lookups.models[c].entry.acl.attributes.owner,
         				'type' : 'kv',
-        				'endpoint_owner' : this.kv_lookups.models[c].entry.acl.attributes.owner,
+        				'endpoint_owner' : 'nobody',
         				'disabled': this.kv_lookups.models[c].entry.associated.content.attributes.disabled
         		};
         		
