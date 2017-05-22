@@ -617,7 +617,9 @@ define([
 			$('#import-in-process', this.$el).show();
 			$('#import-main', this.$el).hide();
 			$('#import-file-modal .modal-body', this.$el).removeClass("dragging");
-			$('#import-progress', this.$el).css('width', 100*(offset/data.length) + "%");
+
+			$('#import-progress', this.$el).css('width', 100*(this.import_successes/data.length) + "%");
+			$('#import-error', this.$el).css('width', 100*(this.import_errors/data.length) + "%");
 
 			// Stop if we hit the end (the base case)
 			if(offset >= data.length || this.cancel_import){
@@ -641,9 +643,15 @@ define([
 			var model = new this.kvStoreModel(model_data);
 
 	        // Save the model
-	        model.save().done(function(){
-				this.importKVRow(data, offset+1, promise);
-	        }.bind(this));
+	        model.save()
+				.done(function(){
+					this.import_successes = this.import_successes + 1;
+					this.importKVRow(data, offset+1, promise);
+	        	}.bind(this))
+				.error(function(){
+					this.import_errors = this.import_errors + 1;
+					this.importKVRow(data, offset+1, promise);
+				}.bind(this));
 
 			// Return the promise
 			return promise;
@@ -659,6 +667,8 @@ define([
 
 			// Clear the cancel indicator
 			this.cancel_import = false;
+			this.import_errors = 0;
+			this.import_successes = 0;
 
 			// Stop if the file has no rows
 			if(data.length === 0){
@@ -690,29 +700,6 @@ define([
 					}
 				}
 			}
-			/*
-			// Verify that all of columns in the import file columns are in the schema
-			for(var c = 0; c < data[0].length; c++){
-
-				// Ignore the _key field
-				if(data[0][c] === '_key'){
-					continue;
-				}
-
-				var field_found = false;
-
-				// See if the KV store schema has this field
-				if(this.field_types[data[0][c]] !== undefined){
-					field_found = true;
-				}
-
-				// Stop if the field could not be found
-				if(!field_found){
-					this.showWarningMessage("Unable to import the file since the KV store schema doesn't include the field: " + data[0][c]);
-					return;
-				}
-			}
-			*/
 
 			// Open the import modal
 			$('#import-file-modal', this.$el).modal();
@@ -721,6 +708,12 @@ define([
 			this.importKVRow(data, 1).done(function(){
 				promise.resolve();
 				this.refreshLookup();
+
+				// Note a warning if some import errors exist
+				if(this.import_errors > 0){
+					this.showWarningMessage("Some rows (" + this.import_errors + ") could not be imported; make sure the values are of the correct type");
+				}
+
 			}.bind(this));
 
 			// Return the promise
