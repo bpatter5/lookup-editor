@@ -64,12 +64,19 @@ from splunk.models.field import BoolField, Field
 Represents an exception when the user did not have sufficient permissions.
 """
 class PermissionDeniedException(Exception):
+    """
+    Represents an exception caused by insufficient permissions
+    """
     pass
 
 """
 Represents an exception when the user requested a lookup file that was too big.
 """
 class LookupFileTooBigException(Exception):
+    """
+    Represents an exception caused by a lookup file being too large to load.
+    """
+
     def __init__(self, file_size):
 
         # Call the base class constructor with the parameters it needs
@@ -82,7 +89,9 @@ class LookupFileTooBigException(Exception):
 Provides a model for retrieving the list of apps from Splunk.
 """
 class App(SplunkAppObjModel):
-    ''' Represents a Splunk app '''
+    """
+    Represents a Splunk app
+    """
 
     resource = 'apps/local'
     is_disabled = BoolField('disabled')
@@ -95,8 +104,8 @@ def isEmpty(row):
     empty.
     """
 
-    for e in row:
-        if e is not None and len(e.strip()) > 0:
+    for entry in row:
+        if entry is not None and len(entry.strip()) > 0:
             return False
 
     return True
@@ -158,9 +167,9 @@ def force_lookup_replication(app, filename, sessionKey, base_uri=None):
     return (True, response.status, content)
 
 class LookupEditor(controllers.BaseController):
-    '''
+    """
     Lookup Editor Controller
-    '''
+    """
 
     MAXIMUM_EDITABLE_SIZE = 10 * 1024 * 1024 # 10 MB
 
@@ -208,9 +217,6 @@ class LookupEditor(controllers.BaseController):
         """
 
         logger.info("Retrieving information about a lookup file...")
-
-        user = cherrypy.session['user']['name']
-        session_key = cherrypy.session.get('sessionKey')
 
         # Load defaults (cherrypy won't let me assign defaults in the function definition)
         owner = kwargs.get('owner', None)
@@ -271,12 +277,15 @@ class LookupEditor(controllers.BaseController):
         backup_directory = self.getBackupDirectory(escaped_filename, namespace, owner)
 
         # Get the backups
-        backups = [ f for f in os.listdir(backup_directory) if os.path.isfile(os.path.join(backup_directory,f)) ]
+        backups = [f for f in os.listdir(backup_directory) if os.path.isfile(os.path.join(backup_directory, f))]
 
         return backups
 
-    @expose_page(must_login=True, methods=['GET']) 
+    @expose_page(must_login=True, methods=['GET'])
     def get_lookup_backups_list(self, lookup_file, namespace, owner=None, **kwargs):
+        """
+        Get a list of the lookup file backups rendered as JSON.
+        """
 
         backups = self.getBackupFiles(lookup_file, namespace, owner)
 
@@ -286,11 +295,11 @@ class LookupEditor(controllers.BaseController):
         for backup in backups:
             try:
                 backups_meta.append(
-                                    {
-                                     'time': backup,
-                                     'time_readable' : datetime.datetime.fromtimestamp(float(backup)).strftime('%Y-%m-%d %H:%M:%S')
-                                    }
-                                    )
+                    {
+                        'time': backup,
+                        'time_readable' : datetime.datetime.fromtimestamp(float(backup)).strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                )
             except ValueError:
                 logger.warning("Backup file name is invalid, file_name=%s", backup)
 
@@ -319,7 +328,9 @@ class LookupEditor(controllers.BaseController):
             resolved_lookup_path = lookupfiles.SplunkLookupTableFile.get(lookupfiles.SplunkLookupTableFile.build_id(lookup_file, namespace, owner)).path
 
         # Determine what the backup directory should be
-        backup_directory = make_splunkhome_path([os.path.dirname(resolved_lookup_path), "lookup_file_backups", namespace, owner, self.escapeFilename(lookup_file)])
+        backup_directory = make_splunkhome_path([os.path.dirname(resolved_lookup_path),
+                                                 "lookup_file_backups", namespace, owner,
+                                                 self.escapeFilename(lookup_file)])
 
         # Make the backup directory, if necessary
         if not os.path.exists(backup_directory):
@@ -338,7 +349,8 @@ class LookupEditor(controllers.BaseController):
 
             # If we don't already know the path of the file, then load it
             if resolved_file_path is None:
-                resolved_file_path = self.resolve_lookup_filename(lookup_file, namespace, owner, throw_not_found=False)
+                resolved_file_path = self.resolve_lookup_filename(lookup_file, namespace, owner,
+                                                                  throw_not_found=False)
 
             # If the file doesn't appear to exist yet. Then skip the backup.
             if resolved_file_path is None:
@@ -346,16 +358,19 @@ class LookupEditor(controllers.BaseController):
                 return None
 
             # Get the backup directory
-            backup_directory = self.getBackupDirectory(lookup_file, namespace, owner, resolved_lookup_path=resolved_file_path)
+            backup_directory = self.getBackupDirectory(lookup_file, namespace, owner,
+                                                       resolved_lookup_path=resolved_file_path)
 
-            # Get the date of the existing file so that we put the 
+            # Get the modification time of the existing file so that we put the date as an epoch
+            # in the name
             try:
                 file_time = os.path.getmtime(resolved_file_path)
             except:
                 logger.warning('Unable to get the file modification time for the existing lookup file="%s"', resolved_file_path)
                 file_time = None
 
-            # If we couldn't get the time, then just use the current time (the time we are making a backup)
+            # If we couldn't get the time, then just use the current time (the time we are making
+            # a backup)
             if file_time is None:
                 file_time = time.time()
 
@@ -377,7 +392,7 @@ class LookupEditor(controllers.BaseController):
 
             return None
 
-    @expose_page(must_login=True, methods=['POST']) 
+    @expose_page(must_login=True, methods=['POST'])
     def save(self, lookup_file, contents, namespace=None, owner=None, **kwargs):
         """
         Save the contents of a lookup file
@@ -405,7 +420,8 @@ class LookupEditor(controllers.BaseController):
                 return self.render_error_json("The lookup filename contains disallowed characters")
 
             # Determine the final path of the file
-            resolved_file_path = self.resolve_lookup_filename(lookup_file, namespace, owner, throw_not_found=False)
+            resolved_file_path = self.resolve_lookup_filename(lookup_file, namespace, owner,
+                                                              throw_not_found=False)
 
             # Make a backup
             self.backupLookupFile(lookup_file, namespace, owner)
@@ -451,7 +467,8 @@ class LookupEditor(controllers.BaseController):
                 shutil.move(temp_file_name, destination_lookup_full_path)
                 logger.info('Lookup created successfully, user=%s, namespace=%s, lookup_file=%s, path="%s"', user, namespace, lookup_file, destination_lookup_full_path)
 
-                # If the file is new, then make sure that the list is reloaded so that the editors notice the change
+                # If the file is new, then make sure that the list is reloaded so that the editors
+                # notice the change
                 lookupfiles.SplunkLookupTableFile.reload(session_key=session_key)
 
             # Edit the existing lookup otherwise
@@ -460,15 +477,24 @@ class LookupEditor(controllers.BaseController):
                 try:
 
                     if not self.isLookupInUsersPath(resolved_file_path) or owner == 'nobody':
-                        lookupfiles.update_lookup_table(filename=temp_file_name, lookup_file=lookup_file, namespace=namespace, owner="nobody", key=session_key)
+                        lookupfiles.update_lookup_table(filename=temp_file_name,
+                                                        lookup_file=lookup_file,
+                                                        namespace=namespace,
+                                                        owner="nobody",
+                                                        key=session_key)
                     else:
-                        lookupfiles.update_lookup_table(filename=temp_file_name, lookup_file=lookup_file, namespace=namespace, owner=owner, key=session_key)
+                        lookupfiles.update_lookup_table(filename=temp_file_name,
+                                                        lookup_file=lookup_file,
+                                                        namespace=namespace,
+                                                        owner=owner,
+                                                        key=session_key)
 
                 except AuthorizationFailed as e:
                     cherrypy.response.status = 403
                     return self.render_error_json(str(e))
 
-                logger.info('Lookup edited successfully, user=%s, namespace=%s, lookup_file=%s', user, namespace, lookup_file)
+                logger.info('Lookup edited successfully, user=%s, namespace=%s, lookup_file=%s',
+                            user, namespace, lookup_file)
 
             # Tell the SHC environment to replicate the file
             try:
@@ -482,6 +508,10 @@ class LookupEditor(controllers.BaseController):
             return self.render_error_json("Unable to save the lookup")
 
     def render_error_json(self, msg):
+        """
+        Render JSON that describes an error state.
+        """
+
         output = jsonresponse.JsonResponse()
         output.data = []
         output.success = False
@@ -489,6 +519,9 @@ class LookupEditor(controllers.BaseController):
         return self.render_json(output, set_mime='text/plain')
 
     def convert_array_to_csv(self, array):
+        """
+        Convert an array to CSV format.
+        """
 
         output = StringIO.StringIO()
 
@@ -499,7 +532,7 @@ class LookupEditor(controllers.BaseController):
 
         return output.getvalue()
 
-    @expose_page(must_login=True, methods=['GET']) 
+    @expose_page(must_login=True, methods=['GET'])
     def get_original_lookup_file(self, lookup_file, namespace="lookup_editor", **kwargs):
         """
         Provides the contents of a lookup file.
@@ -508,14 +541,15 @@ class LookupEditor(controllers.BaseController):
         lookup_type = kwargs.get("type", "csv")
         owner = kwargs.get("owner", None)
 
-        logger.info("Exporting lookup, namespace=%s, lookup=%s, type=%s, owner=%s", namespace, lookup_file, lookup_type, owner)
+        logger.info("Exporting lookup, namespace=%s, lookup=%s, type=%s, owner=%s", namespace,
+                    lookup_file, lookup_type, owner)
 
         try:
 
             # If we are getting the CSV, then just pipe the file to the user
             if lookup_type == "csv":
-                with self.get_lookup(lookup_file, namespace, owner) as f:
-                    csvData = f.read()
+                with self.get_lookup(lookup_file, namespace, owner) as csv_file_handle:
+                    csvData = csv_file_handle.read()
 
             # If we are getting a KV store lookup, then convert it to a CSV file
             else:
@@ -542,18 +576,23 @@ class LookupEditor(controllers.BaseController):
 
     @classmethod
     def check_capabilities(cls, lookup_file, user, session_key):
+        """
+        Check any necessary capabilities and generate an exception if the user lacks necessary
+        permissions.
+        """
 
-        return # TODO: why?
-
+        # Currently, no capabilities are checked
+        return
+        """
         # Get the user's name and session
-        user = cherrypy.session['user']['name'] 
+        user = cherrypy.session['user']['name']
         session_key = cherrypy.session.get('sessionKey')
 
         # Get capabilities
         capabilities = LookupEditor.getCapabilities4User(user, session_key)
 
         # Check capabilities
-        """
+
         if False:
             raise PermissionDeniedException(signature)
         """
@@ -570,10 +609,12 @@ class LookupEditor(controllers.BaseController):
 
     def makeLookupFilename(self, lookup_file, namespace="lookup_editor", owner=None):
         """
-        Create the file name of a lookup file. That is, device a path for where the file should exist.
+        Create the file name of a lookup file. That is, device a path for where the file should
+        exist.
         """
 
-        # Strip out invalid characters like ".." so that this cannot be used to conduct an directory traversal
+        # Strip out invalid characters like ".." so that this cannot be used to conduct an
+        # directory traversal
         lookup_file = os.path.basename(lookup_file)
         namespace = os.path.basename(namespace)
 
@@ -588,16 +629,19 @@ class LookupEditor(controllers.BaseController):
         else:
             return make_splunkhome_path(["etc", "apps", namespace, "lookups", lookup_file])
 
-    def resolve_lookup_filename(self, lookup_file, namespace="lookup_editor", owner=None, get_default_csv=True, version=None, throw_not_found=True):
+    def resolve_lookup_filename(self, lookup_file, namespace="lookup_editor", owner=None,
+                                get_default_csv=True, version=None, throw_not_found=True):
         """
         Resolve the lookup filename. This function will handle things such as:
          * Returning the default lookup file if requested
          * Returning the path to a particular version of a file
 
-        Note that the lookup file must have an existing lookup file entry for this to return correctly; this shouldn't be used for determining the path of a new file.
+        Note that the lookup file must have an existing lookup file entry for this to return
+        correctly; this shouldn't be used for determining the path of a new file.
         """
 
-        # Strip out invalid characters like ".." so that this cannot be used to conduct an directory traversal
+        # Strip out invalid characters like ".." so that this cannot be used to conduct an
+        # directory traversal
         lookup_file = os.path.basename(lookup_file)
         namespace = os.path.basename(namespace)
 
@@ -616,34 +660,38 @@ class LookupEditor(controllers.BaseController):
         # Get the backup file for one without an owner
         if version is not None and owner is not None:
             lookup_path = make_splunkhome_path([self.getBackupDirectory(lookup_file, namespace, owner, resolved_lookup_path=resolved_lookup_path), version])
-            lookup_path_default = make_splunkhome_path(["etc", "users", owner, namespace, "lookups", lookup_file + ".default"])
-        
+            lookup_path_default = make_splunkhome_path(["etc", "users", owner, namespace,
+                                                        "lookups", lookup_file + ".default"])
+
         # Get the backup file for one with an owner
         elif version is not None:
             lookup_path = make_splunkhome_path([self.getBackupDirectory(lookup_file, namespace, owner, resolved_lookup_path=resolved_lookup_path), version])
-            lookup_path_default = make_splunkhome_path(["etc", "apps", namespace, "lookups", lookup_file + ".default"])
+            lookup_path_default = make_splunkhome_path(["etc", "apps", namespace, "lookups",
+                                                        lookup_file + ".default"])
 
         # Get the user lookup
         elif owner is not None and owner != 'nobody':
             # e.g. $SPLUNK_HOME/etc/users/luke/SA-NetworkProtection/lookups/test.csv
             lookup_path = resolved_lookup_path
-            lookup_path_default = make_splunkhome_path(["etc", "users", owner, namespace, "lookups", lookup_file + ".default"])
-        
+            lookup_path_default = make_splunkhome_path(["etc", "users", owner, namespace,
+                                                        "lookups", lookup_file + ".default"])
+
         # Get the non-user lookup
         else:
             lookup_path = resolved_lookup_path
-            lookup_path_default = make_splunkhome_path(["etc", "apps", namespace, "lookups", lookup_file + ".default"])
-            
+            lookup_path_default = make_splunkhome_path(["etc", "apps", namespace, "lookups",
+                                                        lookup_file + ".default"])
+
         logger.info('Resolved lookup file, path=%s', lookup_path)
-        
+
         # Get the file path
         if get_default_csv and not os.path.exists(lookup_path) and os.path.exists(lookup_path_default):
             return lookup_path_default
         else:
             return lookup_path
-            
+
     def append_if_not_none(self, prefix, key, separator="."):
-        
+
         if prefix is not None and len(prefix) > 0:
             return prefix + separator + key
         else:
@@ -662,20 +710,28 @@ class LookupEditor(controllers.BaseController):
         for key in dict_source:
             value = dict_source[key]
 
-            # Determine if this entry needs to turned into a text blob (such as converting a dictionary or array into a string)
+            # Determine if this entry needs to turned into a text blob (such as converting a
+            # dictionary or array into a string)
             if fields is not None and self.append_if_not_none(prefix, key) in fields:
                 treat_as_text_blob = True
             else:
                 treat_as_text_blob = False
 
             # If this isn't a listed column, then just include the raw JSON
-            # This is necessary when a KV store has recognition for many of the fields but some are expected to be JSON within a field, _not_ separate fields.
-            if treat_as_text_blob and (isinstance(value, dict) or isinstance(value, collections.OrderedDict) or (isinstance(value, collections.Sequence) and not isinstance(value, basestring))):
+            # This is necessary when a KV store has recognition for many of the fields but some
+            # are expected to be JSON within a field, _not_ separate fields.
+            if treat_as_text_blob and (isinstance(value, dict)
+                                       or isinstance(value, collections.OrderedDict)
+                                       or (isinstance(value, collections.Sequence)
+                                           and not isinstance(value, basestring))):
+
                 output[self.append_if_not_none(prefix, key)] = json.dumps(value)
 
             # Flatten out this dictionary or array entry
             elif isinstance(value, dict) or isinstance(value, collections.OrderedDict):
-                self.flatten_dict(value, output, self.append_if_not_none(prefix, key), fields=fields)
+
+                self.flatten_dict(value, output, self.append_if_not_none(prefix, key),
+                                  fields=fields)
 
             # If the value is a single item
             else:
@@ -698,10 +754,10 @@ class LookupEditor(controllers.BaseController):
         # Get the fields so that we can compose the header
         # Note: this call must be done with the user context of "nobody".
         response, content = splunk.rest.simpleRequest('/servicesNS/nobody/' + namespace +
-                                                        '/storage/collections/config/' +
-                                                        lookup_file,
-                                                        sessionKey=session_key,
-                                                        getargs={'output_mode': 'json'})
+                                                      '/storage/collections/config/' +
+                                                      lookup_file,
+                                                      sessionKey=session_key,
+                                                      getargs={'output_mode': 'json'})
 
         if response.status == 403:
             raise PermissionDeniedException("You do not have permission to view this lookup")
@@ -718,9 +774,9 @@ class LookupEditor(controllers.BaseController):
 
         # Get the contents
         response, content = splunk.rest.simpleRequest('/servicesNS/' + owner + '/' + namespace +
-                                                        '/storage/collections/data/' + lookup_file,
-                                                        sessionKey=session_key,
-                                                        getargs={'output_mode': 'json'})
+                                                      '/storage/collections/data/' + lookup_file,
+                                                      sessionKey=session_key,
+                                                      getargs={'output_mode': 'json'})
 
         if response.status == 403:
             raise PermissionDeniedException("You do not have permission to view this lookup")
@@ -866,7 +922,3 @@ class LookupEditor(controllers.BaseController):
             cherrypy.response.status = 500
             return self.render_error_json('Lookup file could not be loaded')
 
-
-    @expose_page(must_login=True, methods=['GET'])
-    def get_lookup_header(self, lookup_file, namespace="lookup_editor", owner=None, **kwargs):
-        pass
