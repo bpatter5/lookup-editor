@@ -2389,11 +2389,13 @@ define([
         	if(users_list_from_splunk.length === 0){
 
             	// Add the owner
-            	users.push({
-            		'name' : owner,
-            		'readable_name' : owner,
-            		'description' : 'owner of the lookup'
-            	});
+				if(owner){
+					users.push({
+						'name' : owner,
+						'readable_name' : owner,
+						'description' : 'owner of the lookup'
+					});
+				}
             	
             	// Add myself
             	users.push({
@@ -2546,7 +2548,7 @@ define([
         	// Determine if we are making a new lookup
         	this.is_new = false;
         	
-        	if(this.lookup == "" && this.namespace == "" && this.owner == ""){
+        	if((this.lookup === null && this.namespace === null && this.owner === null) || (Splunk.util.getParameter("action") === "new")){
         		this.is_new = true;
         	}
         	
