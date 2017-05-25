@@ -2681,7 +2681,7 @@ define([
         	}
         	
         	// Stop if we didn't get enough information to load a lookup
-        	else if(this.lookup == "" || this.namespace == "" || this.owner == ""){
+        	else if(this.lookup == null || this.namespace == null || this.owner == null){
         		this.showWarningMessage("Not enough information to identify the lookup file to load");
         	}
         	
