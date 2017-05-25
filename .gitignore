@@ -4,3 +4,8 @@
 *.pyc
 *.pyo
 tmp/*
+
+tests/browser_drivers/
+tests/*.log
+
+.vscode/*
