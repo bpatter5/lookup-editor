@@ -32,9 +32,6 @@ class NewLookupKv(unittest.TestCase):
             time.sleep(1)
         else: self.fail("time out")
         self.assertEqual("Lookup Edit", driver.find_element_by_css_selector(".dashboard-title.dashboard-header-title").text)
-        # ERROR: Caught exception [ERROR: Unsupported command [getEval | window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + window.location.pathname | ]]
-        print(base_url)
-        self.assertRegexpMatches(driver.current_url, r"^\$\{base_url\}[\s\S]action=new&type=kv$")
         for i in range(60):
             try:
                 if 5 == len(driver.find_elements_by_css_selector(".KVStoreFieldView")): break
