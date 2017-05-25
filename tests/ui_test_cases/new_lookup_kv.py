@@ -17,7 +17,7 @@ class NewLookupKv(unittest.TestCase):
     
     def test_new_lookup_kv(self):
         driver = self.driver
-        driver.get(self.base_url + "lookup_new")
+        driver.get(self.base_url + "/en-US/app/lookup_editor/lookup_new")
         for i in range(60):
             try:
                 if 2 == len(driver.find_elements_by_css_selector(".lookup-link")): break
@@ -42,6 +42,12 @@ class NewLookupKv(unittest.TestCase):
             time.sleep(1)
         else: self.fail("time out")
         self.assertEqual(5, len(driver.find_elements_by_css_selector(".KVStoreFieldView")))
+        driver.find_element_by_link_text("Add another field").click()
+        self.assertEqual(6, len(driver.find_elements_by_css_selector(".KVStoreFieldView")))
+        driver.find_element_by_css_selector("#kv_store_field_0 .kv-store-field-remove").click()
+        self.assertEqual(5, len(driver.find_elements_by_css_selector(".KVStoreFieldView")))
+        driver.find_element_by_css_selector("#kv_store_field_1 input").clear()
+        driver.find_element_by_css_selector("#kv_store_field_1 input").send_keys("Field")
     
     def is_element_present(self, how, what):
         try: self.driver.find_element(by=how, value=what)

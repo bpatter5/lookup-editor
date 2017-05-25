@@ -17,7 +17,7 @@ class NewLookupCsv(unittest.TestCase):
     
     def test_new_lookup_csv(self):
         driver = self.driver
-        driver.get(self.base_url + "lookup_new")
+        driver.get(self.base_url + "/en-US/app/lookup_editor/lookup_new")
         for i in range(60):
             try:
                 if 2 == len(driver.find_elements_by_css_selector(".lookup-link")): break

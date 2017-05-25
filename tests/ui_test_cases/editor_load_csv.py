@@ -17,7 +17,7 @@ class EditorLoadCsv(unittest.TestCase):
     
     def test_editor_load_csv(self):
         driver = self.driver
-        driver.get(self.base_url + "lookup_edit?owner=admin&namespace=lookup_editor&lookup=ui_test.csv&type=csv")
+        driver.get(self.base_url + "/en-US/app/lookup_editor/lookup_edit?owner=admin&namespace=lookup_editor&lookup=ui_test.csv&type=csv")
         # ERROR: Caught exception [Error: locator strategy either id or name must be specified explicitly.]
         driver.find_element_by_id("save").click()
         for i in range(60):

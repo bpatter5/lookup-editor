@@ -17,7 +17,7 @@ class ListLookups(unittest.TestCase):
     
     def test_list_lookups(self):
         driver = self.driver
-        driver.get(self.base_url + "lookup_list")
+        driver.get(self.base_url + "/en-US/app/lookup_editor/lookup_list")
         for i in range(60):
             try:
                 if 1 == len(driver.find_elements_by_css_selector("#table")): break
