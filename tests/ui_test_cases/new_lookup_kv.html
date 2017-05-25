@@ -51,7 +51,41 @@
 	<td>${base_url}?action=new&amp;type=kv</td>
 	<td></td>
 </tr>
-
+<tr>
+	<td>waitForCssCount</td>
+	<td>css=.KVStoreFieldView</td>
+	<td>5</td>
+</tr>
+<tr>
+	<td>assertCssCount</td>
+	<td>css=.KVStoreFieldView</td>
+	<td>5</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>link=Add another field</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertCssCount</td>
+	<td>css=.KVStoreFieldView</td>
+	<td>6</td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>css=#kv_store_field_0 .kv-store-field-remove</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertCssCount</td>
+	<td>css=.KVStoreFieldView</td>
+	<td>5</td>
+</tr>
+<tr>
+	<td>type</td>
+	<td>css=#kv_store_field_1 input</td>
+	<td>Field</td>
+</tr>
 </tbody></table>
 </body>
 </html>
