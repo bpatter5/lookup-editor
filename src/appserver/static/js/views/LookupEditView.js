@@ -1175,9 +1175,16 @@ define([
         		this.showWarningMessage("Please enter a lookup name");
         		issues = issues + 1;
         	}
-        	
+			
+        	// Make sure the lookup name doesn't include spaces (https://lukemurphey.net/issues/2035)
+        	else if(this.is_new && mvc.Components.getInstance("lookup-name").val().match(/ /gi)){
+        		$('#lookup-name-control-group', this.$el).addClass('error');
+        		this.showWarningMessage("Lookup name cannot contain spaces");
+        		issues = issues + 1;
+        	}
+
         	// Make sure the lookup name is acceptable
-        	else if(this.is_new && !mvc.Components.getInstance("lookup-name").val().match(/^[-A-Z0-9_ ]+([.][-A-Z0-9_ ]+)*$/gi)){
+        	else if(this.is_new && !mvc.Components.getInstance("lookup-name").val().match(/^[-A-Z0-9_]+([.][-A-Z0-9_]+)*$/gi)){
         		$('#lookup-name-control-group', this.$el).addClass('error');
         		this.showWarningMessage("Lookup name is invalid");
         		issues = issues + 1;
@@ -1186,7 +1193,7 @@ define([
         	// Make sure the lookup app is defined
         	if(this.is_new && (! mvc.Components.getInstance("lookup-app").val() || mvc.Components.getInstance("lookup-app").val().length <= 0)){
         		$('#lookup-app-control-group', this.$el).addClass('error');
-        		this.showWarningMessage("Select the app where the lookup will reside");
+        		this.showWarningMessage("Select the app where the lookup will go");
         		issues = issues + 1;
         	}
         	
