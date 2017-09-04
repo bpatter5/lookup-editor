@@ -156,4 +156,6 @@ Change History
 |         | KV store lookup files will be opened in the "nobody" owner context by default now                                |
 |         | Fixed error message when deleting KV store row entries on Splunk 6.6                                             |
 |         | Edit ACLs page now opens in a new page                                                                           |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 2.7.1   | Fixing issue where lookups with spaces in the names were allowed                                                 |
 +---------+------------------------------------------------------------------------------------------------------------------+
