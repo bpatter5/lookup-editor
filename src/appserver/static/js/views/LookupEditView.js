@@ -1025,7 +1025,7 @@ define([
         	}
         	
         	// Make the URL
-            url = Splunk.util.make_full_url("/custom/lookup_editor/lookup_edit/get_lookup_contents", data);
+			url = Splunk.util.make_full_url("/splunkd/__raw/services/data/lookup_edit/lookup_contents", data);
         	
         	// Started recording the time so that we figure out how long it took to load the lookup file
         	var populateStart = new Date().getTime();

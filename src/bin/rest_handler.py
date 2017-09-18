@@ -58,7 +58,10 @@ class RESTHandler(PersistentServerConnectionApplication):
 
         return {
             'payload': json.dumps(data),
-            'status': response_code
+            'status': response_code,
+            'headers': {
+                'Content-Type': 'application/json'
+            },
         }
 
     def render_error_json(self, message, response_code=500):
