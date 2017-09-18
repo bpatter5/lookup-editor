@@ -81,7 +81,7 @@ define([
 	var Backup = Backbone.Model.extend();
 	
 	var Backups = Backbone.Collection.extend({
-	    url: Splunk.util.make_full_url("/custom/lookup_editor/lookup_edit/get_lookup_backups_list"),
+	    url: Splunk.util.make_full_url("/splunkd/__raw/services/data/lookup_edit/lookup_backups"),
 	    model: Backup
 	});
 	

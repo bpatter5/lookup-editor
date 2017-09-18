@@ -25,7 +25,7 @@ class LookupBackups(object):
         else:
             self.logger = logger
 
-    def get_backup_files(self, lookup_file, namespace, owner):
+    def get_backup_files(self, session_key, lookup_file, namespace, owner):
         """
         Get a list of backup files for a given file
         """
@@ -34,19 +34,19 @@ class LookupBackups(object):
         escaped_filename = escape_filename(lookup_file)
 
         # Get the backup directory and determine the path to the backups
-        backup_directory = self.get_backup_directory(escaped_filename, namespace, owner)
+        backup_directory = self.get_backup_directory(session_key, escaped_filename, namespace, owner)
 
         # Get the backups
         backups = [f for f in os.listdir(backup_directory) if os.path.isfile(os.path.join(backup_directory, f))]
 
         return backups
 
-    def get_lookup_backups_list(self, lookup_file, namespace, owner=None):
+    def get_lookup_backups_list(self, session_key, lookup_file, namespace, owner=None):
         """
         Get a list of the lookup file backups rendered as JSON.
         """
 
-        backups = self.get_backup_files(lookup_file, namespace, owner)
+        backups = self.get_backup_files(session_key, lookup_file, namespace, owner)
 
         # Make the response
         backups_meta = []
@@ -67,7 +67,7 @@ class LookupBackups(object):
 
         return backups_meta
 
-    def get_backup_directory(self, lookup_file, namespace, owner=None, resolved_lookup_path=None):
+    def get_backup_directory(self, session_key, lookup_file, namespace, owner=None, resolved_lookup_path=None):
         """
         Get the backup directory where the lookup should be stored
         """
@@ -77,7 +77,7 @@ class LookupBackups(object):
 
         # Identify the current path of the given lookup file
         if resolved_lookup_path is None:
-            resolved_lookup_path = SplunkLookupTableFile.get(SplunkLookupTableFile.build_id(lookup_file, namespace, owner)).path
+            resolved_lookup_path = SplunkLookupTableFile.get(SplunkLookupTableFile.build_id(lookup_file, namespace, owner), sessionKey=session_key).path
 
         # Determine what the backup directory should be
         backup_directory = make_splunkhome_path([os.path.dirname(resolved_lookup_path),

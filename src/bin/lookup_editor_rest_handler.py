@@ -7,14 +7,13 @@ import os
 import sys
 import csv
 import json
-import codecs
+import datetime
 
 from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 from splunk import AuthorizationFailed, ResourceNotFound
 
-from lookup_editor.exceptions import LookupFileTooBigException, PermissionDeniedException, LookupFileTooBigException
-from lookup_editor import lookupfiles
-from lookup_editor import settings
+from lookup_editor import LookupEditor
+from lookup_editor.exceptions import LookupFileTooBigException, PermissionDeniedException
 
 import rest_handler
 
@@ -32,7 +31,7 @@ csv.field_size_limit(10485760)
 
 def setup_logger(level):
     """
-    Setup a logger for the REST handler.
+    Setup a logger for the REST handler
     """
 
     logger = logging.getLogger('splunk.appserver.lookup_editor.rest_handler')
@@ -52,85 +51,50 @@ logger = setup_logger(logging.INFO)
 
 class LookupEditorHandler(rest_handler.RESTHandler):
     """
-    This is the handler that supports editing lookup files.
+    This is a REST handler that supports editing lookup files. All calls from the user-interface
+    should pass through this handler.
     """
 
     def __init__(self, command_line, command_arg):
         super(LookupEditorHandler, self).__init__(command_line, command_arg, logger)
 
+        self.lookup_editor = LookupEditor(logger)
+
     def get_lookup_info(self, request_info, lookup_file=None, namespace="lookup_editor", **kwargs):
+        """
+        Get information about a lookup file (owner, size, etc.)
+        """
+
         return {
             'payload': str(lookup_file),  # Payload of the request.
             'status': 200                 # HTTP status code
             }
 
     def get_lookup_backups(self, request_info, lookup_file=None, namespace=None, owner=None, **kwargs):
-        return {
-            'payload': str(lookup_file),  # Payload of the request.
-            'status': 200                 # HTTP status code
-            } 
-
-    def resolve_lookup_filename(self, lookup_file, namespace="lookup_editor", owner=None,
-                                get_default_csv=True, version=None, throw_not_found=True,
-                                session_key=None):
         """
-        Resolve the lookup filename. This function will handle things such as:
-         * Returning the default lookup file if requested
-         * Returning the path to a particular version of a file
-
-        Note that the lookup file must have an existing lookup file entry for this to return
-        correctly; this shouldn't be used for determining the path of a new file.
+        Get a list of the lookup file backups rendered as JSON.
         """
 
-        # Strip out invalid characters like ".." so that this cannot be used to conduct an
-        # directory traversal
-        lookup_file = os.path.basename(lookup_file)
-        namespace = os.path.basename(namespace)
+        backups = self.lookup_editor.get_backup_files(request_info.session_key, lookup_file, namespace, owner)
 
-        if owner is not None:
-            owner = os.path.basename(owner)
+        # Make the response
+        backups_meta = []
 
-        # Determine the lookup path by asking Splunk
-        try:
-            resolved_lookup_path = lookupfiles.SplunkLookupTableFile.get(lookupfiles.SplunkLookupTableFile.build_id(lookup_file, namespace, owner), sessionKey=session_key).path
-        except ResourceNotFound:
-            if throw_not_found:
-                raise
-            else:
-                return None
+        for backup in backups:
+            try:
+                backups_meta.append(
+                    {
+                        'time': backup,
+                        'time_readable' : datetime.datetime.fromtimestamp(float(backup)).strftime('%Y-%m-%d %H:%M:%S')
+                    }
+                )
+            except ValueError:
+                self.logger.warning("Backup file name is invalid, file_name=%s", backup)
 
-        # Get the backup file for one without an owner
-        if version is not None and owner is not None:
-            lookup_path = make_splunkhome_path([self.getBackupDirectory(lookup_file, namespace, owner, resolved_lookup_path=resolved_lookup_path), version])
-            lookup_path_default = make_splunkhome_path(["etc", "users", owner, namespace,
-                                                        "lookups", lookup_file + ".default"])
+        # Sort the list
+        backups_meta = sorted(backups_meta, key=lambda x: float(x['time']), reverse=True)
 
-        # Get the backup file for one with an owner
-        elif version is not None:
-            lookup_path = make_splunkhome_path([self.getBackupDirectory(lookup_file, namespace, owner, resolved_lookup_path=resolved_lookup_path), version])
-            lookup_path_default = make_splunkhome_path(["etc", "apps", namespace, "lookups",
-                                                        lookup_file + ".default"])
-
-        # Get the user lookup
-        elif owner is not None and owner != 'nobody':
-            # e.g. $SPLUNK_HOME/etc/users/luke/SA-NetworkProtection/lookups/test.csv
-            lookup_path = resolved_lookup_path
-            lookup_path_default = make_splunkhome_path(["etc", "users", owner, namespace,
-                                                        "lookups", lookup_file + ".default"])
-
-        # Get the non-user lookup
-        else:
-            lookup_path = resolved_lookup_path
-            lookup_path_default = make_splunkhome_path(["etc", "apps", namespace, "lookups",
-                                                        lookup_file + ".default"])
-
-        self.logger.info('Resolved lookup file, path=%s', lookup_path)
-
-        # Get the file path
-        if get_default_csv and not os.path.exists(lookup_path) and os.path.exists(lookup_path_default):
-            return lookup_path_default
-        else:
-            return lookup_path
+        return self.render_json(backups_meta)
 
     def get_lookup_contents(self, request_info, lookup_file=None, namespace="lookup_editor",
                              owner=None, header_only=False, version=None, lookup_type=None,
@@ -156,12 +120,13 @@ class LookupEditorHandler(rest_handler.RESTHandler):
 
             # Load the KV store lookup
             if lookup_type == "kv":
-                return self.render_json(self.get_kv_lookup(lookup_file, namespace, owner))
+                return self.render_json(self.lookup_editor.get_kv_lookup(lookup_file, namespace, owner))
 
             # Load the CSV lookup
             elif lookup_type == "csv":
 
-                with self.get_lookup(request_info.session_key, lookup_file, namespace, owner, version=version,
+                with self.lookup_editor.get_lookup(request_info.session_key, lookup_file, namespace,
+                                                   owner, version=version,
                                      throw_exception_if_too_big=True) as csv_file:
 
                     csv_reader = csv.reader(csv_file)
@@ -214,53 +179,24 @@ class LookupEditorHandler(rest_handler.RESTHandler):
         }
 
     def get_lookup_as_file(self, request_info, lookup_file=None, namespace="lookup_editor", **kwargs):
+        """
+        Provides the lookup file in a way to be downloaded by the browser
+        """
+
         return {
             'payload': str(lookup_file),  # Payload of the request.
             'status': 200                 # HTTP status code
-            }
+        }
 
 
     def post_lookup_contents(self, request_info, lookup_file=None, namespace="lookup_editor",
                              owner=None, header_only=False, version=None, lookup_type=None,
                              **kwargs):
+        """
+        Save the JSON contents to the lookup file
+        """
+
         return {
             'payload': str(lookup_file),  # Payload of the request.
             'status': 200                 # HTTP status code
-            }
-
-    def get_lookup(self, session_key, lookup_file, namespace="lookup_editor", owner=None, get_default_csv=True,
-                   version=None, throw_exception_if_too_big=False):
-        """
-        Get a file handle to the associated lookup file.
-        """
-
-        self.logger.debug("Version is:" + str(version))
-
-        # Check capabilities
-        #LookupEditor.check_capabilities(lookup_file, user, session_key)
-
-        # Get the file path
-        file_path = self.resolve_lookup_filename(lookup_file, namespace, owner, get_default_csv,
-                                                 version, session_key=session_key)
-
-        if throw_exception_if_too_big:
-
-            try:
-                file_size = os.path.getsize(file_path)
-
-                self.logger.info('Size of lookup file determined, file_size=%s, path=%s',
-                                 file_size, file_path)
-
-                if file_size > settings.MAXIMUM_EDITABLE_SIZE:
-                    raise LookupFileTooBigException(file_size)
-
-            except os.error:
-                self.logger.exception("Exception generated when attempting to determine size of " +
-                                      "requested lookup file")
-
-        self.logger.info("Loading lookup file from path=%s", file_path)
-
-        # Get the file handle
-        # Note that we are assuming that the file is in UTF-8. Any characters that don't match
-        # will be replaced.
-        return codecs.open(file_path, 'rb', encoding='utf-8', errors='replace')
+        }

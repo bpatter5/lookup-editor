@@ -80,54 +80,61 @@ class RESTHandler(PersistentServerConnectionApplication):
         }
 
     def handle(self, in_string):
-        self.logger.info("Handling a request")
-
-        # Parse the arguments
-        args = self.parse_in_string(in_string)
-
-        # Get the user information
-        session_key = args['session']['authtoken']
-        user = args['session']['user']
-
-        # Get the method
-        method = args['method']
-
-        # Get the path and the args
-        path = args['path_info']
-        query = args['query_parameters']
-
-        # Make the request info object
-        request_info = RequestInfo(user, session_key, method, path, query, args)
-
-        """
-        if method == 'get':
-            self.do_get(path, user, session_key, **query)
-        """
-
-        # Get the function signature
-        function_name = self.get_function_signature(method, path)
-
         try:
-            function_to_call = getattr(self, function_name)
-        except AttributeError:
-            function_to_call = None
 
-        # Try to run the function
-        if function_to_call is not None:
+            self.logger.info("Handling a request")
+
+            # Parse the arguments
+            args = self.parse_in_string(in_string)
+
+            # Get the user information
+            session_key = args['session']['authtoken']
+            user = args['session']['user']
+
+            # Get the method
+            method = args['method']
+
+            # Get the path and the args
+            path = args['path_info']
+            query = args['query_parameters']
+
+            # Make the request info object
+            request_info = RequestInfo(user, session_key, method, path, query, args)
+
+            """
+            if method == 'get':
+                self.do_get(path, user, session_key, **query)
+            """
+
+            # Get the function signature
+            function_name = self.get_function_signature(method, path)
+
+            try:
+                function_to_call = getattr(self, function_name)
+            except AttributeError:
+                function_to_call = None
+
+            # Try to run the function
+            if function_to_call is not None:
+                if self.logger is not None:
+                    self.logger.info("Executing function, name=%s", function_name)
+
+                # Execute the function
+                return function_to_call(request_info, **query)
+            else:
+                if self.logger is not None:
+                    self.logger.warn("A request could not be executed since the associated function " +
+                                    "is missing, name=%s", function_name)
+
+                return {
+                    'payload': 'Path was not found',
+                    'status': 404
+                }
+        except Exception as exception:
             if self.logger is not None:
-                self.logger.info("Executing function, name=%s", function_name)
+                self.logger.exception("Failed to handle request due to an un handled exception")
 
-            # Execute the function
-            return function_to_call(request_info, **query)
-        else:
-            if self.logger is not None:
-                self.logger.warn("A request could not be executed since the associated function " +
-                                 "is missing, name=%s", function_name)
-
-            return {
-                'payload': 'Path was not found',
-                'status': 404
-            }  
+            raise exception
 
     def do_get(self, path, user, session_key, **kwargs):
         pass
