@@ -93,9 +93,6 @@ class RESTHandler(PersistentServerConnectionApplication):
         path = args['path_info']
         query = args['query_parameters']
 
-        self.logger.info("path_info=" + args['path_info'])
-        self.logger.info("rest_path=" + args['rest_path'])
-
         # Make the request info object
         request_info = RequestInfo(user, session_key, method, path, query, args)
 
