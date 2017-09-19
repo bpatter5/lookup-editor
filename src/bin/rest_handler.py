@@ -27,7 +27,7 @@ class RESTHandler(PersistentServerConnectionApplication):
     /lookup_edit/lookup_contents, then this class will attempt to run a function named
     get_lookup_contents(). Note that the root path of the REST handler is removed.
 
-    If a POSt request is made to the endpoint is executed with the path
+    If a POST request is made to the endpoint is executed with the path
     /lookup_edit/lookup_contents, the this class will attempt to execute post_lookup_contents().
 
     The arguments to the function will be the following:
@@ -101,11 +101,6 @@ class RESTHandler(PersistentServerConnectionApplication):
             # Make the request info object
             request_info = RequestInfo(user, session_key, method, path, query, args)
 
-            """
-            if method == 'get':
-                self.do_get(path, user, session_key, **query)
-            """
-
             # Get the function signature
             function_name = self.get_function_signature(method, path)
 
@@ -135,9 +130,6 @@ class RESTHandler(PersistentServerConnectionApplication):
                 self.logger.exception("Failed to handle request due to an un handled exception")
 
             raise exception
-
-    def do_get(self, path, user, session_key, **kwargs):
-        pass
 
     def convert_to_dict(self, query):
         """
