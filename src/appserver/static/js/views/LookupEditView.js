@@ -1334,8 +1334,8 @@ define([
          * Perform an export of the given file.
          */
         doExport: function(){
-        	var href= "../../../custom/lookup_editor/lookup_edit/get_original_lookup_file?namespace=" + this.namespace + "&owner=" + this.owner + "&lookup_file=" + this.lookup + "&type=" + this.lookup_type;
-        	document.location = href;
+			var href= "../../../splunkd/__raw/services/data/lookup_edit/lookup_as_file?namespace=" + this.namespace + "&owner=" + this.owner + "&lookup_file=" + this.lookup + "&type=" + this.lookup_type;
+			document.location = href;
         },
         
         /**

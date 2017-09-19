@@ -13,6 +13,7 @@ from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 from splunk import AuthorizationFailed, ResourceNotFound
 
 from lookup_editor import LookupEditor
+from lookup_editor import shortcuts
 from lookup_editor.exceptions import LookupFileTooBigException, PermissionDeniedException
 
 import rest_handler
@@ -178,10 +179,46 @@ class LookupEditorHandler(rest_handler.RESTHandler):
             'status': 500
         }
 
-    def get_lookup_as_file(self, request_info, lookup_file=None, namespace="lookup_editor", **kwargs):
+    def get_lookup_as_file(self, request_info, lookup_file=None, namespace="lookup_editor", owner=None, lookup_type='csv', **kwargs):
         """
         Provides the lookup file in a way to be downloaded by the browser
         """
+
+        logger.info("Exporting lookup, namespace=%s, lookup=%s, type=%s, owner=%s", namespace,
+                    lookup_file, lookup_type, owner)
+
+        try:
+
+            # If we are getting the CSV, then just pipe the file to the user
+            if lookup_type == "csv":
+                with self.lookup_editor.get_lookup(request_info.session_key, lookup_file, namespace, owner) as csv_file_handle:
+                    csv_data = csv_file_handle.read()
+
+            # If we are getting a KV store lookup, then convert it to a CSV file
+            else:
+                rows = self.lookup_editor.get_kv_lookup(lookup_file, namespace, owner)
+                csv_data = shortcuts.convert_array_to_csv(rows)
+
+            # Tell the browser to download this as a file
+            if lookup_file.endswith(".csv"):
+                filename = 'attachment; filename="%s"' % lookup_file
+            else:
+                filename = 'attachment; filename="%s"' % (lookup_file + ".csv")
+
+            return {
+                'payload': json.dumps(csv_data),
+                'status': 200,
+                'headers': {
+                    'Content-Type': 'text/csv',
+                    'Content-Disposition': filename
+                },
+            }
+
+        except IOError:
+            return self.render_json([], 404)
+
+        except PermissionDeniedException as exception:
+            return self.render_error_json(str(exception), 403)
 
         return {
             'payload': str(lookup_file),  # Payload of the request.

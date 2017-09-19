@@ -135,7 +135,7 @@
 			<td><%- getAppDescriptionFromName(lookups[i].namespace) %></td>
 			<td><%- lookups[i].owner %></td>
 			<td>
-				<a class="action-link" href="../../../custom/lookup_editor/lookup_edit/get_original_lookup_file?namespace=<%- lookups[i].namespace %>&owner=<%- lookups[i].endpoint_owner %>&lookup_file=<%- lookups[i].name %>&type=<%- lookups[i].type %>">Export</a>
+				<a class="action-link" href="../../../splunkd/__raw/services/data/lookup_edit/lookup_as_file?namespace=<%- lookups[i].namespace %>&owner=<%- lookups[i].endpoint_owner %>&lookup_file=<%- lookups[i].name %>&type=<%- lookups[i].type %>">Export</a>
 				
                 <% 
                     var uri_parameter = null;
