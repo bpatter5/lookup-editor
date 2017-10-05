@@ -90,7 +90,7 @@ class LookupBackups(object):
 
         return backup_directory
 
-    def backup_lookup_file(self, lookup_file, namespace, resolved_file_path, owner=None):
+    def backup_lookup_file(self, session_key, lookup_file, namespace, resolved_file_path, owner=None):
         """
         Make a backup if the lookup file.
         """
@@ -98,8 +98,8 @@ class LookupBackups(object):
         try:
 
             # Get the backup directory
-            backup_directory = self.get_backup_directory(lookup_file, namespace, owner,
-                                                         resolved_lookup_path=resolved_file_path)
+            backup_directory = self.get_backup_directory(session_key, lookup_file, namespace, 
+                                                         owner, resolved_file_path)
 
             # Get the modification time of the existing file so that we put the date as an epoch
             # in the name

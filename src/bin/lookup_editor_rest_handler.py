@@ -264,7 +264,7 @@ class LookupEditorHandler(rest_handler.RESTHandler):
                                                                             throw_not_found=False)
 
             # Make a backup
-            self.lookup_editor.backup_lookup_file(lookup_file, namespace, owner)
+            self.lookup_editor.backup_lookup_file(request_info.session_key, lookup_file, namespace, resolved_file_path, owner)
 
             # Parse the JSON
             parsed_contents = json.loads(contents)
