@@ -79,6 +79,18 @@ class RESTHandler(PersistentServerConnectionApplication):
             'status': response_code
         }
 
+    def get_forms_args_as_dict(self, form_args):
+        
+        post_arg_dict = {}
+
+        for arg in form_args:
+            name = arg[0]
+            value = arg[1]
+
+            post_arg_dict[name] = value
+
+        return post_arg_dict
+
     def handle(self, in_string):
         try:
 
@@ -96,7 +108,11 @@ class RESTHandler(PersistentServerConnectionApplication):
 
             # Get the path and the args
             path = args['path_info']
-            query = args['query_parameters']
+
+            if method.lower() == 'post':
+                query = self.get_forms_args_as_dict(args["form"])
+            else:
+                query = args['query_parameters']
 
             # Make the request info object
             request_info = RequestInfo(user, session_key, method, path, query, args)

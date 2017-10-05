@@ -1452,7 +1452,8 @@ define([
 	        	
 	        	// Perform the request to save the lookups
 	        	$.ajax( {
-	        				url:  Splunk.util.make_url('/custom/lookup_editor/lookup_edit/save'),
+							//url: Splunk.util.make_url('/custom/lookup_editor/lookup_edit/save'),
+							url: Splunk.util.make_full_url("/splunkd/__raw/services/data/lookup_edit/lookup_contents"),
 	        				type: 'POST',
 	        				data: data,
 	        				

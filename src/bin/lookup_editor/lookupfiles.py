@@ -94,16 +94,16 @@ def update_lookup_table(filename, lookup_file, namespace, owner, key):
     
     '''
     try:
-        # When usinOwner passed in should be nobody, otherwise
+        # When using Owner passed in should be nobody, otherwise
         id_val = SplunkLookupTableFile.build_id(lookup_file, namespace, owner)
         lookup_table_file = SplunkLookupTableFile.get(id_val, sessionKey=key)
-        lookup_table_file.manager()._put_args(id_val, {'eai:data': filename})
+        lookup_table_file.manager()._put_args(id_val, {'eai:data': filename}, sessionKey=key)
         
         return True
     except splunk.ResourceNotFound as e:
         sys.stderr.write(Errors.ERR_NO_LOOKUP + ': %s\n' % str(e))
         raise e
-        
+
     except Exception as e:
         sys.stderr.write(Errors.ERR_UNKNOWN_EXCEPTION + ': %s\n' % str(e))
         raise e
@@ -111,7 +111,7 @@ def update_lookup_table(filename, lookup_file, namespace, owner, key):
 def get_temporary_lookup_file(prefix=None, basedir=None):
     '''Create a temporary file and return the filehandle.
     Exceptions will be passed to caller.
-    
+
     @param prefix: A prefix for the file (default is "lookup_gen_<date>_<time>_")
     @param basedir: The base directory for the file (default is $SPLUNK_HOME/var/run/splunk/lookup_tmp,
         the staging directory for use in creating new lookup table files).

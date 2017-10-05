@@ -8,6 +8,7 @@ import sys
 import csv
 import json
 import datetime
+import shutil
 
 from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 from splunk import AuthorizationFailed, ResourceNotFound
@@ -15,6 +16,7 @@ from splunk import AuthorizationFailed, ResourceNotFound
 from lookup_editor import LookupEditor
 from lookup_editor import shortcuts
 from lookup_editor.exceptions import LookupFileTooBigException, PermissionDeniedException
+from lookup_editor.lookupfiles import get_temporary_lookup_file, SplunkLookupTableFile, update_lookup_table
 
 import rest_handler
 
@@ -48,7 +50,7 @@ def setup_logger(level):
     logger.addHandler(file_handler)
     return logger
 
-logger = setup_logger(logging.INFO)
+logger = setup_logger(logging.DEBUG)
 
 class LookupEditorHandler(rest_handler.RESTHandler):
     """
@@ -179,13 +181,14 @@ class LookupEditorHandler(rest_handler.RESTHandler):
             'status': 500
         }
 
-    def get_lookup_as_file(self, request_info, lookup_file=None, namespace="lookup_editor", owner=None, lookup_type='csv', **kwargs):
+    def get_lookup_as_file(self, request_info, lookup_file=None, namespace="lookup_editor",
+                           owner=None, lookup_type='csv', **kwargs):
         """
         Provides the lookup file in a way to be downloaded by the browser
         """
 
-        logger.info("Exporting lookup, namespace=%s, lookup=%s, type=%s, owner=%s", namespace,
-                    lookup_file, lookup_type, owner)
+        self.logger.info("Exporting lookup, namespace=%s, lookup=%s, type=%s, owner=%s", namespace,
+                         lookup_file, lookup_type, owner)
 
         try:
 
@@ -225,15 +228,124 @@ class LookupEditorHandler(rest_handler.RESTHandler):
             'status': 200                 # HTTP status code
         }
 
-
-    def post_lookup_contents(self, request_info, lookup_file=None, namespace="lookup_editor",
-                             owner=None, header_only=False, version=None, lookup_type=None,
-                             **kwargs):
+    def post_lookup_contents(self, request_info, contents=None, lookup_file=None,
+                             namespace="lookup_editor", owner=None, **kwargs):
         """
         Save the JSON contents to the lookup file
         """
 
-        return {
-            'payload': str(lookup_file),  # Payload of the request.
-            'status': 200                 # HTTP status code
-        }
+        self.logger.info("Saving lookup contents...")
+
+        # Stop if the contents of the lookup was not provided
+        if contents is None:
+            self.logger.error("No content provided to save")
+            return self.render_error_json("No content provided")
+
+        try:
+
+            if owner is None:
+                owner = "nobody"
+
+            if namespace is None:
+                namespace = "lookup_editor"
+
+            # Check capabilities
+            #LookupEditor.check_capabilities(lookup_file, request_info.user, request_info.session_key)
+
+            # Ensure that the file name is valid
+            if not shortcuts.is_file_name_valid(lookup_file):
+                return self.render_error_json("The lookup filename contains disallowed characters", 400)
+
+            # Determine the final path of the file
+            resolved_file_path = self.lookup_editor.resolve_lookup_filename(lookup_file,
+                                                                            namespace,
+                                                                            owner,
+                                                                            session_key=request_info.session_key,
+                                                                            throw_not_found=False)
+
+            # Make a backup
+            self.lookup_editor.backup_lookup_file(lookup_file, namespace, owner)
+
+            # Parse the JSON
+            parsed_contents = json.loads(contents)
+
+            # Create the temporary file
+            temp_file_handle = get_temporary_lookup_file()
+
+            # This is a full path already; no need to call make_splunkhome_path().
+            temp_file_name = temp_file_handle.name
+
+            # Make the lookups directory if it does not exist
+            destination_lookup_full_path = shortcuts.make_lookup_filename(lookup_file, namespace, owner)
+            self.logger.debug("destination_lookup_full_path=%s", destination_lookup_full_path)
+            destination_lookup_path_only, _ = os.path.split(destination_lookup_full_path)
+
+            try:
+                os.makedirs(destination_lookup_path_only, 0755)
+                os.chmod(destination_lookup_path_only, 0755)
+            except OSError:
+                # The directory already existed, no need to create it
+                self.logger.debug("Destination path of lookup already existed, no need to create it; destination_lookup_path=%s", destination_lookup_path_only)
+
+            # Write out the new file to a temporary location
+            try:
+                if temp_file_handle is not None and os.path.isfile(temp_file_name):
+
+                    csv_writer = csv.writer(temp_file_handle, lineterminator='\n')
+
+                    for row in parsed_contents:
+
+                        if not self.lookup_editor.is_empty(row): # Prune empty rows
+                            csv_writer.writerow(row)
+
+            finally:
+                if temp_file_handle is not None:
+                    temp_file_handle.close()
+
+            # Determine if the lookup file exists, create it if it doesn't
+            if resolved_file_path is None:
+                shutil.move(temp_file_name, destination_lookup_full_path)
+                self.logger.info('Lookup created successfully, user=%s, namespace=%s, lookup_file=%s, path="%s"', request_info.user, namespace, lookup_file, destination_lookup_full_path)
+
+                # If the file is new, then make sure that the list is reloaded so that the editors
+                # notice the change
+                SplunkLookupTableFile.reload(session_key=request_info.session_key)
+
+            # Edit the existing lookup otherwise
+            else:
+
+                try:
+                    if not shortcuts.is_lookup_in_users_path(resolved_file_path) or owner == 'nobody':
+                        update_lookup_table(filename=temp_file_name,
+                                            lookup_file=lookup_file,
+                                            namespace=namespace,
+                                            owner="nobody",
+                                            key=request_info.session_key)
+                    else:
+                        update_lookup_table(filename=temp_file_name,
+                                            lookup_file=lookup_file,
+                                            namespace=namespace,
+                                            owner=owner,
+                                            key=request_info.session_key)
+
+                except AuthorizationFailed as exception:
+                    return self.render_error_json(str(exception))
+
+                self.logger.info('Lookup edited successfully, user=%s, namespace=%s, lookup_file=%s',
+                                 request_info.user, namespace, lookup_file)
+
+            # Tell the SHC environment to replicate the file
+            try:
+                self.lookup_editor.force_lookup_replication(namespace, lookup_file, request_info.session_key)
+            except ResourceNotFound:
+                self.logger.info("Unable to force replication of the lookup file to other search heads; upgrade Splunk to 6.2 or later in order to support CSV file replication")
+
+            # Everything worked, return accordingly
+            return {
+                'payload': str(lookup_file),  # Payload of the request.
+                'status': 200                 # HTTP status code
+            }
+
+        except:
+            self.logger.exception("Unable to save the lookup")
+            return self.render_error_json("Unable to save the lookup")

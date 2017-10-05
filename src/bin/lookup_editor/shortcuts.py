@@ -107,24 +107,24 @@ def make_lookup_filename(lookup_file, namespace="lookup_editor", owner=None):
     else:
         return make_splunkhome_path(["etc", "apps", namespace, "lookups", lookup_file])
 
-    def is_lookup_in_users_path(lookup_file_path):
-        """
-        Determine if the lookup is within the user's path as opposed to being within the apps path.
-        """
+def is_lookup_in_users_path(lookup_file_path):
+    """
+    Determine if the lookup is within the user's path as opposed to being within the apps path.
+    """
 
-        if "etc/users/" in lookup_file_path:
-            return True
-        else:
-            return False
+    if "etc/users/" in lookup_file_path:
+        return True
+    else:
+        return False
 
-    def is_file_name_valid(self, lookup_file):
-        """
-        Indicate if the lookup file is valid (doesn't contain invalid characters such as "..").
-        """
+def is_file_name_valid(lookup_file):
+    """
+    Indicate if the lookup file is valid (doesn't contain invalid characters such as "..").
+    """
 
-        allowed_path = re.compile("^[-A-Z0-9_ ]+([.][-A-Z0-9_ ]+)*$", re.IGNORECASE)
+    allowed_path = re.compile("^[-A-Z0-9_ ]+([.][-A-Z0-9_ ]+)*$", re.IGNORECASE)
 
-        if not allowed_path.match(lookup_file):
-            return False
-        else:
-            return True
+    if not allowed_path.match(lookup_file):
+        return False
+    else:
+        return True
