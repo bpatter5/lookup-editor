@@ -236,8 +236,7 @@ class LookupEditorHandler(rest_handler.RESTHandler):
 
         try:
             file_name = self.lookup_editor.update(contents, lookup_file, namespace, owner,
-                                                  request_info.session_key, request_info.user,
-                                                  self.logger)
+                                                  request_info.session_key, request_info.user)
 
             # Everything worked, return accordingly
             return {

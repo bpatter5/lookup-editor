@@ -156,6 +156,10 @@ class LookupEditor(LookupBackups):
         if owner is not None:
             owner = os.path.basename(owner)
 
+        # Assign a default for the user to 'nobody' if not provided
+        if owner is None:
+            owner = 'nobody'
+
         # Determine the lookup path by asking Splunk
         try:
             resolved_lookup_path = lookupfiles.SplunkLookupTableFile.get(lookupfiles.SplunkLookupTableFile.build_id(lookup_file, namespace, owner), sessionKey=session_key).path
@@ -165,20 +169,20 @@ class LookupEditor(LookupBackups):
             else:
                 return None
 
-        # Get the backup file for one without an owner
-        if version is not None and owner is not None:
-            lookup_path = make_splunkhome_path([self.get_backup_directory(lookup_file, namespace, owner, resolved_lookup_path=resolved_lookup_path), version])
+        # Get the backup file for one with an owner
+        if version is not None and owner not in [None, 'nobody']:
+            lookup_path = make_splunkhome_path([self.get_backup_directory(session_key, lookup_file, namespace, owner, resolved_lookup_path=resolved_lookup_path), version])
             lookup_path_default = make_splunkhome_path(["etc", "users", owner, namespace,
                                                         "lookups", lookup_file + ".default"])
 
-        # Get the backup file for one with an owner
+        # Get the backup file for one without an owner
         elif version is not None:
-            lookup_path = make_splunkhome_path([self.get_backup_directory(lookup_file, namespace, owner, resolved_lookup_path=resolved_lookup_path), version])
+            lookup_path = make_splunkhome_path([self.get_backup_directory(session_key, lookup_file, namespace, owner, resolved_lookup_path=resolved_lookup_path), version])
             lookup_path_default = make_splunkhome_path(["etc", "apps", namespace, "lookups",
                                                         lookup_file + ".default"])
 
         # Get the user lookup
-        elif owner is not None and owner != 'nobody':
+        elif owner not in [None, 'nobody']:
             # e.g. $SPLUNK_HOME/etc/users/luke/SA-NetworkProtection/lookups/test.csv
             lookup_path = resolved_lookup_path
             lookup_path_default = make_splunkhome_path(["etc", "users", owner, namespace,
@@ -267,7 +271,7 @@ class LookupEditor(LookupBackups):
         return (True, response.status, content)
 
     def update(self, contents=None, lookup_file=None, namespace="lookup_editor", owner=None,
-               session_key=None, user=None, logger=None):
+               session_key=None, user=None):
         """
         Update the given lookup file with the provided contents.
         """
@@ -306,8 +310,7 @@ class LookupEditor(LookupBackups):
 
         # Make the lookups directory if it does not exist
         destination_lookup_full_path = make_lookup_filename(lookup_file, namespace, owner)
-        if logger:
-            logger.debug("destination_lookup_full_path=%s", destination_lookup_full_path)
+        self.logger.debug("destination_lookup_full_path=%s", destination_lookup_full_path)
 
         destination_lookup_path_only, _ = os.path.split(destination_lookup_full_path)
 
@@ -316,8 +319,7 @@ class LookupEditor(LookupBackups):
             os.chmod(destination_lookup_path_only, 0755)
         except OSError:
             # The directory already existed, no need to create it
-            if logger:
-                logger.debug("Destination path of lookup already existed, no need to create it; destination_lookup_path=%s", destination_lookup_path_only)
+            self.logger.debug("Destination path of lookup already existed, no need to create it; destination_lookup_path=%s", destination_lookup_path_only)
 
         # Write out the new file to a temporary location
         try:
@@ -337,8 +339,7 @@ class LookupEditor(LookupBackups):
         # Determine if the lookup file exists, create it if it doesn't
         if resolved_file_path is None:
             shutil.move(temp_file_name, destination_lookup_full_path)
-            if logger:
-                logger.info('Lookup created successfully, user=%s, namespace=%s, lookup_file=%s, path="%s"', user, namespace, lookup_file, destination_lookup_full_path)
+            self.logger.info('Lookup created successfully, user=%s, namespace=%s, lookup_file=%s, path="%s"', user, namespace, lookup_file, destination_lookup_full_path)
 
             # If the file is new, then make sure that the list is reloaded so that the editors
             # notice the change
@@ -360,15 +361,13 @@ class LookupEditor(LookupBackups):
                                                 owner=owner,
                                                 key=session_key)
 
-            if logger:
-                logger.info('Lookup edited successfully, user=%s, namespace=%s, lookup_file=%s',
-                            user, namespace, lookup_file)
+            self.logger.info('Lookup edited successfully, user=%s, namespace=%s, lookup_file=%s',
+                             user, namespace, lookup_file)
 
         # Tell the SHC environment to replicate the file
         try:
             self.force_lookup_replication(namespace, lookup_file, session_key)
         except ResourceNotFound:
-            if logger:
-                logger.info("Unable to force replication of the lookup file to other search heads; upgrade Splunk to 6.2 or later in order to support CSV file replication")
+            self.logger.info("Unable to force replication of the lookup file to other search heads; upgrade Splunk to 6.2 or later in order to support CSV file replication")
 
         return resolved_file_path
