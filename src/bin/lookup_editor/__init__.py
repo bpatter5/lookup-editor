@@ -7,14 +7,16 @@ shouldn't need to call functions in the dependencies.
 import os
 import codecs
 import json
+import shutil
+import csv
 
 import splunk
 from splunk import AuthorizationFailed, ResourceNotFound
 from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 
 from lookup_editor.lookup_backups import LookupBackups
-from lookup_editor.exceptions import LookupFileTooBigException, PermissionDeniedException
-from lookup_editor.shortcuts import flatten_dict
+from lookup_editor.exceptions import LookupFileTooBigException, PermissionDeniedException, LookupNameInvalidException
+from lookup_editor.shortcuts import flatten_dict, is_file_name_valid, is_lookup_in_users_path, make_lookup_filename
 from lookup_editor import lookupfiles
 from lookup_editor import settings
 
@@ -263,3 +265,110 @@ class LookupEditor(LookupBackups):
         # Return a default response
         self.logger.info('Lookup table replication forced for %s', filename)
         return (True, response.status, content)
+
+    def update(self, contents=None, lookup_file=None, namespace="lookup_editor", owner=None,
+               session_key=None, user=None, logger=None):
+        """
+        Update the given lookup file with the provided contents.
+        """
+
+        if owner is None:
+            owner = "nobody"
+
+        if namespace is None:
+            namespace = "lookup_editor"
+
+        # Check capabilities
+        #LookupEditor.check_capabilities(lookup_file, request_info.user, request_info.session_key)
+
+        # Ensure that the file name is valid
+        if not is_file_name_valid(lookup_file):
+            raise LookupNameInvalidException("The lookup filename contains disallowed characters")
+
+        # Determine the final path of the file
+        resolved_file_path = self.resolve_lookup_filename(lookup_file,
+                                                          namespace,
+                                                          owner,
+                                                          session_key=session_key,
+                                                          throw_not_found=False)
+
+        # Make a backup
+        self.backup_lookup_file(session_key, lookup_file, namespace, resolved_file_path, owner)
+
+        # Parse the JSON
+        parsed_contents = json.loads(contents)
+
+        # Create the temporary file
+        temp_file_handle = lookupfiles.get_temporary_lookup_file()
+
+        # This is a full path already; no need to call make_splunkhome_path().
+        temp_file_name = temp_file_handle.name
+
+        # Make the lookups directory if it does not exist
+        destination_lookup_full_path = make_lookup_filename(lookup_file, namespace, owner)
+        if logger:
+            logger.debug("destination_lookup_full_path=%s", destination_lookup_full_path)
+
+        destination_lookup_path_only, _ = os.path.split(destination_lookup_full_path)
+
+        try:
+            os.makedirs(destination_lookup_path_only, 0755)
+            os.chmod(destination_lookup_path_only, 0755)
+        except OSError:
+            # The directory already existed, no need to create it
+            if logger:
+                logger.debug("Destination path of lookup already existed, no need to create it; destination_lookup_path=%s", destination_lookup_path_only)
+
+        # Write out the new file to a temporary location
+        try:
+            if temp_file_handle is not None and os.path.isfile(temp_file_name):
+
+                csv_writer = csv.writer(temp_file_handle, lineterminator='\n')
+
+                for row in parsed_contents:
+
+                    if not self.is_empty(row): # Prune empty rows
+                        csv_writer.writerow(row)
+
+        finally:
+            if temp_file_handle is not None:
+                temp_file_handle.close()
+
+        # Determine if the lookup file exists, create it if it doesn't
+        if resolved_file_path is None:
+            shutil.move(temp_file_name, destination_lookup_full_path)
+            if logger:
+                logger.info('Lookup created successfully, user=%s, namespace=%s, lookup_file=%s, path="%s"', user, namespace, lookup_file, destination_lookup_full_path)
+
+            # If the file is new, then make sure that the list is reloaded so that the editors
+            # notice the change
+            lookupfiles.SplunkLookupTableFile.reload(session_key=session_key)
+
+        # Edit the existing lookup otherwise
+        else:
+
+            if not is_lookup_in_users_path(resolved_file_path) or owner == 'nobody':
+                lookupfiles.update_lookup_table(filename=temp_file_name,
+                                                lookup_file=lookup_file,
+                                                namespace=namespace,
+                                                owner="nobody",
+                                                key=session_key)
+            else:
+                lookupfiles.update_lookup_table(filename=temp_file_name,
+                                                lookup_file=lookup_file,
+                                                namespace=namespace,
+                                                owner=owner,
+                                                key=session_key)
+
+            if logger:
+                logger.info('Lookup edited successfully, user=%s, namespace=%s, lookup_file=%s',
+                            user, namespace, lookup_file)
+
+        # Tell the SHC environment to replicate the file
+        try:
+            self.force_lookup_replication(namespace, lookup_file, session_key)
+        except ResourceNotFound:
+            if logger:
+                logger.info("Unable to force replication of the lookup file to other search heads; upgrade Splunk to 6.2 or later in order to support CSV file replication")
+
+        return resolved_file_path

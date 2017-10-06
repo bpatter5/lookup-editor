@@ -23,3 +23,12 @@ class LookupFileTooBigException(Exception):
 
         # Remember the file-size
         self.file_size = file_size
+
+"""
+Represents an exception when the lookup file is invalid.
+"""
+class LookupNameInvalidException(Exception):
+    """
+    This exception indicates that the lookup file that was attempted to be created was invalid.
+    """
+    pass
