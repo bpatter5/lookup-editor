@@ -1078,17 +1078,17 @@ define([
         		  
         		  // Handle cases where the file could not be found or the user did not have permissions
         		  complete: function(jqXHR, textStatus){
-        			  if( jqXHR.status == 404){
+        			  if(jqXHR.status == 404){
         				  console.info('Lookup file was not found');
         				  this.showWarningMessage("The requested lookup file does not exist", true);
 						  $('.show-when-editing', this.$el).hide();
         			  }
-        			  else if( jqXHR.status == 403){
+        			  else if(jqXHR.status == 403){
         				  console.info('Inadequate permissions');
         				  this.showWarningMessage("You do not have permission to view this lookup file", true);
 						  $('.show-when-editing', this.$el).hide();
         			  }
-        			  else if( jqXHR.status == 420){
+        			  else if(jqXHR.status == 420){
         				  console.info('File is too large');
         				  this.showWarningMessage("The file is too big to be edited (must be less than 10 MB)");
 						  $('.show-when-editing', this.$el).hide();
@@ -1101,7 +1101,7 @@ define([
         			  if( version === undefined && this.lookup_type === "csv" ){
         				  this.loadLookupBackupsList(lookup_file, namespace, user);
         			  }
-        			  else if(this.lookup_type === "csv"){
+        			  else if(this.lookup_type === "csv" && jqXHR.status === 200){
         				  // Show a message noting that the backup was imported
         				  this.showInfoMessage("Backup file was loaded successfully");
         			  }
@@ -1452,7 +1452,6 @@ define([
 	        	
 	        	// Perform the request to save the lookups
 	        	$.ajax( {
-							//url: Splunk.util.make_url('/custom/lookup_editor/lookup_edit/save'),
 							url: Splunk.util.make_full_url("/splunkd/__raw/services/data/lookup_edit/lookup_contents"),
 	        				type: 'POST',
 	        				data: data,
