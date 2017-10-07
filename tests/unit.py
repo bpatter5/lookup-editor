@@ -1,3 +1,13 @@
+"""
+This class tests the lookup editor related classes including:
+
+    lookup_editor.LookupEditor
+    lookup_editor.lookup_backups.LookupBackups
+    lookup_editor.shortcuts
+    lookup_backups_rest_handler.LookupBackupsHandler
+    lookup_backups_rest_handler.LookupEditorHandler
+"""
+
 import unittest
 import sys
 import os
@@ -9,17 +19,29 @@ import splunk
 sys.path.append( os.path.join("..", "src", "bin") )
 sys.path.append( os.path.join("..", "src", "appserver", "controllers") )
 
-from rest_handler import RESTHandler
 from lookup_editor import shortcuts, lookup_backups, LookupEditor
+from lookup_backups_rest_handler import LookupBackupsHandler
+from lookup_editor_rest_handler import LookupEditorHandler
 
 logger = logging.getLogger('splunk.appserver.lookup_editor.unit_test')
 
 class LookupEditorTestCase(unittest.TestCase):
-    
+    """
+    This base class offers functionality to help tests cases for the lookup editor.
+    """
+
     def get_session_key(self):
+        """
+        Get a session key to Splunk.
+        """
+
         return splunk.auth.getSessionKey(username='admin', password='changeme')
 
     def strip_splunk_path(self, file_path):
+        """
+        Strip out the part of the path that refers to the local Splunk install.
+        """
+
         etc_start = file_path.find("/etc/")
         return file_path[etc_start:]
 
@@ -33,8 +55,32 @@ class TestLookupEditRESTHandler(LookupEditorTestCase):
         response, content = splunk.rest.simpleRequest("/services/lookup_edit/lookup_contents", sessionKey=self.get_session_key())
         self.assertEqual(response.status, 404)
     """
+
     def test_function_signature(self):
-        sig = RESTHandler.get_function_signature("get", "test_a_function")
+        """
+        Test the creation of the function signature from the path.
+        """
+
+        sig = LookupEditorHandler.get_function_signature("get", "test_a_function")
+        self.assertEqual(sig, "get_test_a_function")
+
+class TestLookupBackupRESTHandler(LookupEditorTestCase):
+    """
+    This tests the REST handler to ensure that it is functioning.
+    """
+
+    """
+    def test_ping_handler(self):
+        response, content = splunk.rest.simpleRequest("/services/lookup_edit/lookup_contents", sessionKey=self.get_session_key())
+        self.assertEqual(response.status, 404)
+    """
+
+    def test_function_signature(self):
+        """
+        Test the creation of the function signature from the path.
+        """
+
+        sig = LookupBackupsHandler.get_function_signature("get", "test_a_function")
         self.assertEqual(sig, "get_test_a_function")
 
 class TestLookupShortcuts(LookupEditorTestCase):
@@ -43,6 +89,9 @@ class TestLookupShortcuts(LookupEditorTestCase):
     """
 
     def test_make_lookup_filename_valid(self):
+        """
+        Test the make_lookup_filename() functions ability to create a lookup file path.
+        """
 
         # Global lookup
         self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", namespace="some_app")), "/etc/apps/some_app/lookups/test.csv")
@@ -60,13 +109,25 @@ class TestLookupShortcuts(LookupEditorTestCase):
         self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner=' ')), "/etc/apps/lookup_editor/lookups/test.csv")
 
     def test_make_lookup_filename_invalid(self):
+        """
+        Test the creation of a lookup file via make_lookup_filename() when the path includes
+        disallowed characters.
+        """
 
         # Invalid characters
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("../test.csv")), "/etc/apps/lookup_editor/lookups/test.csv")
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", namespace="../some_app")), "/etc/apps/some_app/lookups/test.csv")
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner="../some_user")), "/etc/users/some_user/lookup_editor/lookups/test.csv")
+        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("../test.csv")),
+                          "/etc/apps/lookup_editor/lookups/test.csv")
+
+        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", namespace="../some_app")),
+                          "/etc/apps/some_app/lookups/test.csv")
+    
+        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner="../some_user")),
+                          "/etc/users/some_user/lookup_editor/lookups/test.csv")
 
     def test_flatten_dict(self):
+        """
+        Test the flattening of a dict via flatten_dict().
+        """
 
         d = '{ "name" : "Test", "configuration" : { "views" : [ { "name" : "some_view", "app" : "some_app" } ], "delay" : 300, "delay_readable" : "5m", "hide_chrome" : true, "invert_colors" : true }, "_user" : "nobody", "_key" : "123456789" }'
         flattened_d = shortcuts.flatten_dict(json.loads(d))
@@ -75,6 +136,9 @@ class TestLookupShortcuts(LookupEditorTestCase):
         self.assertEquals(flattened_d['name'], "Test")
 
     def test_flatten_dict_specified_fields(self):
+        """
+        Test the flattening of a dict via flatten_dict() but only convert the given fields.
+        """
 
         d = '{ "name" : "Test", "configuration" : { "views" : [ { "name" : "some_view", "app" : "some_app" } ], "delay" : 300, "delay_readable" : "5m", "hide_chrome" : true, "invert_colors" : true }, "_user" : "nobody", "_key" : "123456789" }'
         flattened_d = shortcuts.flatten_dict(json.loads(d), fields=['name', 'configuration', '_user', '_key'])
@@ -86,9 +150,6 @@ class TestLookupShortcuts(LookupEditorTestCase):
 
         self.assertEquals(c['views'][0]["name"], 'some_view')
 
-    def test_flatten_dict_specified_fields_hierarchical(self):
-        pass
-
 class TestLookupEditor(LookupEditorTestCase):
     """
     This tests the class which manages lookup backups.
@@ -98,23 +159,41 @@ class TestLookupEditor(LookupEditorTestCase):
         self.lookup_editor = LookupEditor(logger=logger)
 
     def test_resolve_lookup_filename(self):
-        file_path = self.lookup_editor.resolve_lookup_filename('test.csv', 'search', 'nobody', False,
-                                                 None, session_key=self.get_session_key())
+        """
+        Test resolve_lookup_filename() to resolve a lookup file name.
+        """
 
-        self.assertEquals(self.strip_splunk_path(file_path), '/etc/apps/lookup_editor/lookups/test.csv')
+        file_path = self.lookup_editor.resolve_lookup_filename('test.csv', 'search', 'nobody',
+                                                               False, None,
+                                                               session_key=self.get_session_key())
+
+        self.assertEquals(self.strip_splunk_path(file_path),
+                          '/etc/apps/lookup_editor/lookups/test.csv')
 
     def test_resolve_lookup_filename_version(self):
-        file_path = self.lookup_editor.resolve_lookup_filename('test.csv', 'search', 'nobody', False,
-                                                 '1234', session_key=self.get_session_key())
+        """
+        Test resolve_lookup_filename() to resolve a lookup file name to the backed up version.
+        """
 
-        self.assertEquals(self.strip_splunk_path(file_path), '/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv/1234')
+        file_path = self.lookup_editor.resolve_lookup_filename('test.csv', 'search', 'nobody',
+                                                               False, '1234',
+                                                               session_key=self.get_session_key())
+
+        self.assertEquals(self.strip_splunk_path(file_path),
+                          '/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv/1234')
         
     def test_resolve_lookup_filename_version_no_user(self):
+        """
+        Test resolve_lookup_filename() to resolve a lookup file name to the backed up version
+        without providing a user.
+        """
+
         file_path = self.lookup_editor.resolve_lookup_filename('test.csv', 'search', None, False,
                                                  '1234', session_key=self.get_session_key())
 
-        self.assertEquals(self.strip_splunk_path(file_path), '/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv/1234')
-        
+        self.assertEquals(self.strip_splunk_path(file_path),
+                          '/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv/1234')
+
 class TestLookupBackups(LookupEditorTestCase):
     """
     This tests the class which manages lookup backups.
@@ -124,20 +203,35 @@ class TestLookupBackups(LookupEditorTestCase):
         self.lookup_backups = lookup_backups.LookupBackups(logger=logger)
 
     def test_get_backup_directory(self):
-        self.assertEquals(self.strip_splunk_path(self.lookup_backups.get_backup_directory(self.get_session_key(), "test.csv", namespace="search", owner="nobody")), "/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv")
+        """
+        Ensure that get_backup_directory() returns the correct directory.
+        """
+
+        dir = self.lookup_backups.get_backup_directory(self.get_session_key(),
+                                                       "test.csv", namespace="search",
+                                                       owner="nobody")
+
+        self.assertEquals(self.strip_splunk_path(dir),
+                          "/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv")
 
     def test_get_backup_directory_with_resolved(self):
+        """
+        Ensure that get_backup_directory() returns the correct directory when given a value for resolved_lookup_path.
+        """
         self.lookup_editor = LookupEditor(logger=logger)
-        resolved_lookup_path = self.lookup_editor.resolve_lookup_filename('test.csv', 'search', 'nobody', False,
-                                                                          None, session_key=self.get_session_key())
-        self.assertEquals(self.strip_splunk_path(self.lookup_backups.get_backup_directory(self.get_session_key(), "test.csv", namespace="search", owner="nobody", resolved_lookup_path=resolved_lookup_path)), "/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv")
+        resolved_lookup_path = self.lookup_editor.resolve_lookup_filename('test.csv',
+                                                                          'search',
+                                                                          'nobody',
+                                                                          False,
+                                                                          None,
+                                                                          session_key=self.get_session_key())
+
+        dir = self.lookup_backups.get_backup_directory(self.get_session_key(), "test.csv",
+                                                       namespace="search", owner="nobody",
+                                                       resolved_lookup_path=resolved_lookup_path)
+
+        self.assertEquals(self.strip_splunk_path(dir),
+                          "/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv")
 
 if __name__ == "__main__":
-    loader = unittest.TestLoader()
-    suites = []
-    suites.append(loader.loadTestsFromTestCase(TestLookupEditRESTHandler))
-    suites.append(loader.loadTestsFromTestCase(TestLookupShortcuts))
-    suites.append(loader.loadTestsFromTestCase(TestLookupBackups))
-    suites.append(loader.loadTestsFromTestCase(TestLookupEditor))
-
-    unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(suites))
+    unittest.main(exit=True)
