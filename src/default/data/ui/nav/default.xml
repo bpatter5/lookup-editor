@@ -1,6 +1,7 @@
 <nav color="#858585" search_view="search">
   <view name="lookup_list" default="true" />
   <view name="lookup_new" />
+	<view name="lookup_editor_logs" />
   <collection label="Search">
   	<view name="search" />
   	<view name="datasets" />
