@@ -1,7 +1,61 @@
+"""
+This class makes creating a REST handler for Splunk easier.
 
+The class will automatically call a function within the class based on the path and the method.
+
+For example, if a GET call is made to the path "ping", then this class will call the function
+get_ping().
+
+Below is an example.
+
+1) Create your REST handler class
+
+This class needs to inherit from RESTHandler.
+
+See below for an example that will return
+
+    import logging
+    import rest_handler
+
+    class HelloWorldHandler(rest_handler.RESTHandler):
+        def __init__(self, command_line, command_arg):
+            super(HelloWorldHandler, self).__init__(command_line, command_arg, logger)
+
+        def get_ping(self, request_info, **kwargs):
+            return {
+                'payload': 'This worked!', # Payload of the request.
+                'status': 200 # HTTP status code
+            }
+
+2) Register the REST handler in restmap.conf
+
+Below is an example that assumes the Python code above is in hello_world_rest_handler.py.
+
+    [script:hello_world_rest_handler]
+    match                 = /data/my_test
+    script                = hello_world_rest_handler.py
+    scripttype            = persist
+    handler               = hello_world_rest_handler.HelloWorldHandler
+    requireAuthentication = true
+    output_modes          = json
+    passPayload           = true
+    passHttpHeaders       = true
+    passHttpCookies       = true
+
+"""
+
+import os
+import sys
 import json
 
 from splunk.persistconn.application import PersistentServerConnectionApplication
+
+if sys.platform == "win32":
+    import msvcrt
+    # Binary mode is required for persistent mode on Windows.
+    msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+    msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
+    msvcrt.setmode(sys.stderr.fileno(), os.O_BINARY)
 
 class RequestInfo(object):
     """
@@ -107,7 +161,13 @@ class RESTHandler(PersistentServerConnectionApplication):
             method = args['method']
 
             # Get the path and the args
-            path = args['path_info']
+            if 'path_info' in args:
+                path = args['path_info']
+            else:
+                return {
+                    'payload': 'No path was provided',
+                    'status': 403
+                }
 
             if method.lower() == 'post':
                 query = self.get_forms_args_as_dict(args["form"])
@@ -145,7 +205,10 @@ class RESTHandler(PersistentServerConnectionApplication):
             if self.logger is not None:
                 self.logger.exception("Failed to handle request due to an un handled exception")
 
-            raise exception
+            return {
+                    'payload': str(exception),
+                    'status': 500
+            }
 
     def convert_to_dict(self, query):
         """

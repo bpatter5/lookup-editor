@@ -296,9 +296,6 @@ class LookupEditor(LookupBackups):
                                                           session_key=session_key,
                                                           throw_not_found=False)
 
-        # Make a backup
-        self.backup_lookup_file(session_key, lookup_file, namespace, resolved_file_path, owner)
-
         # Parse the JSON
         parsed_contents = json.loads(contents)
 

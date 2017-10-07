@@ -3,27 +3,19 @@ This controller provides helper methods to the front-end views that manage looku
 """
 
 import logging
-import os
-import sys
 import csv
 import json
 import datetime
 
 from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 from splunk import AuthorizationFailed, ResourceNotFound
+from splunk.rest import simpleRequest
 
 from lookup_editor import LookupEditor
 from lookup_editor import shortcuts
 from lookup_editor.exceptions import LookupFileTooBigException, PermissionDeniedException, LookupNameInvalidException
 
 import rest_handler
-
-if sys.platform == "win32":
-    import msvcrt
-    # Binary mode is required for persistent mode on Windows.
-    msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
-    msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
-    msvcrt.setmode(sys.stderr.fileno(), os.O_BINARY)
 
 # The default of the csv module is 128KB; upping to 10MB. See SPL-12117 for
 # the background on issues surrounding field sizes.
@@ -71,12 +63,14 @@ class LookupEditorHandler(rest_handler.RESTHandler):
             'status': 200 # HTTP status code
         }
 
-    def get_lookup_backups(self, request_info, lookup_file=None, namespace=None, owner=None, **kwargs):
+    def get_lookup_backups(self, request_info, lookup_file=None, namespace=None, owner=None,
+                           **kwargs):
         """
         Get a list of the lookup file backups rendered as JSON.
         """
 
-        backups = self.lookup_editor.get_backup_files(request_info.session_key, lookup_file, namespace, owner)
+        backups = self.lookup_editor.get_backup_files(request_info.session_key, lookup_file,
+                                                      namespace, owner)
 
         # Make the response
         backups_meta = []
@@ -128,7 +122,7 @@ class LookupEditorHandler(rest_handler.RESTHandler):
 
                 with self.lookup_editor.get_lookup(request_info.session_key, lookup_file, namespace,
                                                    owner, version=version,
-                                     throw_exception_if_too_big=True) as csv_file:
+                                                   throw_exception_if_too_big=True) as csv_file:
 
                     csv_reader = csv.reader(csv_file)
 
@@ -235,6 +229,18 @@ class LookupEditorHandler(rest_handler.RESTHandler):
         self.logger.info("Saving lookup contents...")
 
         try:
+
+            # Backup the lookup file
+            data = {
+                'lookup_file' : lookup_file,
+                'namespace' : namespace,
+                'owner' : owner
+            }
+
+            _, _ = simpleRequest('/services/data/lookup_backup/backup',
+                                 sessionKey=request_info.session_key,
+                                 method='POST', postargs=data)
+
             file_name = self.lookup_editor.update(contents, lookup_file, namespace, owner,
                                                   request_info.session_key, request_info.user)
 
