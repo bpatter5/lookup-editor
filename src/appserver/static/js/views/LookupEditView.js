@@ -145,7 +145,11 @@ define([
         	setInterval(this.hideInfoMessageIfNecessary.bind(this), 1000);
         	
         	// Listen to changes in the KV field editor so that the validation can be refreshed
-        	this.listenTo(Backbone, "kv_field:changed", this.validateForm.bind(this));
+			this.listenTo(Backbone, "kv_field:changed", this.validateForm.bind(this));
+			
+			// Retain a list of the capabilities
+			this.capabilities = null;
+			this.is_using_free_license = $C.SPLUNKD_FREE_LICENSE;
         },
         
         events: {
@@ -200,17 +204,19 @@ define([
 		 * @param drop_zone An element to setup a drop-zone on.
 		 */
         setupDragDropHandlerOnElement: function(drop_zone){
-        	
-        	drop_zone.ondragover = function (e) {
-        		e.preventDefault();
-        		e.dataTransfer.dropEffect = 'copy';
-        	}.bind(this);
-        	
-        	drop_zone.ondrop = function (e) {
-        	      e.preventDefault();
-        	      this.onDropFile(e);
-        	      return false;
-        	}.bind(this);
+			
+			if(drop_zone){
+				drop_zone.ondragover = function (e) {
+					e.preventDefault();
+					e.dataTransfer.dropEffect = 'copy';
+				}.bind(this);
+				
+				drop_zone.ondrop = function (e) {
+					e.preventDefault();
+					this.onDropFile(e);
+					return false;
+				}.bind(this);
+			}
         },
         
         /**
@@ -2296,7 +2302,70 @@ define([
         		this.agent.hide();
         	}
         },
-        
+		
+        /**
+         * Get the list of the user's capabilities.
+         */
+        getCapabilities: function(){
+
+        	// Get a promise ready
+        	var promise = jQuery.Deferred();
+			
+			// Get the capabilties
+			if (this.capabilities === null) {
+
+				var uri = Splunk.util.make_url("/splunkd/__raw/services/authentication/current-context?output_mode=json");
+
+				// Fire off the request
+				jQuery.ajax({
+					url: uri,
+					type: 'GET',
+					success: function (result) {
+						if (result !== undefined) {
+							this.capabilities = result.entry[0].content.capabilities;
+							promise.resolve(this.capabilities);
+						}
+						else{
+							promise.reject();
+						}
+					}.bind(this),
+					error: function() {
+						promise.reject();
+					}.bind(this)
+				});
+			}
+
+			// If we already got them, then just return the capabilities
+			else {
+				promise.resolve(this.capabilities);
+			}
+
+			return promise;
+		},
+
+        /**
+         * Determine if the user has the given capability.
+         */
+        hasCapability: function(capability){
+			
+        	// Get a promise ready
+        	var promise = jQuery.Deferred();
+
+			$.when(this.getCapabilities()).done(function(capabilities){
+
+				// Determine if the user should be considered as having access
+				if(this.is_using_free_license){
+					promise.resolve(true);
+				}
+				else{
+					promise.resolve($.inArray(capability, this.capabilities) >= 0);
+				}
+			}.bind(this));
+
+			return promise;
+			
+		},
+
         /**
          * Get a list of users.
 		 * 
@@ -2362,7 +2431,7 @@ define([
         makeUsersList: function(owner, users_list_from_splunk){
         	
         	// Set a default value for version
-        	if( typeof users_list_from_splunk == 'undefined' ){
+        	if(typeof users_list_from_splunk == 'undefined'){
         		users_list_from_splunk = [];
         	}
         	
@@ -2544,165 +2613,170 @@ define([
          * Render the page.
          */
         render: function () {
-        	console.log("Rendering...");
-	
-        	// Get the information from the lookup to load
-        	this.lookup = Splunk.util.getParameter("lookup");
-        	this.namespace = Splunk.util.getParameter("namespace");
-        	this.owner = Splunk.util.getParameter("owner");
-        	this.lookup_type = Splunk.util.getParameter("type");
-        	
-        	// Determine if we are making a new lookup
-        	this.is_new = false;
-        	
-        	if((this.lookup === null && this.namespace === null && this.owner === null) || (Splunk.util.getParameter("action") === "new")){
-        		this.is_new = true;
-        	}
-        	
-        	// Get a list of users to show from which to load the context
-        	var users = this.makeUsersList(this.owner);
-        	
-        	// Render the HTML content
-        	this.$el.html(_.template(Template, {
-        		'insufficient_permissions' : false,
-        		'is_new' : this.is_new,
-        		'lookup_name': this.lookup,
-        		'lookup_type' : this.lookup_type,
-        		'users' : users
-        	}));
-        	
-        	// Setup a handler for the shortcuts
-        	$(document).keydown(this.handleShortcuts.bind(this));
-        	console.info("Press CTRL + E to see something interesting");
-        	
-            // Show the content that is specific to making new lookups
-        	if(this.is_new){
-        		
-	        	// Make the lookup name input
-	        	var name_input = new TextInput({
-	                "id": "lookup-name",
-	                "searchWhenChanged": false,
-	                "el": $('#lookup-name', this.$el)
-	            }, {tokens: true}).render();
-        		
-	        	name_input.on("change", function(newValue) {
-                	this.validateForm();
-                }.bind(this));
-        		
-	        	// Make the app selection drop-down
-                var app_dropdown = new DropdownInput({
-                    "id": "lookup-app",
-                    "selectFirstChoice": false,
-                    "showClearButton": false,
-                    "el": $('#lookup-app', this.$el),
-                    "choices": this.getAppsChoices()
-                }, {tokens: true}).render();
-                
-                app_dropdown.on("change", function(newValue) {
-                	this.validateForm();
-                }.bind(this));
-                
-                // Make the user-only lookup checkbox
-                var user_only_checkbox = new CheckboxGroupInput({
-		            "id": "lookup-user-only",
-		            "choices": [{label:"User-only", value: "user_only"}],
-		            "el": $('#lookup-user-only')
-		        }, {tokens: true}).render();
-		
-		        user_only_checkbox.on("change", function(newValue) {
-		        	this.validateForm();
-		        }.bind(this));
 
-        	}
-        	
-        	// Setup the handlers so that we can make the view support drag and drop
-            this.setupDragDropHandlers();
-        	
-        	// If we are editing an existing KV lookup, then get the information about the lookup and _then_ get the lookup data
-        	if(this.lookup_type === "kv" && !this.is_new){
-        		
-            	// Get the info about the lookup configuration (for KV store lookups)
-	        	this.lookup_config = new KVLookup();
-	        	
-	        	this.lookup_config.fetch({
-	        		// e.g. servicesNS/nobody/lookup_editor/storage/collections/config/test
-	        		url: splunkd_utils.fullpath(['/servicesNS', 'nobody', this.namespace, 'storage/collections/config', this.lookup].join('/')), // For some reason using the actual owner causes this call to fail
-	                success: function(model, response, options) {
-	                    console.info("Successfully retrieved the information about the KV store lookup");
-	                    
-	                    // Determine the types of the fields
-	                    for (var possible_field in model.entry.associated.content.attributes) {
-	                    	// Determine if this a field
-	                    	if(possible_field.indexOf('field.') === 0){
-	                    		
-	                    		// Save the type if it is a field
-	                    		this.field_types[possible_field.substr(6)] = model.entry.associated.content.attributes[possible_field];
-	                    	}
-	                    }
-	                    
-	                    // Determine if types are enforced
-	                    if(model.entry.associated.content.attributes.hasOwnProperty('enforceTypes')){
-	                    	if(model.entry.associated.content.attributes.enforceTypes === "true"){
-	                    		this.field_types_enforced = true;
-	                    	}
-	                    	else{
-	                    		this.field_types_enforced = false;
-	                    	}
-	                    }
-	                    
-	                    // If this lookup cannot be edited, then set the editor to read-only
-	                    if(!model.entry.acl.attributes.can_write){
-	                    	this.read_only = true;
-	                    	this.showWarningMessage("You do not have permission to edit this lookup; it is being displayed read-only");
-	                    }
-	                    
-	                }.bind(this),
-	                error: function() {
-	                	console.warn("Unable to retrieve the information about the KV store lookup");
-	                }.bind(this),
-	                complete: function(){
-	                	this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type);
-	                }.bind(this)
-	        	});
-        	}
-        	
-        	// If we are making an new KV lookup, then show the form that allows the user to define the meta-data
-        	else if(this.lookup_type === "kv" && this.is_new){
-        		
-        		this.kv_store_fields_editor = new KVStoreFieldEditor({
-        			'el' : $('#lookup-kv-store-edit', this.$el)
-        		});
-        		
-        		this.kv_store_fields_editor.render();
-        		
-        		$('#lookup-kv-store-edit', this.$el).show();
-        		$('#save', this.$el).show();
-        		$('#lookup-table', this.$el).hide();
-        	}
-        	
-        	// If this is a new lookup, then show default content accordingly
-        	else if(this.is_new){
-        		
-        		// Show a default lookup if this is a new lookup
-        		this.renderLookup(this.getDefaultData());
-        	}
-        	
-        	// Stop if we didn't get enough information to load a lookup
-        	else if(this.lookup == null || this.namespace == null || this.owner == null){
-        		this.showWarningMessage("Not enough information to identify the lookup file to load");
-        	}
-        	
-        	// Otherwise, load the lookup
-        	else{
-        		this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type);
-        	}
-        	
-        	// Get a list of users to show from which to load the context
-            $.when(this.getUsers(this.owner)).done(function(users){
-            	console.info("Rendering users list");
-            	this.renderUserList(users);
-      		}.bind(this));
-        	
+			$.when(this.hasCapability('admin_all_objects')).done(function(has_permission){
+				console.log("Rendering...");
+		
+				// Get the information from the lookup to load
+				this.lookup = Splunk.util.getParameter("lookup");
+				this.namespace = Splunk.util.getParameter("namespace");
+				this.owner = Splunk.util.getParameter("owner");
+				this.lookup_type = Splunk.util.getParameter("type");
+				
+				// Determine if we are making a new lookup
+				this.is_new = false;
+				
+				if((this.lookup === null && this.namespace === null && this.owner === null) || (Splunk.util.getParameter("action") === "new")){
+					this.is_new = true;
+				}
+				
+				// Get a list of users to show from which to load the context
+				var users = this.makeUsersList(this.owner);
+				
+				// Render the HTML content
+				this.$el.html(_.template(Template, {
+					'insufficient_permissions' : !has_permission,
+					'is_new' : this.is_new,
+					'lookup_name': this.lookup,
+					'lookup_type' : this.lookup_type,
+					'users' : users
+				}));
+				
+				// Setup a handler for the shortcuts
+				$(document).keydown(this.handleShortcuts.bind(this));
+				console.info("Press CTRL + E to see something interesting");
+				
+				if(has_permission){
+
+					// Show the content that is specific to making new lookups
+					if(this.is_new){
+						
+						// Make the lookup name input
+						var name_input = new TextInput({
+							"id": "lookup-name",
+							"searchWhenChanged": false,
+							"el": $('#lookup-name', this.$el)
+						}, {tokens: true}).render();
+						
+						name_input.on("change", function(newValue) {
+							this.validateForm();
+						}.bind(this));
+						
+						// Make the app selection drop-down
+						var app_dropdown = new DropdownInput({
+							"id": "lookup-app",
+							"selectFirstChoice": false,
+							"showClearButton": false,
+							"el": $('#lookup-app', this.$el),
+							"choices": this.getAppsChoices()
+						}, {tokens: true}).render();
+						
+						app_dropdown.on("change", function(newValue) {
+							this.validateForm();
+						}.bind(this));
+						
+						// Make the user-only lookup checkbox
+						var user_only_checkbox = new CheckboxGroupInput({
+							"id": "lookup-user-only",
+							"choices": [{label:"User-only", value: "user_only"}],
+							"el": $('#lookup-user-only')
+						}, {tokens: true}).render();
+				
+						user_only_checkbox.on("change", function(newValue) {
+							this.validateForm();
+						}.bind(this));
+
+					}
+					
+					// Setup the handlers so that we can make the view support drag and drop
+					this.setupDragDropHandlers();
+					
+					// If we are editing an existing KV lookup, then get the information about the lookup and _then_ get the lookup data
+					if(this.lookup_type === "kv" && !this.is_new){
+						
+						// Get the info about the lookup configuration (for KV store lookups)
+						this.lookup_config = new KVLookup();
+						
+						this.lookup_config.fetch({
+							// e.g. servicesNS/nobody/lookup_editor/storage/collections/config/test
+							url: splunkd_utils.fullpath(['/servicesNS', 'nobody', this.namespace, 'storage/collections/config', this.lookup].join('/')), // For some reason using the actual owner causes this call to fail
+							success: function(model, response, options) {
+								console.info("Successfully retrieved the information about the KV store lookup");
+								
+								// Determine the types of the fields
+								for (var possible_field in model.entry.associated.content.attributes) {
+									// Determine if this a field
+									if(possible_field.indexOf('field.') === 0){
+										
+										// Save the type if it is a field
+										this.field_types[possible_field.substr(6)] = model.entry.associated.content.attributes[possible_field];
+									}
+								}
+								
+								// Determine if types are enforced
+								if(model.entry.associated.content.attributes.hasOwnProperty('enforceTypes')){
+									if(model.entry.associated.content.attributes.enforceTypes === "true"){
+										this.field_types_enforced = true;
+									}
+									else{
+										this.field_types_enforced = false;
+									}
+								}
+								
+								// If this lookup cannot be edited, then set the editor to read-only
+								if(!model.entry.acl.attributes.can_write){
+									this.read_only = true;
+									this.showWarningMessage("You do not have permission to edit this lookup; it is being displayed read-only");
+								}
+								
+							}.bind(this),
+							error: function() {
+								console.warn("Unable to retrieve the information about the KV store lookup");
+							}.bind(this),
+							complete: function(){
+								this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type);
+							}.bind(this)
+						});
+					}
+					
+					// If we are making an new KV lookup, then show the form that allows the user to define the meta-data
+					else if(this.lookup_type === "kv" && this.is_new){
+						
+						this.kv_store_fields_editor = new KVStoreFieldEditor({
+							'el' : $('#lookup-kv-store-edit', this.$el)
+						});
+						
+						this.kv_store_fields_editor.render();
+						
+						$('#lookup-kv-store-edit', this.$el).show();
+						$('#save', this.$el).show();
+						$('#lookup-table', this.$el).hide();
+					}
+					
+					// If this is a new lookup, then show default content accordingly
+					else if(this.is_new){
+						
+						// Show a default lookup if this is a new lookup
+						this.renderLookup(this.getDefaultData());
+					}
+					
+					// Stop if we didn't get enough information to load a lookup
+					else if(this.lookup == null || this.namespace == null || this.owner == null){
+						this.showWarningMessage("Not enough information to identify the lookup file to load");
+					}
+					
+					// Otherwise, load the lookup
+					else{
+						this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type);
+					}
+					
+					// Get a list of users to show from which to load the context
+					$.when(this.getUsers(this.owner)).done(function(users){
+						console.info("Rendering users list");
+						this.renderUserList(users);
+					}.bind(this));
+				}
+			}.bind(this));
         }
     });
     
