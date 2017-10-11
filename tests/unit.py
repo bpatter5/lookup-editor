@@ -55,7 +55,7 @@ class LookupEditorTestCase(unittest.TestCase):
         if self.session_key is not None:
             return self.session_key
         else:
-            return splunk.auth.getSessionKey(username='admin', password='changemer')
+            return splunk.auth.getSessionKey(username='admin', password='changeme')
 
     def strip_splunk_path(self, file_path):
         """
