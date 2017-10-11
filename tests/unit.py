@@ -25,17 +25,37 @@ from lookup_editor_rest_handler import LookupEditorHandler
 
 logger = logging.getLogger('splunk.appserver.lookup_editor.unit_test')
 
+def skipIfCantAuthenticate(func):
+    def _decorator(self, *args, **kwargs):
+
+        try:
+            self.get_session_key()
+        except splunk.AuthenticationFailed:
+            self.skipTest("Could not authenticate with Splunk")
+            return
+        except splunk.SplunkdConnectionException:
+            self.skipTest("Splunkd not accessible")
+            return
+
+        return func(self, *args, **kwargs)
+
+    return _decorator
+
 class LookupEditorTestCase(unittest.TestCase):
     """
     This base class offers functionality to help tests cases for the lookup editor.
     """
 
+    session_key = None
+
     def get_session_key(self):
         """
         Get a session key to Splunk.
         """
-
-        return splunk.auth.getSessionKey(username='admin', password='changeme')
+        if self.session_key is not None:
+            return self.session_key
+        else:
+            return splunk.auth.getSessionKey(username='admin', password='changemer')
 
     def strip_splunk_path(self, file_path):
         """
@@ -158,6 +178,7 @@ class TestLookupEditor(LookupEditorTestCase):
     def setUp(self):
         self.lookup_editor = LookupEditor(logger=logger)
 
+    @skipIfCantAuthenticate
     def test_resolve_lookup_filename(self):
         """
         Test resolve_lookup_filename() to resolve a lookup file name.
@@ -170,6 +191,7 @@ class TestLookupEditor(LookupEditorTestCase):
         self.assertEquals(self.strip_splunk_path(file_path),
                           '/etc/apps/lookup_editor/lookups/test.csv')
 
+    @skipIfCantAuthenticate
     def test_resolve_lookup_filename_version(self):
         """
         Test resolve_lookup_filename() to resolve a lookup file name to the backed up version.
@@ -182,6 +204,7 @@ class TestLookupEditor(LookupEditorTestCase):
         self.assertEquals(self.strip_splunk_path(file_path),
                           '/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv/1234')
         
+    @skipIfCantAuthenticate
     def test_resolve_lookup_filename_version_no_user(self):
         """
         Test resolve_lookup_filename() to resolve a lookup file name to the backed up version
@@ -202,6 +225,7 @@ class TestLookupBackups(LookupEditorTestCase):
     def setUp(self):
         self.lookup_backups = lookup_backups.LookupBackups(logger=logger)
 
+    @skipIfCantAuthenticate
     def test_get_backup_directory(self):
         """
         Ensure that get_backup_directory() returns the correct directory.
@@ -214,6 +238,7 @@ class TestLookupBackups(LookupEditorTestCase):
         self.assertEquals(self.strip_splunk_path(dir),
                           "/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv")
 
+    @skipIfCantAuthenticate
     def test_get_backup_directory_with_resolved(self):
         """
         Ensure that get_backup_directory() returns the correct directory when given a value for resolved_lookup_path.
