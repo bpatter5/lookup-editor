@@ -191,7 +191,7 @@ class LookupEditorHandler(rest_handler.RESTHandler):
 
             # If we are getting a KV store lookup, then convert it to a CSV file
             else:
-                rows = self.lookup_editor.get_kv_lookup(lookup_file, namespace, owner)
+                rows = self.lookup_editor.get_kv_lookup(request_info.session_key, lookup_file, namespace, owner)
                 csv_data = shortcuts.convert_array_to_csv(rows)
 
             # Tell the browser to download this as a file
