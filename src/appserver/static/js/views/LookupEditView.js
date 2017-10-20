@@ -297,7 +297,7 @@ define([
         	var field_type = this.getFieldType(col);
         	
         	// Check it if it is an number
-        	if(field_type === 'number' && !/^[-]?\d+$/.test(value)){
+        	if(field_type === 'number' && !/^[-]?\d+(.\d+)?$/.test(value)){
     			return true;
     		}
     		
@@ -1816,7 +1816,8 @@ define([
         		
         		// Handle number fields
         		else if(field_info === 'number'){
-        			column['type'] = 'numeric';
+					column['type'] = 'numeric';
+					column['format'] = '0.0[0000]';
         		}
         		
         		columns.push(column);
