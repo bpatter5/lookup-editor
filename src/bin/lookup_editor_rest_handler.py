@@ -115,7 +115,9 @@ class LookupEditorHandler(rest_handler.RESTHandler):
 
             # Load the KV store lookup
             if lookup_type == "kv":
-                return self.render_json(self.lookup_editor.get_kv_lookup(lookup_file, namespace, owner))
+                return self.render_json(self.lookup_editor.get_kv_lookup(request_info.session_key,
+                                                                         lookup_file, namespace,
+                                                                         owner))
 
             # Load the CSV lookup
             elif lookup_type == "csv":
