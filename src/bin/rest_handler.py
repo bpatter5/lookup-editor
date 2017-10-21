@@ -45,6 +45,7 @@ Below is an example that assumes the Python code above is in hello_world_rest_ha
 """
 
 import os
+import re
 import sys
 import json
 
@@ -101,7 +102,7 @@ class RESTHandler(PersistentServerConnectionApplication):
         """
 
         if len(path) > 0:
-            return method + "_" + path
+            return method + "_" + re.sub(r'[^a-zA-Z0-9_]', '_', path).lower()
         else:
             return method
 

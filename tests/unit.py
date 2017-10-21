@@ -84,6 +84,14 @@ class TestLookupEditRESTHandler(LookupEditorTestCase):
         sig = LookupEditorHandler.get_function_signature("get", "test_a_function")
         self.assertEqual(sig, "get_test_a_function")
 
+    def test_function_signature_sub_path(self):
+        """
+        Test the creation of the function signature from the path.
+        """
+
+        sig = LookupEditorHandler.get_function_signature("get", "first_part/second_part")
+        self.assertEqual(sig, "get_first_part_second_part")
+
 class TestLookupBackupRESTHandler(LookupEditorTestCase):
     """
     This tests the REST handler to ensure that it is functioning.
