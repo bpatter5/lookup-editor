@@ -1,5 +1,5 @@
 <form>
-  <label>App Logs</label>
+  <label>Logs</label>
   <fieldset submitButton="true" autoRun="true">
     <input type="time" token="field1">
       <label></label>

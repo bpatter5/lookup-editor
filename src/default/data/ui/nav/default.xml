@@ -1,7 +1,10 @@
 <nav color="#858585" search_view="search">
   <view name="lookup_list" default="true" />
   <view name="lookup_new" />
-	<view name="lookup_editor_logs" />
+	<collection label="Health">
+		<view name="lookup_editor_logs" />
+		<view name="lookup_editor_status" />
+  </collection>
   <collection label="Search">
   	<view name="search" />
   	<view name="datasets" />
