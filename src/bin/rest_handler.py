@@ -216,8 +216,11 @@ class RESTHandler(PersistentServerConnectionApplication):
         """
 
         return {
-            'payload': 'Online', # Payload of the request.
-            'status': 200 # HTTP status code
+            'payload': 'Online',
+            'status': 200,
+            'headers': {
+                'Content-Type': 'text/plain'
+            },
         }
 
     def post_ping(self, request_info, **kwargs):
