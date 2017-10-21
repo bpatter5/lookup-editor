@@ -1032,7 +1032,7 @@ Below is an example of the entry in the file:
     <target name="test.deploy_and_run_unit" description="Deploys the application and runs the unit tests" depends="skip_bump,deploy,test.run_unit" />
 	
     <!-- ================================= 
-          target: test.deploy_test
+          target: test.deploy_and_test
          ================================= -->
     <target name="test.deploy_and_test" description="Deploys the application and runs the entire test suite" depends="skip_bump,deploy,test" />
 	
