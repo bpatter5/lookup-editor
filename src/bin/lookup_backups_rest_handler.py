@@ -9,8 +9,7 @@ from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 from splunk import AuthorizationFailed, ResourceNotFound
 
 from lookup_editor import LookupEditor
-
-import rest_handler
+from lookup_editor import rest_handler
 
 # The default of the csv module is 128KB; upping to 10MB. See SPL-12117 for
 # the background on issues surrounding field sizes.
