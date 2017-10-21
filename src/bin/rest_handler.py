@@ -203,7 +203,7 @@ class RESTHandler(PersistentServerConnectionApplication):
                 }
         except Exception as exception:
             if self.logger is not None:
-                self.logger.exception("Failed to handle request due to an un handled exception")
+                self.logger.exception("Failed to handle request due to an unhandled exception")
 
             return {
                 'payload': str(exception),
