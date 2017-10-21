@@ -206,9 +206,33 @@ class RESTHandler(PersistentServerConnectionApplication):
                 self.logger.exception("Failed to handle request due to an un handled exception")
 
             return {
-                    'payload': str(exception),
-                    'status': 500
+                'payload': str(exception),
+                'status': 500
             }
+
+    def get_ping(self, request_info, **kwargs):
+        """
+        Return a response indicating that the REST handler is online.
+        """
+
+        return {
+            'payload': 'Online', # Payload of the request.
+            'status': 200 # HTTP status code
+        }
+
+    def post_ping(self, request_info, **kwargs):
+        """
+        Return a response indicating that the REST handler is online.
+        """
+
+        return self.get_ping(request_info, **kwargs)
+
+    def head_ping(self, request_info, **kwargs):
+        """
+        Return a response indicating that the REST handler is online.
+        """
+
+        return self.get_ping(request_info, **kwargs)
 
     def convert_to_dict(self, query):
         """
