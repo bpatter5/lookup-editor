@@ -26,8 +26,7 @@ define([
     KVStoreFieldView,
     Template
 ){
-    
-	
+
     var KVStoreFieldEditor = SimpleSplunkView.extend({
         className: "KVStoreFieldEditor",
         

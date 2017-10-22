@@ -26,8 +26,7 @@ define([
     DropdownInput,
     Template
 ){
-	
-    
+
     var KVStoreFieldView = SimpleSplunkView.extend({
         className: "KVStoreFieldView",
         
