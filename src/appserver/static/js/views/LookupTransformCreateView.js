@@ -76,6 +76,9 @@ define([
 
         events: {
             "click #save" : "onCreate",
+
+            // This is used to fix some wierdness with bootstrap and input focus
+            "shown #lookup-transform-modal" : "focusView",
         },
 
         /**
@@ -86,6 +89,8 @@ define([
             this.namespace = namespace;
             this.lookup = lookup;
             this.fields = fields;
+
+            this.save_pressed = false;
 
             // Clear the existing value so that it doesn't carry over
             mvc.Components.getInstance("transform-name").val('');
@@ -98,9 +103,21 @@ define([
         },
 
         /**
+         * Fixes an issue where clicking an input loses focus instantly due to a problem in Bootstrap.
+         * 
+         * http://stackoverflow.com/questions/11634809/twitter-bootstrap-focus-on-textarea-inside-a-modal-on-click
+         */
+        focusView: function(){
+            this.$('#transform-name input').focus();
+            
+        },
+
+        /**
          * Create the transform and call the callback once it is done if necessary.
          */
         onCreate: function(){
+            this.save_pressed = true;
+
             if(this.validateForm()){
                 $.when(this.createTransform(this.owner, this.namespace, this.lookup, mvc.Components.getInstance("transform-name").val(), this.fields)).done(function(){
                     if(this.callback){
@@ -122,7 +139,7 @@ define([
          * Hide the warning message.
          */
         hideWarningMessage: function(){
-            this.$('alert').show();
+            this.$('.alert').hide();
         },
 
         /**
@@ -181,7 +198,9 @@ define([
          */
         validateForm: function() {
             if(mvc.Components.getInstance("transform-name").val().length === 0){
-                this.showWarningMessage('Please enter the name of the transform to create');
+                if(this.save_pressed){
+                    this.showWarningMessage('Please enter the name of the transform to create');
+                }
                 return false;
             }
             else{
