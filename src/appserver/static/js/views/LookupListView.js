@@ -2,7 +2,8 @@
 require.config({
     paths: {
         datatables: "../app/lookup_editor/js/lib/DataTables/js/jquery.dataTables",
-        bootstrapDataTables: "../app/lookup_editor/js/lib/DataTables/js/dataTables.bootstrap",
+		bootstrapDataTables: "../app/lookup_editor/js/lib/DataTables/js/dataTables.bootstrap",
+		lookupTransformCreateView: "../app/lookup_editor/js/views/LookupTransformCreateView",
         text: "../app/lookup_editor/js/lib/text",
         console: '../app/lookup_editor/js/lib/console'
     },
@@ -22,7 +23,8 @@ define([
     "jquery",
     "splunkjs/mvc/simplesplunkview",
     "text!../app/lookup_editor/js/templates/LookupList.html",
-    "bootstrapDataTables",
+	"bootstrapDataTables",
+	"lookupTransformCreateView",
     "util/splunkd_utils",
     "bootstrap.dropdown",
     "css!../app/lookup_editor/css/LookupList.css",
@@ -36,7 +38,8 @@ define([
     $,
     SimpleSplunkView,
     Template,
-    dataTable,
+	dataTable,
+	LookupTransformCreateView,
     splunkd_utils
 ){
 	
@@ -144,7 +147,10 @@ define([
                 error: function() {
                   console.error("Unable to fetch the lookup transforms");
                 }
-            });
+			});
+
+			// Keep a reference around for the lookup transform editor
+			this.lookup_transform_editor = null;
         },
         
         events: {
@@ -161,7 +167,10 @@ define([
         	"click #disable-this-lookup" : "disableLookup",
         		
             // Options for enabling lookups
-            "click .enable-kv-lookup" : "enableLookup"
+			"click .enable-kv-lookup" : "enableLookup",
+			
+			// Open the 
+			"click .open-in-search" : "openInSearch"
         },
         
         /**
@@ -517,22 +526,49 @@ define([
         	this.filter_text = $('#free-text-filter').val();
         	this.data_table.columns(0).search( $('#free-text-filter').val() ).draw();
         },
-        
+		
+		/**
+         * Open the lookup in search or make the lookup transform.
+         */
+		openInSearch: function(e){
+			e.preventDefault();
+
+			if(this.lookup_transform_editor === null){
+				this.lookup_transform_editor = new LookupTransformCreateView({
+					el : $('#lookup-transform-edit', this.$el),
+					callback : function(){
+						this.lookup_transforms.fetch({
+							success: function() {
+							  console.info("Successfully retrieved the list of lookup transforms");
+							  this.renderLookupsList(true);
+							}.bind(this),
+							error: function() {
+							  console.error("Unable to fetch the lookup transforms");
+							}.bind(this)
+						});
+					}.bind(this)
+				});
+	
+				this.lookup_transform_editor.render();
+			}
+
+			var data = $(e.currentTarget).data();
+
+			this.lookup_transform_editor.show(data.name, data.namespace, data.name, data.fields);
+		},
+
         /**
          * Get the description for the app name
          */
         getAppDescriptionFromName: function(name){
         	
     		for(var c = 0; c < this.apps.models.length; c++){
-    			
     			if(this.apps.models[c].entry.attributes.name === name){
     				return this.apps.models[c].entry.associated.content.attributes.label;
     			}
-    			
     		}
     		
     		return name;
-        	
         },
         
         /**
@@ -643,13 +679,29 @@ define([
         	
         	// Add the KV store lookups
         	for(var c = 0; c < this.kv_lookups.models.length; c++){
-        		
+
+				// Filter down the attributes down to the fields
+				var fields = _.keys(this.kv_lookups.models[c].entry.content.attributes).filter(function(attribute){
+					return attribute.indexOf('field.') === 0;
+				});
+
+				// Strip out the prefix of "field."
+				fields = fields.map(function(attribute){
+					return attribute.substr(6, 100);
+				});
+
+				// Add the _key field to the list if we got some fields
+				if(fields.length > 0){
+					fields.push('_key');
+				}
+
         		new_entry = {
         				'name': this.kv_lookups.models[c].entry.attributes.name,
         				'author': this.kv_lookups.models[c].entry.attributes.author,
         				'updated': this.kv_lookups.models[c].entry.attributes.updated,
         				'namespace': this.kv_lookups.models[c].entry.acl.attributes.app,
-        				'owner': this.kv_lookups.models[c].entry.acl.attributes.owner,
+						'owner': this.kv_lookups.models[c].entry.acl.attributes.owner,
+						'fields': fields.join(","),
         				'type' : 'kv',
         				'endpoint_owner' : 'nobody',
         				'disabled': this.kv_lookups.models[c].entry.associated.content.attributes.disabled

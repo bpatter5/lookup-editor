@@ -161,7 +161,9 @@
 				<% } %> 
                 <% if (lookups[i].type == "kv" && getLookupTransform(lookups[i].name)) { %>
 					<a class="action-link external" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- getLookupTransform(lookups[i].name) %>">Open in Search</a>
-				<% } %>
+                <% } else if (lookups[i].type == "kv") { %>
+                    <a class="action-link external open-in-search" target="_blank" href="#" data-fields="<%- lookups[i].fields %>" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>">Open in Search</a>
+                <% } %>
 			</td>
         </tr>
 		<% } %>
@@ -179,3 +181,5 @@
 		</div>
     </div>
 </div>
+
+<div id="lookup-transform-edit"></div>
