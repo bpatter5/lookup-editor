@@ -187,6 +187,9 @@ define([
                 if(response.status === 409){
                     this.showWarningMessage('A transform with this name already exists');
                 }
+                else if(response.status === 403){
+                    this.showWarningMessage('You do not have permission to create a lookup transform');
+                }
                 else{
                     this.showWarningMessage('The transform could not be created (got an error from the server)');
                 }
