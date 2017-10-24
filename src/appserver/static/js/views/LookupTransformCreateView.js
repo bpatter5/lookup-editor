@@ -183,7 +183,7 @@ define([
                 this.openInSearch(transform_name);
 
                 promise.resolve();
-            }).fail(response => {
+            }).fail(function(response) {
                 if(response.status === 409){
                     this.showWarningMessage('A transform with this name already exists');
                 }
@@ -196,7 +196,7 @@ define([
                 
                 // Otherwise, show a failure message
                 promise.reject();
-            });
+            }.bind(this));
             
             // Return the promise
             return promise;
