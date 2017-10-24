@@ -20,5 +20,14 @@
 			<arg line="${value.test.browser}" />
         </exec>
     </target>
+
+    <!-- ================================= 
+          target: splunk.refresh
+         ================================= -->
+    <target name="splunk.refresh" description="Refresh Splunk" depends="define_reload_conf_macro,verify_splunk_home">
+    	<reload_conf endpoint="nav" />
+    	<reload_conf endpoint="views" />
+		<reload_conf endpoint="transforms-lookup" />
+    </target>
 	
 </project>
