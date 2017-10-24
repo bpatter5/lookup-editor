@@ -177,13 +177,13 @@ define([
                     app: namespace,
                     owner: 'nobody',
                 },
-            }).done(() => {
+            }).done(function() {
                 // If successful, close the dialog and run the search
                 this.$('#lookup-transform-modal').modal('hide');
                 this.openInSearch(transform_name);
 
                 promise.resolve();
-            }).fail(function(response) {
+            }.bind(this)).fail(function(response) {
                 if(response.status === 409){
                     this.showWarningMessage('A transform with this name already exists');
                 }
