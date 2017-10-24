@@ -537,10 +537,10 @@ define([
 				this.lookup_transform_editor = new LookupTransformCreateView({
 					el : $('#lookup-transform-edit', this.$el),
 					callback : function(){
+						this.retain_state = true;
 						this.lookup_transforms.fetch({
 							success: function() {
 							  console.info("Successfully retrieved the list of lookup transforms");
-							  this.renderLookupsList(true);
 							}.bind(this),
 							error: function() {
 							  console.error("Unable to fetch the lookup transforms");
