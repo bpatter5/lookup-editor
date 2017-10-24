@@ -34,21 +34,6 @@ define([
     Template,
     splunkd_utils
 ){
-	var LookupTransform = SplunkDBaseModel.extend({
-        url: "data/transforms/lookups",
-	    initialize: function() {
-	    	SplunkDBaseModel.prototype.initialize.apply(this, arguments);
-	    }
-	});
-
-	var LookupTransforms = SplunkDsBaseCollection.extend({
-        url: "data/transforms/lookups?count=-1",
-        model: LookupTransform,
-	    initialize: function() {
-	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
-	    }
-    });
-
     var LookupTransformCreateView = SimpleSplunkView.extend({
         className: "LookupTransformCreateView",
         
@@ -222,7 +207,7 @@ define([
             this.$el.html(Template);
             
             // Get the transforms
-            this.transforms = new LookupTransforms();
+            this.transforms = new TransformsLookups();
             this.transforms.on('reset', this.gotTransforms.bind(this), this);
 
             this.transforms.fetch({
