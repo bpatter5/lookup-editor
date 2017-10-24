@@ -120,7 +120,8 @@ define([
             });
         	
         	// Get the KV store lookups
-        	this.kv_lookups_supported = true;
+			this.kv_lookups_supported = true;
+			this.kv_lookups = null;
         	this.getKVLookups();
         	
         	// Get the apps
@@ -546,7 +547,8 @@ define([
 							  console.error("Unable to fetch the lookup transforms");
 							}.bind(this)
 						});
-					}.bind(this)
+					}.bind(this),
+					kv_collections : this.kv_lookups
 				});
 	
 				this.lookup_transform_editor.render();
@@ -554,7 +556,7 @@ define([
 
 			var data = $(e.currentTarget).data();
 
-			this.lookup_transform_editor.show(data.name, data.namespace, data.name, data.fields);
+			this.lookup_transform_editor.show(data.name, data.namespace, data.name);
 		},
 
         /**
@@ -679,29 +681,12 @@ define([
         	
         	// Add the KV store lookups
         	for(var c = 0; c < this.kv_lookups.models.length; c++){
-
-				// Filter down the attributes down to the fields
-				var fields = _.keys(this.kv_lookups.models[c].entry.content.attributes).filter(function(attribute){
-					return attribute.indexOf('field.') === 0;
-				});
-
-				// Strip out the prefix of "field."
-				fields = fields.map(function(attribute){
-					return attribute.substr(6, 100);
-				});
-
-				// Add the _key field to the list if we got some fields
-				if(fields.length > 0){
-					fields.push('_key');
-				}
-
         		new_entry = {
         				'name': this.kv_lookups.models[c].entry.attributes.name,
         				'author': this.kv_lookups.models[c].entry.attributes.author,
         				'updated': this.kv_lookups.models[c].entry.attributes.updated,
         				'namespace': this.kv_lookups.models[c].entry.acl.attributes.app,
 						'owner': this.kv_lookups.models[c].entry.acl.attributes.owner,
-						'fields': fields.join(","),
         				'type' : 'kv',
         				'endpoint_owner' : 'nobody',
         				'disabled': this.kv_lookups.models[c].entry.associated.content.attributes.disabled

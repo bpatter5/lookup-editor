@@ -34,11 +34,20 @@ define([
     Template,
     splunkd_utils
 ){
+
+	var KVLookups = SplunkDsBaseCollection.extend({
+	    url: '/servicesNS/nobody/-/storage/collections/config?count=-1',
+	    initialize: function() {
+	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
+	    }
+	});
+
     var LookupTransformCreateView = SimpleSplunkView.extend({
         className: "LookupTransformCreateView",
         
         defaults: {
-            callback: null
+            callback: null,
+            kv_collections: null
         },
         
         /**
@@ -49,8 +58,9 @@ define([
             
             this.callback = this.options.callback;
 
-            // This will contain the list of the transforms
+            // This will contain the list of the transforms and kv collections
             this.transforms = null;
+            this.kv_collections = this.options.kv_collections;
 
             // This will be the lookup transform that was created
             this.lookup_transform = null;
@@ -69,22 +79,37 @@ define([
         /**
          * Show the modal.
          */
-        show: function(owner, namespace, lookup, fields) {
-            this.owner = owner;
-            this.namespace = namespace;
-            this.lookup = lookup;
-            this.fields = fields;
-
-            this.save_pressed = false;
-
+        show: function(owner, namespace, lookup) {
+    
             // Clear the existing value so that it doesn't carry over
             mvc.Components.getInstance("transform-name").val('');
-
+                
             // Hide the warning message
             this.hideWarningMessage();
 
+            this.$('.main-content').show();
+            this.$('.no-fields-content').hide();
+            this.$('#save').show();
+
+            // Make sure that the lookup has fields defined
+            var fields = this.getFieldsForLookup(lookup);
+
+            if(fields.length > 0){
+                this.owner = owner;
+                this.namespace = namespace;
+                this.lookup = lookup;
+    
+                this.save_pressed = false;
+            }
+            else {
+                this.$('.main-content').hide();
+                this.$('.no-fields-content').show();
+                this.$('#save').hide();
+            }
+
             // Open the modal
             this.$('#lookup-transform-modal').modal();
+
         },
 
         /**
@@ -104,7 +129,7 @@ define([
             this.save_pressed = true;
 
             if(this.validateForm()){
-                $.when(this.createTransform(this.owner, this.namespace, this.lookup, mvc.Components.getInstance("transform-name").val(), this.fields)).done(function(){
+                $.when(this.createTransform(this.owner, this.namespace, this.lookup, mvc.Components.getInstance("transform-name").val())).done(function(){
                     if(this.callback){
                         this.callback();
                     }
@@ -130,18 +155,21 @@ define([
         /**
          * Create the transform.
          */
-        createTransform: function(owner, namespace, lookup, transform_name, fields) {
+        createTransform: function(owner, namespace, lookup, transform_name) {
             // Create the model to save
             var lookupTransform = new TransformsLookup();
 
             // Get a promise ready
             var promise = jQuery.Deferred();
 
+            // Get the list of fields for this lookup
+            var fields = this.getFieldsForLookup(lookup);
+
             // Modify the model
             lookupTransform.entry.content.set('collection', lookup);
             lookupTransform.entry.content.set('external_type', 'kvstore');
             lookupTransform.entry.content.set('name', transform_name);
-            lookupTransform.entry.content.set('fields_list', fields);
+            lookupTransform.entry.content.set('fields_list', fields.join(","));
 
             // Kick off the request to edit the entry
             lookupTransform.save({}, {
@@ -156,7 +184,7 @@ define([
 
                 promise.resolve();
             }).fail(response => {
-                if(response.status === 490){
+                if(response.status === 409){
                     this.showWarningMessage('A transform with this name already exists');
                 }
                 else{
@@ -169,13 +197,6 @@ define([
             
             // Return the promise
             return promise;
-        },
-
-        /**
-         * Get the list of transforms.
-         */
-        gotTransforms: function() {
-            
         },
 
         /**
@@ -194,6 +215,36 @@ define([
         },
 
         /**
+         * Get the fields list for the given lookup name.
+         */
+        getFieldsForLookup: function(lookup_name){
+
+            for(var c = 0; c < this.kv_collections.models.length; c++){
+
+                var entry = this.kv_collections.models[c].entry;
+
+                if(entry.attributes.name === lookup_name){
+                    // Filter down the attributes down to the fields
+                    var fields = _.keys(entry.content.attributes).filter(function(attribute){
+                        return attribute.indexOf('field.') === 0;
+                    });
+
+                    // Strip out the prefix of "field."
+                    fields = fields.map(function(attribute){
+                        return attribute.substr(6, 100);
+                    });
+
+                    // Add the _key field to the list if we got some fields
+                    if(fields.length > 0){
+                        fields.push('_key');
+                    }
+
+                    return fields;
+                }
+            }
+        },
+
+        /**
          * Open the given lookup in the search page.
          */
         openInSearch: function(lookup_transform) {
@@ -208,7 +259,6 @@ define([
             
             // Get the transforms
             this.transforms = new TransformsLookups();
-            this.transforms.on('reset', this.gotTransforms.bind(this), this);
 
             this.transforms.fetch({
                 success: function () {
@@ -218,6 +268,20 @@ define([
                     console.error("Unable to fetch the transforms");
                 }
             });
+
+            // Get the KV store collections
+            if(this.kv_collections === null){
+                this.kv_collections = new KVLookups();
+                
+                this.kv_collections.fetch({
+                    success: function () {
+                        console.info("Successfully retrieved the list of KV store collections");
+                    },
+                    error: function () {
+                        console.error("Unable to fetch the collections");
+                    }
+                });
+            }
 
             // Make the input for the transform name
 			this.name_input = new TextInput({

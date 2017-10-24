@@ -9,25 +9,33 @@
             <i class="icon-alert"></i>
             <span id="message">Transform could not be created</span>
         </div>
+        <div class="main-content">
+            This lookup doesn't have a transforms.conf entry and needs one in order to be accessible in search.
+            <p />
+            <p />
+            Enter a name of a transform below.
+            
+            <div id="transform-name-control-group" class="control-group"></span>
+                <div class="top-label">
+                    <label class="control-label" for="transform-name">Transform name:</label>
+                </div>
+                <div class="controls show-when-creating">
+                    <div class="input" id="transform-name"></div>
+                    <span class="hide help-inline"></span>
+                    <span class="help-block"></span>
+                </div>
+            </div>
+        </div>
+        <div class="no-fields-content">
+            This lookup has no fields defined in collections.conf.
+            The fields need to be defined in order for the lookup to be available in search.
+            <p />
+            <p />
 
-        This lookup doesn't have a transforms.conf entry and needs one in order to be accessible in search.
-        <p />
-        <p />
-        Enter a name of a transform below.
-        
-        <div id="transform-name-control-group" class="control-group"></span>
-            <div class="top-label">
-                <label class="control-label" for="transform-name">Transform name:</label>
-            </div>
-            <div class="controls show-when-creating">
-                <div class="input" id="transform-name"></div>
-                <span class="hide help-inline"></span>
-                <span class="help-block"></span>
-            </div>
         </div>
     </div>
     <div class="modal-footer">
-        <a href="#" class="btn btn-dialog-cancel label_from_data" data-dismiss="modal" style="display: inline;">Cancel</a>
+        <a href="#" class="btn btn-dialog-cancel label_from_data" data-dismiss="modal" style="display: inline;">Close</a>
         <a href="#" class="btn btn-primary" id="save">Create Transform</a>
     </div>
 </div>
