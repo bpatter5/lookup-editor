@@ -113,6 +113,9 @@
 				<% if(!is_new) { %>
 				<button class="btn" id="export-file">Export</button>
 				<button class="btn" id="refresh">Refresh</button>
+				<% if(search_link !== null) { %>
+				<a class="btn" target="_blank" href="<%- search_link %>">Open in Search</a>
+				<% } %>
 				<!-- <button class="btn" id="edit-acl">Edit Permissions</button> -->
 				<a class="btn dropdown-toggle right-offset-button" data-toggle="dropdown" href="#">
         			Revert to previous version
@@ -127,6 +130,11 @@
 				<div id="load-user-context" class="btn-group pull-right right-offset-button">
 					<button class="btn" id="import-file">Import</button>
 					<button class="btn" id="export-file">Export</button>
+					<% if(search_link !== null) { %>
+						<a class="btn" target="_blank" href="<%- search_link %>">Open in Search</a>
+					<% } else {%>
+					<button class="btn" id="open-in-search">Open in Search</button>
+					<% } %>
 					<button class="btn" id="refresh">Refresh</button>
 					<!-- <button class="btn" id="edit-acl">Edit Permissions</button> -->
 					<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
@@ -165,4 +173,5 @@
 
 <button class="btn btn-primary pull-right editing-content <% if(lookup_type === "kv" && !is_new ){ %>hide<% } %>" id="save">Save Lookup</button>
 
+<div id="lookup-transform-modal"></div>
 <% } %>
