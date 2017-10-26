@@ -170,7 +170,7 @@ define([
             // Options for enabling lookups
 			"click .enable-kv-lookup" : "enableLookup",
 			
-			// Open the 
+			// Open the lookup in search
 			"click .open-in-search" : "openInSearch"
         },
         
@@ -556,7 +556,7 @@ define([
 
 			var data = $(e.currentTarget).data();
 
-			this.lookup_transform_editor.show(data.name, data.namespace, data.name);
+			this.lookup_transform_editor.openInSearchOrCreateTransform(data.name, data.namespace, data.name);
 		},
 
         /**
