@@ -1,4 +1,5 @@
-	<div tabindex="-1" id="import-file-modal" class="modal fade in hide">
+<div class="lookup-edit-view">
+<div tabindex="-1" id="import-file-modal" class="modal fade in hide">
 	    <div class="modal-header">
 	        <button type="button" class="close btn-dialog-close" data-dismiss="modal">x</button>
 	        <h3>Import File</h3>
@@ -36,8 +37,7 @@
 	    <div class="modal-footer">
 	        <a href="#" class="btn btn-dialog-cancel label_from_data" data-dismiss="modal" style="display: inline;">Cancel</a>
 	    </div>
-	</div>
-	
+</div>
 
 <div class="top-controls">
 	<div class="row-fluid">
@@ -162,16 +162,12 @@
         	</div>
 			<% } %>
 		</div>
-	</div>
-	
 </div>
-
+	
 <div id="lookup-table" class="editing-content"></div>
 
-<div id="lookup-kv-store-edit" class="hide editing-content"></div>
-
-
 <button class="btn btn-primary pull-right editing-content <% if(lookup_type === "kv" && !is_new ){ %>hide<% } %>" id="save">Save Lookup</button>
-
-<div id="lookup-transform-modal"></div>
 <% } %>
+</div>
+<div id="lookup-kv-store-edit" class="hide editing-content"></div>
+<div id="lookup-transform-modal"></div>

@@ -1,31 +1,31 @@
 /* Make sure the table breaks from the form elements above it */
-#lookup-table{
+.lookup-edit-view #lookup-table{
 	clear: both;
 }
 
-input[type=text]{
+.lookup-edit-view input[type=text]{
 	display: block;
 	clear:both;
 }
 
 /* Hide the import button because we are going to make our own */
-#import-file-input{
+.lookup-edit-view #import-file-input{
 	height:0px;
 	overflow:hidden;
 }
 
 /* Split a block of characters with a line */
-.paragraph{
+.lookup-edit-view .paragraph{
 	margin-top: 12px;
 }
 
 /* Style the button for selecting the file to import */
-#choose-import-file{
+.lookup-edit-view #choose-import-file{
 	display: block;
 }
 
 /* Setup a particular styling for drop zones */
-.dragging{
+.lookup-edit-view .dragging{
 	border: 5px dashed #ddd;
 	background-image: url('/en-US/static/app/lookup_editor/images/drag_and_drop.png');
 	background-repeat: no-repeat;
@@ -35,12 +35,15 @@ input[type=text]{
 }
 
 /* Hide items in the drop-zone while dragging is happening */
-.modal-body.dragging > span, .modal-body.dragging > div, .modal-body.dragging > button, #lookups_editor.dragging > div{
+.lookup-edit-view .modal-body.dragging > span,
+.lookup-edit-view .modal-body.dragging > div,
+.lookup-edit-view .modal-body.dragging > button,
+.lookup-edit-view #lookups_editor.dragging > div{
 	opacity: 0.01;
 }
 
 /* Show a dragging image on the note telling users that they can drag and drop */
-.drag-and-drop-tip{
+.lookup-edit-view .drag-and-drop-tip{
 	margin-top: 16px;
 	padding-left:48px;
 	background-repeat: no-repeat;
@@ -48,51 +51,51 @@ input[type=text]{
 }
 
 /* Give the alert a little more from the form elements in front of it */
-.alert{
+.lookup-edit-view .alert{
 	margin-left: 32px;
 }
 
 /* Style the breadcrumbs link */
-.list-link{
+.lookup-edit-view .list-link{
 	margin-left: 16px;
     margin-bottom: 16px;
 }
 
 /* Push the save button a little bit away from the table */
-#save{
+.lookup-edit-view #save{
 	margin-top: 16px;
 	float: right;
 }
 
 /* Make sure the controls are the aligned with the other buttons (such as a the save button) */
-.btn-primary.pull-right, .btn-group.pull-right{
+.lookup-edit-view .btn-primary.pull-right, .btn-group.pull-right{
 	margin-right: 16px
 }
 
 /* Style the labels in form control groups */
-.top-label{
+.lookup-edit-view .top-label{
 	display: inline-block;
     vertical-align: top;
 }
 
 /* Make sure the controls break according to the inline form style */
-.controls{
+.lookup-edit-view .controls{
 	display: inline-block;
 }
 
 /* Style the controls at the top of the screen */
-.top-controls{
+.lookup-edit-view .top-controls{
 	height: 80px;
 }
 
 /* Style the control labels in the control groups */
-.control-label{
+.lookup-edit-view .control-label{
 	margin-left: 8px;
 	margin-top: 4px;
 }
 
 /* Style the modification time that is shown when editing KV store lookups */
-.modification-time-holder{
+.lookup-edit-view .modification-time-holder{
     text-align: right;
     padding-right: 16px;
     display: inline-block;
@@ -100,20 +103,20 @@ input[type=text]{
 	clear: both;
 }
 
-.modification-time-holder > i{
+.lookup-edit-view .modification-time-holder > i{
 	color: green;
 	padding-left: 32px;
 }
 
 /* Make the check-box fit with the other inputs */
-#lookup-user-only{
+.lookup-edit-view #lookup-user-only{
 	display: inline-block;
     vertical-align: top;
     margin-top: 2px;
 }
 
 /* Tell the dialogs to use an inline-block so that they fit nicely next to other elements */
-#info-message, #warning-message{
+.lookup-edit-view #info-message, #warning-message{
 	display: inline-block;
     vertical-align: top;
     padding-bottom: 0px;
@@ -121,34 +124,34 @@ input[type=text]{
 }
 
 /* Reinstate the display none if the hide class is set (since the CSS about overrides this) */
-#info-message.hide, #warning-message.hide{
+.lookup-edit-view #info-message.hide, .lookup-edit-view #warning-message.hide{
 	display: none;
 }
 
 /* Style the message telling users to right-click for editing options */
-.right-click-help-message{
+.lookup-edit-view .right-click-help-message{
 	padding-bottom: 5px;
     padding-left: 16px;
 }
 
-.right-click-help-message .icon-info-circle{
+.lookup-edit-view .right-click-help-message .icon-info-circle{
 	margin-right: 4px;
 }
 
 /* This styles the name of the lookup (when editing an existing lookup file) */
-.lookup-name{
+.lookup-edit-view .lookup-name{
 	margin-left: 16px;
 	margin-top: 3px;
 	display:inline-block;
 }
 
 /* Add a little room before the first label so that the name isn't right up against the edge */
-.row-fluid > div:first-child > .top-label{
+.lookup-edit-view .row-fluid > div:first-child > .top-label{
 	margin-left: 16px;
 }
 
 /* Set the size of the drop-down */
-.dropdown-menu{
+.lookup-edit-view .dropdown-menu{
 	margin-top: 2px;
 	background-color: white;
 	overflow-x: hidden;
@@ -159,90 +162,90 @@ input[type=text]{
 /*
  * Fix highlight color on the dropdown button (for reverting to previous versions)
  */
-.btn-group.open .btn-primary.dropdown-toggle {
+ .lookup-edit-view .btn-group.open .btn-primary.dropdown-toggle {
     background-color: #65a637;
 }
 
-.btn-primary.dropdown-toggle:focus {
+.lookup-edit-view .btn-primary.dropdown-toggle:focus {
 	border-color: rgba(82,168,236,0.8);
 }
 
 /**
  * Cell renderers
  */
-.handsontable td.cellEmpty{
+ .lookup-edit-view .handsontable td.cellEmpty{
 	background: #F8F8F8;
 }
 
-.handsontable td.cellEmptyHeader{
+.lookup-edit-view .handsontable td.cellEmptyHeader{
 	/* Pattern from http://www.patternify.com/ */
 	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAT0lEQVQYV2P8v3nmfwYc4HdPOlyGEZdCZEWsJTMZsCpEVwQyFkMhNkUYCnEpQlGITxFcISFFYIW/7BngwQPyHS4AV4hPEchGsEJCikC2AAAsFDi53F9I+QAAAABJRU5ErkJggg==);
 }
 
-.cellNegative{
+.lookup-edit-view .cellNegative{
 	color: red;
 }
 
-.cellKey{
+.lookup-edit-view .cellKey{
 	color: green;
 }
 
-.cellInvalidType{
+.lookup-edit-view .cellInvalidType{
 	/* Pattern from http://www.patternify.com/ */
 	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAT0lEQVQYV2P8v3nmfwYc4HdPOlyGEZdCZEWsJTMZsCpEVwQyFkMhNkUYCnEpQlGITxFcISFFYIW/7BngwQPyHS4AV4hPEchGsEJCikC2AAAsFDi53F9I+QAAAABJRU5ErkJggg==);
 }
 
-.cellPositive{
+.lookup-edit-view .cellPositive{
 	color: green;
 }
 
 /* This selector needs to specific enough to override the built-in styling such that the header looks like the un-editable KV store header */
-.csv-lookup tr > td.cellHeader{
+.lookup-edit-view .csv-lookup tr > td.cellHeader{
 	background-color: #EEE;
 	text-align: center
 }
 
-.cellTrue{
+.lookup-edit-view .cellTrue{
 	fontstyle: italic;
 	color: green;
 }
 
-.cellFalse{
+.lookup-edit-view .cellFalse{
 	fontstyle: italic;
 	color: red;
 }
 
-.handsontable td.cellUrgencyUnknown{
+.lookup-edit-view .handsontable td.cellUrgencyUnknown{
 	color: black;
 	background-color: #c1d7f0;
 }
 
-.handsontable td.cellUrgencyInformational{
+.lookup-edit-view .handsontable td.cellUrgencyInformational{
 	color: black;
 	background-color: #c1d7f0;
 }
 
-.handsontable td.cellUrgencyLow{
+.lookup-edit-view .handsontable td.cellUrgencyLow{
 	color: black;
 	background-color: #b5e25d;
 }
 
-.handsontable td.cellUrgencyMedium{
+.lookup-edit-view .handsontable td.cellUrgencyMedium{
 	color: black;
 	background-color: #ffd70d;
 }
 
-.handsontable td.cellUrgencyHigh{
+.lookup-edit-view .handsontable td.cellUrgencyHigh{
 	color: black;
 	background-color: #ff8700;
 }
 
-.handsontable td.cellUrgencyCritical{
+.lookup-edit-view .handsontable td.cellUrgencyCritical{
 	color: white;
 	background-color: #bf1900;
 }
 
-.cellHREF{
+.lookup-edit-view .cellHREF{
 	color: blue;
 	text-decoration: underline;
 }
