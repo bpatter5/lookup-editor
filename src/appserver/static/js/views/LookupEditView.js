@@ -5,7 +5,8 @@ require.config({
         text: "../app/lookup_editor/js/lib/text",
         console: '../app/lookup_editor/js/lib/console',
         csv: '../app/lookup_editor/js/lib/csv',
-        kv_store_field_editor: '../app/lookup_editor/js/views/KVStoreFieldEditor',
+		kv_store_field_editor: '../app/lookup_editor/js/views/KVStoreFieldEditor',
+		transform_create_view: '../app/lookup_editor/js/views/LookupTransformCreateView',
         clippy: '../app/lookup_editor/js/lib/clippy',
         moment: '../app/lookup_editor/js/lib/moment.min',
 		kvstore: "../app/lookup_editor/js/contrib/kvstore"
@@ -36,7 +37,8 @@ define([
     "splunkjs/mvc/simpleform/input/dropdown",
     "splunkjs/mvc/simpleform/input/checkboxgroup",
     "text!../app/lookup_editor/js/templates/LookupEdit.html",
-    "kv_store_field_editor",
+	"kv_store_field_editor",
+	"transform_create_view",
     "moment",
 	"kvstore",
     "clippy",
@@ -60,7 +62,8 @@ define([
     DropdownInput,
     CheckboxGroupInput,
     Template,
-    KVStoreFieldEditor,
+	KVStoreFieldEditor,
+	LookupTransformCreateView,
     moment,
 	KVStore
 ){
@@ -115,8 +118,10 @@ define([
             
             this.users = null; // This is where loaded users list will be stored
             this.agent = null; // This is for Clippy
-            
-            this.kv_store_fields_editor = null;
+			
+			// These retain some sub-views that we may create
+			this.kv_store_fields_editor = null;
+			this.lookup_transform_create_view = null;
             
             // These are copies of editor classes used with the handsontable
             this.forgiving_checkbox_editor = null;
@@ -171,6 +176,7 @@ define([
 
 			"click #refresh"                               : "refreshLookup",
 			"click #edit-acl"                              : "editACLs",
+			"click #open-in-search"                        : "openInSearch"
         },
         
         /**
@@ -2604,6 +2610,28 @@ define([
 		},
 
 		/**
+		 * Open the lookup in search or create a transform so that it can be searched.
+		 */
+		openInSearch: function(){
+
+			// Make the lookup transform view if necessary
+			if(this.lookup_transform_create_view === null){
+				this.lookup_transform_create_view = new LookupTransformCreateView({
+					el: $('#lookup-transform-modal')
+				});
+
+				$.when(this.lookup_transform_create_view.render()).done(function(){
+					this.lookup_transform_create_view.show(this.owner, this.namespace, this.lookup);
+				}.bind(this));
+
+			// Otherwise, just show the existing form
+			} else {
+				this.lookup_transform_create_view.show(this.owner, this.namespace, this.lookup);
+			}
+			
+		},
+
+		/**
 		 * Refresh the lookup.
 		 */
 		refreshLookup: function(){
@@ -2634,13 +2662,20 @@ define([
 				// Get a list of users to show from which to load the context
 				var users = this.makeUsersList(this.owner);
 				
+				// Make an open in search link
+				var search_link = null;
+				if(this.lookup_type === 'csv'){
+					search_link = LookupTransformCreateView.prototype.makeSearchLink(this.lookup);
+				}
+
 				// Render the HTML content
 				this.$el.html(_.template(Template, {
 					'insufficient_permissions' : !has_permission,
 					'is_new' : this.is_new,
 					'lookup_name': this.lookup,
 					'lookup_type' : this.lookup_type,
-					'users' : users
+					'users' : users,
+					'search_link' : search_link
 				}));
 				
 				// Setup a handler for the shortcuts
