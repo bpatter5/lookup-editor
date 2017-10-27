@@ -1823,7 +1823,7 @@ define([
         		// Handle number fields
         		else if(field_info === 'number'){
 					column['type'] = 'numeric';
-					column['format'] = '0.0[0000]';
+					column['format'] = '0.[00000]';
         		}
         		
         		columns.push(column);
