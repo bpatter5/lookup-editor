@@ -2621,12 +2621,12 @@ define([
 				});
 
 				$.when(this.lookup_transform_create_view.render()).done(function(){
-					this.lookup_transform_create_view.show(this.owner, this.namespace, this.lookup);
+					this.lookup_transform_create_view.openInSearchOrCreateTransform(this.owner, this.namespace, this.lookup);
 				}.bind(this));
 
 			// Otherwise, just show the existing form
 			} else {
-				this.lookup_transform_create_view.show(this.owner, this.namespace, this.lookup);
+				this.lookup_transform_create_view.openInSearchOrCreateTransform(this.owner, this.namespace, this.lookup);
 			}
 			
 		},
