@@ -89,7 +89,9 @@ define([
         show: function(owner, namespace, lookup) {
     
             // Clear the existing value so that it doesn't carry over
-            mvc.Components.getInstance("transform-name").val('');
+            if(mvc.Components.getInstance("transform-name")){
+                mvc.Components.getInstance("transform-name").val('');
+            }
                 
             // Hide the warning message
             this.hideWarningMessage();
@@ -127,7 +129,6 @@ define([
          */
         focusView: function(){
             this.$('#transform-name input').focus();
-            
         },
 
         /**
@@ -189,6 +190,9 @@ define([
                     // If successful, close the dialog and run the search
                     this.$('#lookup-transform-modal').modal('hide');
                     this.openInSearch(transform_name);
+
+                    // Clear the transforms list so that we refresh the list
+                    this.transforms = null;
 
                     promise.resolve();
                 }.bind(this)).fail(function(response) {
@@ -277,6 +281,7 @@ define([
          * Get the transform name for the given KV store collection (if it exists).
          */
         getTransformForCollection: function(collection_name){
+
             // Get a promise ready
             var promise = jQuery.Deferred();
 
@@ -293,7 +298,7 @@ define([
                 promise.resolve(existing_transform);
             }.bind(this));
 
-            return promise;            
+            return promise;    
         },
 
         /**
