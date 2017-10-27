@@ -1,4 +1,11 @@
 /*
+ * Hide the header since we are going to show our own header
+ */
+.dashboard-header.dashboard-header-dashboardheader{
+	display: none;
+}
+
+/*
  * Fix to make styling look more like new Splunk.
  */
 #row1 > #panel1 > .dashboard-panel{

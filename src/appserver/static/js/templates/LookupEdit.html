@@ -1,4 +1,12 @@
 <div class="lookup-edit-view">
+
+	<div class="dashboard-header">
+		<h2 class="dashboard-title dashboard-header-title">
+			<a href="lookup_list" class="dashboard-title dashboard-header-title">Lookups</a> /
+		</h2>
+		<h2 class="dashboard-title dashboard-header-title"><% if(is_new) { %>New Lookup<% } else { %><%- lookup_name %><% } %></h2>
+	</div>
+
 <div tabindex="-1" id="import-file-modal" class="modal fade in hide">
 	    <div class="modal-header">
 	        <button type="button" class="close btn-dialog-close" data-dismiss="modal">x</button>
@@ -40,18 +48,6 @@
 </div>
 
 <div class="top-controls">
-	<div class="row-fluid">
-		<div class="span2">
-			<a class="list-link" href="lookup_list">
-				<i class="icon-chevron-left icon-no-underline"></i>
-				<span>Back to Lookups List</span>
-			</a> 
-		</div>
-		<div class="span8 alert-dialogs">
-
-		</div>
-	</div>
-
 	<% if(insufficient_permissions) { %>
 	<div id="no-permissions-dialog" class="alert alert-warning">
 		<i class="icon-alert"></i>
@@ -62,7 +58,6 @@
 	<div class="row-fluid">
 		<div class="span8">
 	<% if(is_new) { %>
-			
 			<span id="lookup-name-control-group" class="control-group">
 				<div class="top-label show-when-creating">
 					<label class="control-label" for="lookup-name">Name:</label>
@@ -91,8 +86,6 @@
 				</div>
 			</span>
 	<% } %>
-			<div class="lookup-name lead <% if(is_new) { %>hide<% } %>" id="lookup-name-static"><%- lookup_name %></div>
-			
 			<div id="warning-message" class="alert alert-warning hide">
 				<i class="icon-alert"></i>
 				<div class="message">Warning!</div>
@@ -159,8 +152,8 @@
 					<i class="icon-circle-filled hide"></i>
 					<span id="modification-time">(changes automatically saved in real-time)</span>
 				</div>
-        	</div>
 			<% } %>
+			</div>
 		</div>
 </div>
 	

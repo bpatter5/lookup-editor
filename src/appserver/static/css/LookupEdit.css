@@ -1,3 +1,13 @@
+
+.dashboard-header h2{
+	display: inline-block;
+	font-size: 24px;
+    margin: 0;
+    padding: 0;
+    font-weight: 200;
+    padding-left: 0;
+}
+
 /* Make sure the table breaks from the form elements above it */
 .lookup-edit-view #lookup-table{
 	clear: both;
@@ -85,7 +95,7 @@
 
 /* Style the controls at the top of the screen */
 .lookup-edit-view .top-controls{
-	height: 80px;
+	margin-bottom: 16px;
 }
 
 /* Style the control labels in the control groups */
