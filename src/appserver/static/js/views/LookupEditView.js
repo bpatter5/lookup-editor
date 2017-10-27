@@ -1302,8 +1302,8 @@ define([
         	
         	$("#modification-time").text("Modified: " + today.getFullYear() + "/" + this.pad(today.getMonth() + 1, 2) + "/" + today.getDate() + " " + this.pad((today.getHours() % 12),2) + ":" + this.pad(today.getMinutes(), 2) + ":" + this.pad(today.getSeconds(),2) + " " + am_or_pm);
         	
-        	$(".modification-time-holder > i").show();
-        	$(".modification-time-holder > i").fadeOut(1000);
+        	$(".mod-time-icon > i").show();
+        	$(".mod-time-icon > i").fadeOut(1000);
         },
         
         /**

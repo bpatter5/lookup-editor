@@ -106,16 +106,19 @@
 
 /* Style the modification time that is shown when editing KV store lookups */
 .lookup-edit-view .modification-time-holder{
-    text-align: right;
-    padding-right: 16px;
+    padding-left: 4px;
     display: inline-block;
     padding-top: 6px;
 	clear: both;
 }
 
-.lookup-edit-view .modification-time-holder > i{
+.lookup-edit-view .modification-time-holder > .mod-time-icon{
+	display: inline-block;
+	width: 10px;
+}
+
+.lookup-edit-view .mod-time-icon > i{
 	color: green;
-	padding-left: 32px;
 }
 
 /* Make the check-box fit with the other inputs */
@@ -140,8 +143,10 @@
 
 /* Style the message telling users to right-click for editing options */
 .lookup-edit-view .right-click-help-message{
-	padding-bottom: 5px;
-    padding-left: 16px;
+	padding-left: 16px;
+	position: relative;
+    top: 50%;
+    transform: translateY(100%);
 }
 
 .lookup-edit-view .right-click-help-message .icon-info-circle{

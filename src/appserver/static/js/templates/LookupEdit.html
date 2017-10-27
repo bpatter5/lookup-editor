@@ -55,37 +55,60 @@
 	</div>
 	<% } else { %>
 	
-	<div class="row-fluid">
-		<div class="span8">
 	<% if(is_new) { %>
-			<span id="lookup-name-control-group" class="control-group">
-				<div class="top-label show-when-creating">
-					<label class="control-label" for="lookup-name">Name:</label>
+		<div class="row-fluid">
+				<div class="span8">
+					<span id="lookup-name-control-group" class="control-group">
+						<div class="top-label show-when-creating">
+							<label class="control-label" for="lookup-name">Name:</label>
+						</div>
+						<div class="controls show-when-creating">
+							<div class="input input-text" id="lookup-name"></div>
+							<span class="hide help-inline"></span>
+							<span class="help-block"><% if(lookup_type === "csv"){ %>Generally ends with ".csv"<% } else { %>Specifies the name of collection<% } %></span>
+						</div>
+					</span>
+					
+					<% if(lookup_type === "csv"){ %>
+					<span id="user-control-group" class="control-group show-when-creating">
+						<div class="input input-checkbox" id="lookup-user-only"></div>
+					</span>
+					<% } %>
+					
+					<span id="lookup-app-control-group" class="control-group">
+						<div class="top-label show-when-creating">
+							<label class="control-label" for="lookup-app">App:</label>
+						</div>
+						<div class="controls show-when-creating">
+							<div class="input input-dropdown" id="lookup-app"></div>
+							<span class="hide help-inline"></span>
+							<span class="help-block"><% if(lookup_type === "csv"){ %>Specifies the app where the lookup file will reside<% } else { %>Specifies the app where the collection will reside<% } %></span>
+						</div>
+					</span>
+		
+					<div id="warning-message" class="alert alert-warning hide">
+						<i class="icon-alert"></i>
+						<div class="message">Warning!</div>
+					</div>
+					
+					<div id="info-message" class="alert alert-info hide">
+						<i class="icon-alert"></i>
+						<div class="message">Ok!</div>
+					</div>
+					<% if(lookup_type === "csv") { %>
+					<div class="right-click-help-message show-when-editing"><i class="icon-info-circle" />Right-click the table for editing options</div>
+					<% } %>
 				</div>
-				<div class="controls show-when-creating">
-					<div class="input input-text" id="lookup-name"></div>
-		        	<span class="hide help-inline"></span>
-		        	<span class="help-block"><% if(lookup_type === "csv"){ %>Generally ends with ".csv"<% } else { %>Specifies the name of collection<% } %></span>
+				<div class="span4 show-when-editing">
+					<% if(lookup_type === "csv"){ %>
+					<div class="btn-group pull-right">
+						<button class="btn" id="import-file">Import</button>
+					</div>
+					<% } %>
 				</div>
-			</span>
-			
-			<% if(lookup_type === "csv"){ %>
-			<span id="user-control-group" class="control-group show-when-creating">
-				<div class="input input-checkbox" id="lookup-user-only"></div>
-			</span>
-			<% } %>
-			
-			<span id="lookup-app-control-group" class="control-group">
-				<div class="top-label show-when-creating">
-					<label class="control-label" for="lookup-app">App:</label>
-				</div>
-				<div class="controls show-when-creating">
-					<div class="input input-dropdown" id="lookup-app"></div>
-		        	<span class="hide help-inline"></span>
-		        	<span class="help-block"><% if(lookup_type === "csv"){ %>Specifies the app where the lookup file will reside<% } else { %>Specifies the app where the collection will reside<% } %></span>
-				</div>
-			</span>
-	<% } %>
+	<% } else { %>
+	<div class="row-fluid">
+		<div class="span4">
 			<div id="warning-message" class="alert alert-warning hide">
 				<i class="icon-alert"></i>
 				<div class="message">Warning!</div>
@@ -95,15 +118,20 @@
 				<i class="icon-alert"></i>
 				<div class="message">Ok!</div>
 			</div>
-			<% if(lookup_type === "csv" || !is_new) { %>
-			<div class="right-click-help-message show-when-editing"><i class="icon-info-circle" />Right-click the table for editing options</div>
+			<% if(lookup_type === "kv") { %>
+			<div class="modification-time-holder">
+				<div class="mod-time-icon">
+					<i class="icon-circle-filled hide"></i>
+				</div>
+				<span id="modification-time">Changes are automatically saved in real-time</span>
+			</div>
 			<% } %>
+			<div class="right-click-help-message show-when-editing"><i class="icon-info-circle" />Right-click the table for editing options</div>
 		</div>
-		<div class="span4 show-when-editing">
+		<div class="span8 show-when-editing">
 			<% if(lookup_type === "csv"){ %>
 			<div class="btn-group pull-right">
 				<button class="btn" id="import-file">Import</button>
-				<% if(!is_new) { %>
 				<button class="btn" id="export-file">Export</button>
 				<button class="btn" id="refresh">Refresh</button>
 				<% if(search_link !== null) { %>
@@ -117,15 +145,14 @@
         		<ul id="backup-versions" class="dropdown-menu">
         			<li><a class="backup-version" href="#">No backup versions available</a></li>
         		</ul>
-        		<% } %>
 			</div>
-			<% } else if(lookup_type === "kv" && !is_new) { %>
+			<% } else if(lookup_type === "kv") { %>
 				<div id="load-user-context" class="btn-group pull-right right-offset-button">
 					<button class="btn" id="import-file">Import</button>
 					<button class="btn" id="export-file">Export</button>
 					<% if(search_link !== null) { %>
 						<a class="btn" target="_blank" href="<%- search_link %>">Open in Search</a>
-					<% } else {%>
+					<% } else { %>
 					<button class="btn" id="open-in-search">Open in Search</button>
 					<% } %>
 					<button class="btn" id="refresh">Refresh</button>
@@ -148,13 +175,10 @@
 		        		<% } %>
 		        	</ul>
 	        	</div>
-	        	<div class="modification-time-holder pull-right">
-					<i class="icon-circle-filled hide"></i>
-					<span id="modification-time">(changes automatically saved in real-time)</span>
-				</div>
 			<% } %>
 			</div>
 		</div>
+	<% } %>
 </div>
 	
 <div id="lookup-table" class="editing-content"></div>
