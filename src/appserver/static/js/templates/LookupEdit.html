@@ -16,6 +16,9 @@
 		</div>
 	<% } %>
 
+<!--
+	Import modal.
+-->
 <div tabindex="-1" id="import-file-modal" class="modal fade in hide">
 	    <div class="modal-header">
 	        <button type="button" class="close btn-dialog-close" data-dismiss="modal">x</button>
@@ -58,6 +61,9 @@
 
 <div class="top-controls">
 	<% if(insufficient_permissions) { %>
+		<!--
+			User has insufficient permission (is missing admin_all_objects).
+		-->
 	<div id="no-permissions-dialog" class="alert alert-warning">
 		<i class="icon-alert"></i>
 		You don't have permission to edit this lookup file. You need <strong>admin_all_objects</strong> in order to create KV store lookups.
@@ -65,6 +71,9 @@
 	<% } else { %>
 	
 	<% if(is_new) { %>
+		<!--
+			Here are the controls for creating lookups.
+		-->
 		<div class="row-fluid">
 				<div class="span8">
 					<span id="lookup-name-control-group" class="control-group">
@@ -116,6 +125,9 @@
 					<% } %>
 				</div>
 	<% } else { %>
+		<!--
+			Here are the controls for editing lookups.
+		-->
 	<div class="row-fluid">
 		<div class="span4">
 			<div id="warning-message" class="alert alert-warning hide">
@@ -130,53 +142,63 @@
 			<div class="right-click-help-message show-when-editing"><i class="icon-info-circle" />Right-click the table for editing options</div>
 		</div>
 		<div class="span8 show-when-editing">
-			<% if(lookup_type === "csv"){ %>
-			<div class="btn-group pull-right">
-				<button class="btn" id="import-file">Import</button>
-				<button class="btn" id="export-file">Export</button>
-				<button class="btn" id="refresh">Refresh</button>
-				<% if(search_link !== null) { %>
-				<a class="btn" target="_blank" href="<%- search_link %>">Open in Search</a>
-				<% } %>
-				<!-- <button class="btn" id="edit-acl">Edit Permissions</button> -->
-				<a class="btn dropdown-toggle right-offset-button" data-toggle="dropdown" href="#">
-        			Revert to previous version
-        			<span class="caret"></span>
-        		</a>
-        		<ul id="backup-versions" class="dropdown-menu">
-        			<li><a class="backup-version" href="#">No backup versions available</a></li>
-        		</ul>
-			</div>
-			<% } else if(lookup_type === "kv") { %>
-				<div id="load-user-context" class="btn-group pull-right right-offset-button">
+			<div class="pull-right controls-holder">
+				<% if(lookup_type === "csv"){ %>
+				<div class="btn-group">
 					<button class="btn" id="import-file">Import</button>
 					<button class="btn" id="export-file">Export</button>
+				</div>
+				<div class="btn-group">
 					<% if(search_link !== null) { %>
-						<a class="btn" target="_blank" href="<%- search_link %>">Open in Search</a>
-					<% } else { %>
-					<button class="btn" id="open-in-search">Open in Search</button>
+					<a class="btn" target="_blank" href="<%- search_link %>">Open in Search</a>
 					<% } %>
+				</div>
+				<div class="btn-group">
 					<button class="btn" id="refresh">Refresh</button>
 					<!-- <button class="btn" id="edit-acl">Edit Permissions</button> -->
-					<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-		        		Showing entries for: <span id="loaded-user-context"></span>
-		        		<span class="caret"></span>
-		        	</a>
-		        	<ul class="dropdown-menu">
-		        		<% for(var c = 0; c < users.length; c++){ %>
-		        			<li>
-		        				<a class="user-context" href="#" data-user="<%- users[c].name %>">
-		        				<%- users[c].readable_name %>
-		        				
-		        				<% if(users[c].description){ %>
-		        					(<%- users[c].description %>)
-		        				<% } %>
-		        				</a>
-		        			</li>
-		        		<% } %>
-		        	</ul>
-	        	</div>
-			<% } %>
+					<a class="btn dropdown-toggle right-offset-button" data-toggle="dropdown" href="#">
+						Revert to previous version
+						<span class="caret"></span>
+					</a>
+					<ul id="backup-versions" class="dropdown-menu">
+						<li><a class="backup-version" href="#">No backup versions available</a></li>
+					</ul>
+				</div>
+				<% } else if(lookup_type === "kv") { %>
+					<div id="load-user-context" class="btn-group right-offset-button">
+						<button class="btn" id="import-file">Import</button>
+						<button class="btn" id="export-file">Export</button>
+					</div>
+					<div class="btn-group">
+						<% if(search_link !== null) { %>
+						<a class="btn" target="_blank" href="<%- search_link %>">Open in Search</a>
+						<% } else { %>
+						<button class="btn" id="open-in-search">Open in Search</button>
+						<% } %>
+					</div>
+					<div class="btn-group">
+						<button class="btn" id="refresh">Refresh</button>
+						<!-- <button class="btn" id="edit-acl">Edit Permissions</button> -->
+						<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+							Showing entries for: <span id="loaded-user-context"></span>
+							<span class="caret"></span>
+						</a>
+						<ul class="dropdown-menu">
+							<% for(var c = 0; c < users.length; c++){ %>
+								<li>
+									<a class="user-context" href="#" data-user="<%- users[c].name %>">
+									<%- users[c].readable_name %>
+									
+									<% if(users[c].description){ %>
+										(<%- users[c].description %>)
+									<% } %>
+									</a>
+								</li>
+							<% } %>
+						</ul>
+					</div>
+				<% } %>
+				</div>
 			</div>
 		</div>
 	<% } %>

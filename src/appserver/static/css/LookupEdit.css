@@ -1,5 +1,10 @@
+/* Style the header */
 .lookup-header{
 	display: inline-block;
+}
+
+.lookup-header h2:first-child{
+	margin: 10px 4px 0 16px;
 }
 
 .lookup-header h2{
@@ -10,8 +15,8 @@
     font-weight: 200;
 }
 
-.lookup-header h2:first-child{
-	margin: 10px 0 0 16px;
+.controls-holder{
+	margin-right: 15px;
 }
 
 /* Make sure the table breaks from the form elements above it */
@@ -176,7 +181,7 @@
 	background-color: white;
 	overflow-x: hidden;
 	max-height: 200px;
-	left: 228px;
+	left: 44%;
 }
 
 /*
