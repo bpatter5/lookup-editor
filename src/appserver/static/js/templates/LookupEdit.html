@@ -1,11 +1,20 @@
 <div class="lookup-edit-view">
 
-	<div class="dashboard-header">
-		<h2 class="dashboard-title dashboard-header-title">
-			<a href="lookup_list" class="dashboard-title dashboard-header-title">Lookups</a> /
+	<div class="lookup-header">
+		<h2>
+			<a href="lookup_list">Lookups</a>
 		</h2>
-		<h2 class="dashboard-title dashboard-header-title"><% if(is_new) { %>New Lookup<% } else { %><%- lookup_name %><% } %></h2>
+		<h2>/ <% if(is_new) { %>New Lookup<% } else { %><%- lookup_name %><% } %></h2>
 	</div>
+
+	<% if(lookup_type === "kv") { %>
+		<div class="modification-time-holder pull-right">
+			<div class="mod-time-icon">
+				<i class="icon-circle-filled hide"></i>
+			</div>
+			<span id="modification-time">Changes are automatically saved in real-time</span>
+		</div>
+	<% } %>
 
 <div tabindex="-1" id="import-file-modal" class="modal fade in hide">
 	    <div class="modal-header">
@@ -118,14 +127,6 @@
 				<i class="icon-alert"></i>
 				<div class="message">Ok!</div>
 			</div>
-			<% if(lookup_type === "kv") { %>
-			<div class="modification-time-holder">
-				<div class="mod-time-icon">
-					<i class="icon-circle-filled hide"></i>
-				</div>
-				<span id="modification-time">Changes are automatically saved in real-time</span>
-			</div>
-			<% } %>
 			<div class="right-click-help-message show-when-editing"><i class="icon-info-circle" />Right-click the table for editing options</div>
 		</div>
 		<div class="span8 show-when-editing">
