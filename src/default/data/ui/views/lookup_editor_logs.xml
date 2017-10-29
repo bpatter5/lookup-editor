@@ -59,7 +59,12 @@
       <table>
         <title>Latest Logs</title>
         <search>
-          <query>index=_internal (sourcetype=lookup_editor_rest_handler OR sourcetype=lookup_backups_rest_handler) $severity$ | rex field=_raw "(?&lt;severity&gt;(DEBUG)|(ERROR)|(WARNING)|(INFO)|(CRITICAL)) (?&lt;message&gt;.*)" | sort -_time | eval time=_time | convert ctime(time) | table time severity message</query>
+          <query>index=_internal (sourcetype=lookup_editor_rest_handler OR sourcetype=lookup_backups_rest_handler) $severity$
+          | rex field=_raw "(?&lt;severity&gt;(DEBUG)|(ERROR)|(WARNING)|(INFO)|(CRITICAL)) (?&lt;message&gt;.*)"
+          | sort -_time
+          | eval time=_time
+          | convert ctime(time)
+          | table time severity message</query>
           <earliest>$field1.earliest$</earliest>
           <latest>$field1.latest$</latest>
         </search>
@@ -68,6 +73,9 @@
         <option name="dataOverlayMode">none</option>
         <option name="drilldown">cell</option>
         <option name="count">10</option>
+        <drilldown>
+          <link target="_blank">search?q=index=_internal (sourcetype=lookup_editor_rest_handler OR sourcetype=lookup_backups_rest_handler) $severity$&amp;earliest=$field1.earliest$&amp;latest=$field1.latest$</link>
+        </drilldown>
       </table>
     </panel>
   </row>
