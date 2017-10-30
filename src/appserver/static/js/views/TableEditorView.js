@@ -525,8 +525,8 @@ define([
         renderLookup: function(data){
             
         	if(data === null){
-        		this.showWarningMessage("Lookup could not be loaded");
-        		return;
+        		console.warn("Lookup could not be loaded");
+        		return false;
         	}
         	
         	// Store the table header so that we can determine the relative offsets of the fields
@@ -781,7 +781,10 @@ define([
                     });
                 }.bind(this));
 
-        	}
+            }
+            
+            // Return true indicating that the load worked
+            return true;
         },
 
         /**

@@ -166,9 +166,8 @@ define([
         	"dragleave #lookup-table"                      : "onDragFileEnd",
 			"click #import-file-modal .btn-dialog-cancel"  : "cancelImport",
 			"click #import-file-modal .btn-dialog-close"   : "cancelImport",
-			
-			//"hidden #import-file-modal"                  : "cancelImport",
 
+			// Misc options
 			"click #refresh"                               : "refreshLookup",
 			"click #edit-acl"                              : "editACLs",
 			"click #open-in-search"                        : "openInSearch"
@@ -390,7 +389,7 @@ define([
         },
         
 		/**
-		 * The handler for fil-dragging.
+		 * The handler for file-dragging.
 		 * 
 		 * @param evt The event
 		 */
@@ -623,7 +622,9 @@ define([
             	
 				else{
 					// Render the lookup file
-					this.table_editor_view.renderLookup(data);
+					if(!this.table_editor_view.renderLookup(data)){
+						this.showWarningMessage("Lookup could not be loaded");
+					}
 					
 					// Hide the import dialog
 					$('#import-file-modal', this.$el).modal('hide');
@@ -828,48 +829,50 @@ define([
         	
         	// Perform the call
         	$.ajax({
-        		  url: url,
-        		  cache: false,
-        		  
-        		  // On success, populate the table
-        		  success: function(data) {
-        			  
-        			  // Data could not be loaded
-        			  if(data == null){
-        				  console.error('JSON of lookup table could not be loaded (got an empty value)');
-        				  this.showWarningMessage("The requested lookup file could not be loaded", true);
-        				  $('.show-when-editing', this.$el).hide();
-        			  }
-        			  
-        			  // Data can be loaded
-        			  else{
-        				  
-        				  // Note that the lookup is empty
-        				  if(data.length === 0){
-        					  console.error('JSON of lookup table was successfully loaded (though the file is blank)');
-            				  this.showWarningMessage("The lookup is blank; edit it to populate it", true);
-            				  this.table_editor_view.renderLookup(this.getDefaultData());
-        				  }
-        				  else{
-        					  console.info('JSON of lookup table was successfully loaded');
-    	        			  this.table_editor_view.renderLookup(data);
-        				  }
-	        			  
-	        			  var elapsed = new Date().getTime()-populateStart;
-	        			  console.info("Lookup loaded and rendered in " + elapsed + "ms");
-	        			  
-	        			  // Remember the specs on the loaded file
-	        			  this.lookup = lookup_file;
-	        	          this.namespace = namespace;
-	        	          this.owner = user;
-	        	          this.lookup_type = lookup_type;
+				url: url,
+				cache: false,
 
-						  this.initializeKVStoreModel();
-	        	          
-	        	          // Update the UI to note which user context is loaded
-	        	          $('#loaded-user-context').text(this.owner);
-        			  }
-        			  
+				// On success, populate the table
+				success: function (data) {
+
+					// Data could not be loaded
+					if (data == null) {
+						console.error('JSON of lookup table could not be loaded (got an empty value)');
+						this.showWarningMessage("The requested lookup file could not be loaded", true);
+						$('.show-when-editing', this.$el).hide();
+					}
+
+					// Data can be loaded
+					else {
+
+						// Note that the lookup is empty
+						if (data.length === 0) {
+							console.error('JSON of lookup table was successfully loaded (though the file is blank)');
+							this.showWarningMessage("The lookup is blank; edit it to populate it", true);
+							this.table_editor_view.renderLookup(this.getDefaultData());
+						}
+						else {
+							console.info('JSON of lookup table was successfully loaded');
+							if (!this.table_editor_view.renderLookup(data)) {
+								this.showWarningMessage("Lookup could not be loaded");
+							}
+						}
+
+						var elapsed = new Date().getTime() - populateStart;
+						console.info("Lookup loaded and rendered in " + elapsed + "ms");
+
+						// Remember the specs on the loaded file
+						this.lookup = lookup_file;
+						this.namespace = namespace;
+						this.owner = user;
+						this.lookup_type = lookup_type;
+
+						this.initializeKVStoreModel();
+
+						// Update the UI to note which user context is loaded
+						$('#loaded-user-context').text(this.owner);
+					}
+
         		  }.bind(this),
         		  
         		  // Handle cases where the file could not be found or the user did not have permissions
