@@ -16,10 +16,11 @@ require.config({
 		kv_store_field_editor: '../app/lookup_editor/js/views/KVStoreFieldEditor',
 		transform_create_view: '../app/lookup_editor/js/views/LookupTransformCreateView',
 		table_editor_view: '../app/lookup_editor/js/views/TableEditorView',
-		kvstore: "../app/lookup_editor/js/contrib/kvstore",
+		kvstore: '../app/lookup_editor/js/contrib/kvstore',
+		capabilities: '../app/lookup_editor/js/utils/Capabilities',
 
 		// Helper libraries
-        text: "../app/lookup_editor/js/lib/text",
+        text: '../app/lookup_editor/js/lib/text',
         console: '../app/lookup_editor/js/lib/console',
         csv: '../app/lookup_editor/js/lib/csv',
         clippy: '../app/lookup_editor/js/lib/clippy'
@@ -50,6 +51,7 @@ define([
 	"kv_store_field_editor",
 	"transform_create_view",
 	"kvstore",
+	"capabilities",
     "clippy",
     "csv",
     "bootstrap.dropdown",
@@ -72,7 +74,8 @@ define([
     Template,
 	KVStoreFieldEditor,
 	LookupTransformCreateView,
-	KVStore
+	KVStore,
+	Capabilities
 ){
 	
 	var Apps = SplunkDsBaseCollection.extend({
@@ -1559,71 +1562,6 @@ define([
         		this.agent.hide();
         	}
         },
-		
-        /**
-         * Get the list of the user's capabilities.
-         */
-        getCapabilities: function(){
-
-        	// Get a promise ready
-        	var promise = jQuery.Deferred();
-			
-			// Get the capabilties
-			if (this.capabilities === null) {
-
-				var uri = Splunk.util.make_url("/splunkd/__raw/services/authentication/current-context?output_mode=json");
-
-				// Fire off the request
-				jQuery.ajax({
-					url: uri,
-					type: 'GET',
-					success: function (result) {
-						if (result !== undefined) {
-							this.capabilities = result.entry[0].content.capabilities;
-							promise.resolve(this.capabilities);
-						}
-						else{
-							promise.reject();
-						}
-					}.bind(this),
-					error: function() {
-						promise.reject();
-					}.bind(this)
-				});
-			}
-
-			// If we already got them, then just return the capabilities
-			else {
-				promise.resolve(this.capabilities);
-			}
-
-			return promise;
-		},
-
-        /**
-         * Determine if the user has the given capability.
-		 * 
-		 * @param capability The name of the capability to see if the user has.
-         */
-        hasCapability: function(capability){
-			
-        	// Get a promise ready
-        	var promise = jQuery.Deferred();
-
-			$.when(this.getCapabilities()).done(function(capabilities){
-
-				// Determine if the user should be considered as having access
-				if(this.is_using_free_license){
-					promise.resolve(true);
-				}
-				else{
-					promise.resolve($.inArray(capability, this.capabilities) >= 0);
-				}
-			}.bind(this));
-
-			return promise;
-			
-		},
 
         /**
          * Get a list of users.
@@ -1773,51 +1711,6 @@ define([
     		            ["", "", "", "", "", ""]
     		          ];
         },
-        
-		/**
-		 * Adjust the permissions on the collection.
-		 * 
-		 * @param owner The name of the owner of the collection
-		 * @param app The app context of the collection
-		 * @param collection The name of the collection to modify
-		 * @param sharing Indicates whether the app is shared in app or globally
-		 * @param read The string representing who should be given read acccess (like "*")
-		 * @param write The string representing who should be given write acccess (like "*")
-		 */
-		changeCollectionACL: function(owner, app, collection, sharing, read, write){
-
-			// Convert the read perms into a string
-			if(read.isArray()){
-				read = read.join(",");
-			}
-
-			// Convert the write perms into a string
-			if(write.isArray()){
-				write = write.join(",");
-			}
-
-			// Make the arguments
-			var data = {
-				"output_mode": "json",
-				"perms.read" : "*",
-				"perms.write" : "*",
-				"sharing" : sharing,
-				"owner" : owner
-			}
-
-			// Do the operation
-			$.ajax({
-        			url: splunkd_utils.fullpath('/servicesNS/' + owner + '/' + app + '/storage/collections/config/' + collection + '/acl'),
-        			data: data,
-        			type: 'POST',
-        			
-        			// On success, populate the table
-        			success: function(data) {
-						console.info("ACL successfully updated");
-					}
-
-			});
-		},
 
 		/**
 		 * Edit the ACLs.
@@ -1862,7 +1755,6 @@ define([
 		 */
 		refreshLookup: function(){
 			this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type);
-			//this.render();
 		},
 
         /**
@@ -1870,7 +1762,7 @@ define([
          */
         render: function () {
 
-			$.when(this.hasCapability('admin_all_objects')).done(function(has_permission){
+			$.when(Capabilities.hasCapability('admin_all_objects')).done(function(has_permission){
 				console.log("Rendering...");
 		
 				// Get the information from the lookup to load
