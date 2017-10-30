@@ -19,7 +19,6 @@ import splunk
 from splunk.rest import simpleRequest
 
 sys.path.append( os.path.join("..", "src", "bin") )
-sys.path.append( os.path.join("..", "src", "appserver", "controllers") )
 
 from lookup_editor import shortcuts, lookup_backups, LookupEditor
 from lookup_backups_rest_handler import LookupBackupsHandler
@@ -28,6 +27,9 @@ from lookup_editor_rest_handler import LookupEditorHandler
 logger = logging.getLogger('splunk.appserver.lookup_editor.unit_test')
 
 def skipIfCantAuthenticate(func):
+    """
+    This decorator will cause tests to be skipped if a session key could not be obtained.
+    """
     def _decorator(self, *args, **kwargs):
 
         try:
@@ -44,6 +46,10 @@ def skipIfCantAuthenticate(func):
     return _decorator
 
 def skipIfLookupTestNotInstalled(func):
+    """
+    This decorator will cause tests to be skipped if the host doesn't have the lookup_test app
+    installed.
+    """
     def _decorator(self, *args, **kwargs):
 
         try:
