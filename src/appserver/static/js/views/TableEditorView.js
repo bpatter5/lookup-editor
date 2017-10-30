@@ -1,3 +1,14 @@
+/**
+ * This view provides a wrapper around Handontable for the use of displaying and modifying the
+ * contents of lookup files.
+ * 
+ * This class exposes a series of Backbone events that can be used to listen for actions. Below is
+ * a list:
+ * 
+ *    1) editCell: when a cell gets edited
+ *    2) removeRow: when a row ges removed
+ *    3) createRows: when a series of new rows are to be created
+ */
 require.config({
     paths: {
     	handsontable: "../app/lookup_editor/js/lib/handsontable.full.min",
@@ -768,7 +779,7 @@ define([
 
         		// For row creation
         		this.handsontable.addHook('afterCreateRow', function(row, count){
-                    this.trigger("removeRow", {
+                    this.trigger("createRows", {
                         'row' : row,
                         'count' : count
                     });
