@@ -51,6 +51,10 @@ define([
         initialize: function() {
         	this.options = _.extend({}, this.defaults, this.options);
             
+            // Here are the options:
+            this.lookup_type = this.options.lookup_type; // The type of lookup (csv or kv)
+
+            // Below is the list of internal variables
             this.handsontable = null; // A reference to the handsontable
             this.read_only = false; // We will update this to true if the lookup cannot be edited
 
@@ -58,8 +62,6 @@ define([
             this.field_types_enforced = false; // This will store whether this lookup enforces types
             this.read_only = false; // We will update this to true if the lookup cannot be edited
             this.table_header = null; // This will store the header of the table so that can recall the relative offset of the fields in the table
-
-            this.lookup_type = null;
             this.columns = null; // This will store meta-data about the columns
 
             // These are copies of editor classes used with the handsontable
@@ -177,6 +179,47 @@ define([
         	
         },
         
+        /**
+         * Get the data from the table.
+         * 
+         * Note: this is just a pass-through to HandsOnTable
+         */
+        getData: function(){
+            return this.handsontable.getData();
+        },
+
+        /**
+         * Get the data from the table for the given row.
+         * 
+         * Note: this is just a pass-through to HandsOnTable
+         * 
+         * @param row An integer designating the row
+         */
+        getDataAtRow: function(row){
+            return this.handsontable.getDataAtRow(row);
+        },
+
+        /**
+         * Get the data from the table for the given row.
+         * 
+         * Note: this is just a pass-through to HandsOnTable
+         * 
+         * @param row An integer designating the row
+         * @param column The column number to edit or a string value of the column name
+         * @param value The value to set to
+         * @param operation A string describing the value
+         */
+        setDataAtCell: function(row, column, value, operation){
+
+            // If the column is a string, then this is a column name. Resolve the actual column
+            // name.
+            if(typeof column === "string"){
+                column = this.getColumnForField(column);
+            }
+
+            return this.handsontable.setDataAtCell(row, column, value, operation);
+        },
+
         /**
          * Get the table header.
 		 * 
@@ -480,7 +523,7 @@ define([
 		 * @param data The array of arrays that represents the data to render
          */
         renderLookup: function(data){
-        	
+            
         	if(data === null){
         		this.showWarningMessage("Lookup could not be loaded");
         		return;
@@ -607,85 +650,85 @@ define([
         	
         	// Make the handsontable instance
         	this.handsontable = new Handsontable(this.$el[0], {
-        		  data: this.lookup_type === "kv" ? data.slice(1) : data,
-        		  startRows: 1,
-        		  startCols: 1,
-        		  contextMenu: contextMenu,
-        		  minSpareRows: 0,
-        		  minSpareCols: 0,
-        		  colHeaders: this.lookup_type === "kv" ? this.table_header : false,
-        		  columns: this.columns,
-        		  rowHeaders: true,
-        		  fixedRowsTop: this.lookup_type === "kv" ? 0 : 1,
-        		  height: function(){ return $(window).height() - 320; }, // Set the window height so that the user doesn't have to scroll to the bottom to set the save button
-        		  
-        		  stretchH: 'all',
-        		  manualColumnResize: true,
-        		  manualColumnMove: true,
-        		  onBeforeChange: this.validate.bind(this),
-        		  
-        		  allowInsertColumn: this.lookup_type === "kv" ? false : true,
-        		  allowRemoveColumn: this.lookup_type === "kv" ? false : true,
-        		  
-        		  renderer: this.lookupRenderer.bind(this),
-        		  
-        		  cells: function(row, col, prop) {
-        			  
-        			  var cellProperties = {};
-        			  
-        			  // Don't allow the _key row to be editable on KV store lookups since the keys are auto-assigned
-        		      if (this.read_only || (this.lookup_type === "kv" && col == 0)) {
-        		        cellProperties.readOnly = true;
-        		      }
-
-        		      return cellProperties;
-        		  }.bind(this),
+        	    data: this.lookup_type === "kv" ? data.slice(1) : data,
+        		startRows: 1,
+        		startCols: 1,
+        		contextMenu: contextMenu,
+        		minSpareRows: 0,
+        		minSpareCols: 0,
+        		colHeaders: this.lookup_type === "kv" ? this.table_header : false,
+        		columns: this.columns,
+        		rowHeaders: true,
+        		fixedRowsTop: this.lookup_type === "kv" ? 0 : 1,
+        		height: function(){ return $(window).height() - 320; }, // Set the window height so that the user doesn't have to scroll to the bottom to set the save button
         		
-        		  beforeRemoveRow: function(index, amount){
+        		stretchH: 'all',
+        		manualColumnResize: true,
+        		manualColumnMove: true,
+        		onBeforeChange: this.validate.bind(this),
+        		
+        		allowInsertColumn: this.lookup_type === "kv" ? false : true,
+        		allowRemoveColumn: this.lookup_type === "kv" ? false : true,
+        		
+        		renderer: this.lookupRenderer.bind(this),
+        		
+        		cells: function(row, col, prop) {
         			  
-        			  // Don't allow deletion of all cells
-        			  if( (this.countRows() - amount) <= 0 && self.lookup_type !== "kv"){
-        				  alert("A valid lookup file requires at least one row (for the header).");
-        				  return false;
-        			  }
+        			var cellProperties = {};
         			  
-        			  // Warn about the header being deleted and make sure the user wants to proceed.
-        			  if(index == 0 && self.lookup_type !== "kv"){
-        				  var continue_with_deletion = confirm("Are you sure you want to delete the header row?\n\nNote that a valid lookup file needs at least a header.");
+        			// Don't allow the _key row to be editable on KV store lookups since the keys are auto-assigned
+        		    if (this.read_only || (this.lookup_type === "kv" && col == 0)) {
+        		        cellProperties.readOnly = true;
+        		    }
+
+        		    return cellProperties;
+        		}.bind(this),
+        		
+        		beforeRemoveRow: function(index, amount){
+        			  
+        			// Don't allow deletion of all cells
+        			if( (this.countRows() - amount) <= 0 && self.lookup_type !== "kv"){
+        				alert("A valid lookup file requires at least one row (for the header).");
+        				return false;
+        			}
+        			  
+        			// Warn about the header being deleted and make sure the user wants to proceed.
+        			if(index == 0 && self.lookup_type !== "kv"){
+        				var continue_with_deletion = confirm("Are you sure you want to delete the header row?\n\nNote that a valid lookup file needs at least a header.");
         				  
-        				  if (!continue_with_deletion){
-        					  return false;
-        				  }
-        			  }
-        		  },
-        		  
-        		  beforeRemoveCol: function(index, amount){
+        				if (!continue_with_deletion){
+        					return false;
+        				}
+        			}
+        		},
+        		
+        		beforeRemoveCol: function(index, amount){
         			  
-        			  // Don't allow deletion of all cells
-        			  if( (this.countCols() - amount) <= 0){
-        				  alert("A valid lookup file requires at least one column.");
-        				  return false;
-        			  }
-        		  },
-        		  
-        		  // Don't allow removal of all columns
-        		  afterRemoveCol: function(index, amount){
-        			  if(this.countCols() == 0){
-        				  alert("You must have at least one cell to have a valid lookup");
-        			  }
-        		  },
-        		  
-        		  // If all rows have been removed, all in some blank ones
-        		  afterRemoveRow: function(index, amount){
-        			  if(this.countRows() == 0){
-        				  //self.loadLookupContents(self.lookup, self.namespace, self.owner, self.lookup_type, false);
-        			  }
-        		  },
-        		  
-        		  // Update the cached version of the table header
-        		  afterColumnMove: function(){
-        			  this.getTableHeader(false);
-        		  }.bind(this)
+        			// Don't allow deletion of all cells
+        			if( (this.countCols() - amount) <= 0){
+        				alert("A valid lookup file requires at least one column.");
+        				return false;
+        			}
+        		},
+        		
+        		// Don't allow removal of all columns
+        		afterRemoveCol: function(index, amount){
+        			if(this.countCols() == 0){
+        				alert("You must have at least one cell to have a valid lookup");
+        			}
+        		},
+        		
+        		// If all rows have been removed, all in some blank ones
+        		afterRemoveRow: function(index, amount){
+        			if(this.countRows() == 0){
+        				//self.loadLookupContents(self.lookup, self.namespace, self.owner, self.lookup_type, false);
+        			}
+        		},
+        		
+        		// Update the cached version of the table header
+        		afterColumnMove: function(){
+        			this.getTableHeader(false);
+                }.bind(this)
             });
         	
         	// Wire-up handlers for doing KV store dynamic updates
@@ -710,7 +753,11 @@ define([
         				var col = changes[c][1];
         				var new_value = changes[c][3];
 
-        				this.doEditCell(row, col, new_value);
+                        this.trigger("editCell", {
+                            'row' : row,
+                            'col' : col,
+                            'new_value' : new_value
+                        });
         			}
 
         		}.bind(this));
@@ -720,18 +767,22 @@ define([
 
         			// Iterate and remove each row
         			for(var c = 0; c < amount; c++){
-        				var row = index + c;		        		
-        				this.doRemoveRow(row);
+        				var row = index + c;
+                        this.trigger("removeRow", row);
         			}
 
         		}.bind(this));
 
         		// For row creation
-        		this.handsontable.addHook('afterCreateRow', this.doCreateRows.bind(this));
+        		this.handsontable.addHook('afterCreateRow', function(row, count){
+                    this.trigger("removeRow", {
+                        'row' : row,
+                        'count' : count
+                    });
+                }.bind(this));
 
         	}
         },
-
 
         /**
          * Make JSON for the given row.

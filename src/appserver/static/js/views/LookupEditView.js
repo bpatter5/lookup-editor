@@ -525,7 +525,7 @@ define([
 
 			// Verify that the input file matches the KV store collection
 			// A file can only be imported if the import file has all of the columns of the schema (no gaps)
-			for(var field in this.field_types){
+			for(var field in this.table_editor_view.field_types){
 
 				// See if the field exists in the input file
 				if(field !== "undefined"){
@@ -791,14 +791,6 @@ define([
          * @param version The version to get from the archived history
          */
         loadLookupContents: function(lookup_file, namespace, user, lookup_type, header_only, version){
-			
-			// Make an instance of the table editor if necessary
-			if(this.table_editor_view === null){
-				this.table_editor_view = new TableEditorView({
-					el: '#lookup-table',
-					lookup_type: lookup_type
-				});
-			}
 
         	// Set a default value for header_only
         	if( typeof header_only === 'undefined' ){
@@ -1351,7 +1343,7 @@ define([
       		  		// If this is a new row, then populate the _key
       		  		if(!_key){
       		  			_key = data['_key'];
-      		  			this.table_editor_view.setDataAtCell(row, this.table_editor_view.getColumnForField("_key"), _key, "key_update");
+      		  			this.table_editor_view.setDataAtCell(row, "_key", _key, "key_update");
       		  			console.info('KV store entry creation completed for entry ' + _key);
       		  		}
       		  		else{
@@ -1457,7 +1449,7 @@ define([
             model.save({wait: true})
                 .done(function(data) {
       		  		// Update the _key values in the cell
-					this.table_editor_view.setDataAtCell(row, this.table_editor_view.getColumnForField("_key"), data._key, "key_update");
+					this.table_editor_view.setDataAtCell(row, "_key", data._key, "key_update");
       		  		
       		  		this.hideWarningMessage();
       		  		this.updateTimeModified();
@@ -1865,7 +1857,8 @@ define([
 		 * Refresh the lookup.
 		 */
 		refreshLookup: function(){
-			this.render();
+			this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type);
+			//this.render();
 		},
 
         /**
@@ -1907,6 +1900,28 @@ define([
 						'users' : users,
 						'search_link' : search_link
 					}));
+
+					// Initialize the table editor if we haven't already
+					if(this.table_editor_view === null){
+						this.table_editor_view = new TableEditorView({
+							el: '#lookup-table',
+							lookup_type: this.lookup_type
+						});
+
+						// Wire up the handlers
+						this.table_editor_view.on("editCell", function(data) {
+							this.doEditCell(data.row, data.col, data.new_value);
+						}.bind(this));
+
+						this.table_editor_view.on("removeRow", function(row) {
+							this.doRemoveRow(row);
+						}.bind(this));
+
+						this.table_editor_view.on("editCell", function(data) {
+							this.doCreateRows(data.row, data.count);
+						}.bind(this));
+						
+					}
 					
 					// Setup a handler for the shortcuts
 					$(document).keydown(this.handleShortcuts.bind(this));
@@ -1975,17 +1990,17 @@ define([
 										if(possible_field.indexOf('field.') === 0){
 											
 											// Save the type if it is a field
-											this.field_types[possible_field.substr(6)] = model.entry.associated.content.attributes[possible_field];
+											this.table_editor_view.field_types[possible_field.substr(6)] = model.entry.associated.content.attributes[possible_field];
 										}
 									}
 									
 									// Determine if types are enforced
 									if(model.entry.associated.content.attributes.hasOwnProperty('enforceTypes')){
 										if(model.entry.associated.content.attributes.enforceTypes === "true"){
-											this.field_types_enforced = true;
+											this.table_editor_view.field_types_enforced = true;
 										}
 										else{
-											this.field_types_enforced = false;
+											this.table_editor_view.field_types_enforced = false;
 										}
 									}
 									
