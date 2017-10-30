@@ -12,15 +12,18 @@
 
 require.config({
     paths: {
+		// Main components
+		kv_store_field_editor: '../app/lookup_editor/js/views/KVStoreFieldEditor',
+		transform_create_view: '../app/lookup_editor/js/views/LookupTransformCreateView',
+		table_editor_view: '../app/lookup_editor/js/views/TableEditorView',
+		kvstore: "../app/lookup_editor/js/contrib/kvstore",
+
+		// Helper libraries
         text: "../app/lookup_editor/js/lib/text",
         console: '../app/lookup_editor/js/lib/console',
         csv: '../app/lookup_editor/js/lib/csv',
-		kv_store_field_editor: '../app/lookup_editor/js/views/KVStoreFieldEditor',
-		transform_create_view: '../app/lookup_editor/js/views/LookupTransformCreateView',
-    	table_editor_view: '../app/lookup_editor/js/views/TableEditorView',
-        clippy: '../app/lookup_editor/js/lib/clippy',
-        moment: '../app/lookup_editor/js/lib/moment.min',
-		kvstore: "../app/lookup_editor/js/contrib/kvstore"
+        clippy: '../app/lookup_editor/js/lib/clippy'
+		
     },
     shim: {
         'clippy': {
@@ -46,7 +49,6 @@ define([
     "text!../app/lookup_editor/js/templates/LookupEdit.html",
 	"kv_store_field_editor",
 	"transform_create_view",
-    "moment",
 	"kvstore",
     "clippy",
     "csv",
@@ -70,7 +72,6 @@ define([
     Template,
 	KVStoreFieldEditor,
 	LookupTransformCreateView,
-    moment,
 	KVStore
 ){
 	

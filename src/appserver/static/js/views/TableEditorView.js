@@ -1,9 +1,7 @@
 require.config({
     paths: {
     	handsontable: "../app/lookup_editor/js/lib/handsontable.full.min",
-        text: "../app/lookup_editor/js/lib/text",
         console: '../app/lookup_editor/js/lib/console',
-        csv: '../app/lookup_editor/js/lib/csv',
         moment: '../app/lookup_editor/js/lib/moment.min'
     },
     shim: {
@@ -17,20 +15,15 @@ require.config({
 define([
     "underscore",
     "backbone",
-    "splunkjs/mvc",
-    "util/splunkd_utils",
     "jquery",
     "handsontable",
     "splunkjs/mvc/simplesplunkview",
     "moment",
-    "csv",
     "splunk.util",
     "css!../app/lookup_editor/css/lib/handsontable.full.min.css"
 ], function(
     _,
     Backbone,
-    mvc,
-    splunkd_utils,
     $,
     Handsontable,
     SimpleSplunkView,
