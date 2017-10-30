@@ -121,7 +121,6 @@ class LookupEditorHandler(rest_handler.RESTHandler):
 
             # Load the CSV lookup
             elif lookup_type == "csv":
-
                 with self.lookup_editor.get_lookup(request_info.session_key, lookup_file, namespace,
                                                    owner, version=version,
                                                    throw_exception_if_too_big=True) as csv_file:
@@ -203,7 +202,7 @@ class LookupEditorHandler(rest_handler.RESTHandler):
                 filename = 'attachment; filename="%s"' % (lookup_file + ".csv")
 
             return {
-                'payload': json.dumps(csv_data),
+                'payload': csv_data,
                 'status': 200,
                 'headers': {
                     'Content-Type': 'text/csv',
