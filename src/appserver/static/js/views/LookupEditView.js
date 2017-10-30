@@ -1444,7 +1444,7 @@ define([
         	var record_data = [];
         	
         	for(var c=0; c < count; c++){
-        		record_data.push(this.makeRowJSON(row + c));
+        		record_data.push(this.table_editor_view.makeRowJSON(row + c));
         	}
         	
         	// Third, we need to do a post to create the row
@@ -1921,7 +1921,7 @@ define([
 							this.doRemoveRow(row);
 						}.bind(this));
 
-						this.table_editor_view.on("editCell", function(data) {
+						this.table_editor_view.on("createRows", function(data) {
 							this.doCreateRows(data.row, data.count);
 						}.bind(this));
 						
