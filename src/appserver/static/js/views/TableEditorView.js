@@ -60,7 +60,6 @@ define([
 
             // Below is the list of internal variables
             this.handsontable = null; // A reference to the handsontable
-            this.read_only = false; // We will update this to true if the lookup cannot be edited
 
             this.field_types = {}; // This will store the expected types for each field
             this.field_types_enforced = false; // This will store whether this lookup enforces types
@@ -790,6 +789,54 @@ define([
             // Return true indicating that the load worked
             return true;
         },
+
+		/**
+		 * Set the status to read-only
+		 * 
+		 * @param read_only A boolean indicating if the table should be in read-only mode.
+		 */
+		setReadOnly: function(read_only){
+			this.read_only = read_only;
+		},
+
+		/**
+		 * Determine if the table is in read-only mode.
+		 */
+		isReadOnly: function(){
+			return this.read_only;
+		},
+
+		/**
+		 * Set the field types and whether the types ought to be enforced.
+		 * 
+		 * @param field_types A list of the field types
+		 */
+		setFieldTypes: function(field_types){
+			this.field_types = field_types;
+		},
+
+		/**
+		 * Get the field types.
+		 */
+		getFieldTypes: function(){
+			return this.field_types;
+		},
+
+		/**
+		 * Set the field type enforcement to on.
+		 * 
+		 * @param field_types_enforced A boolean indicating whether the types should be enforced
+		 */
+		setFieldTypeEnforcement: function(field_types_enforced){
+			this.field_types_enforced = field_types_enforced;
+		},
+
+		/**
+		 * Get a boolean indicating whether field types are enforced.
+		 */
+		areFieldTypesEnforced: function(){
+			return this.field_types_enforced;
+		},
 
         /**
          * Make JSON for the given row.

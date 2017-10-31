@@ -21,6 +21,7 @@ require.config({
 		kvstore: '../app/lookup_editor/js/contrib/kvstore',
 		capabilities: '../app/lookup_editor/js/utils/Capabilities',
 		users: '../app/lookup_editor/js/utils/Users',
+		kv_lookup_info: '../app/lookup_editor/js/utils/KVLookupInfo',
 
 		// Helper libraries
         text: '../app/lookup_editor/js/lib/text',
@@ -56,6 +57,7 @@ define([
 	"kvstore",
 	"capabilities",
 	"users",
+	"kv_lookup_info",
     "clippy",
     "csv",
     "bootstrap.dropdown",
@@ -80,19 +82,14 @@ define([
 	LookupTransformCreateView,
 	KVStore,
 	Capabilities,
-	Users
+	Users,
+	KVLookupInfo
 ){
 	
 	var Apps = SplunkDsBaseCollection.extend({
 	    url: "apps/local?count=-1&search=disabled%3D0",
 	    initialize: function() {
 	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
-	    }
-	});
-	
-	var KVLookup = SplunkDBaseModel.extend({
-	    initialize: function() {
-	    	SplunkDBaseModel.prototype.initialize.apply(this, arguments);
 	    }
 	});
 	
@@ -124,7 +121,6 @@ define([
             this.namespace = null;
             this.owner = null;
             this.lookup_type = null;
-            this.lookup_config = null;
             
             this.agent = null; // This is for Clippy
 			
@@ -532,7 +528,7 @@ define([
 
 			// Verify that the input file matches the KV store collection
 			// A file can only be imported if the import file has all of the columns of the schema (no gaps)
-			for(var field in this.table_editor_view.field_types){
+			for(var field in this.table_editor_view.getFieldTypes()){
 
 				// See if the field exists in the input file
 				if(field !== "undefined"){
@@ -581,7 +577,7 @@ define([
          importFile: function(evt){
         	
         	// Stop if this is read-only
-        	if(this.table_editor_view.read_only){
+        	if(this.table_editor_view.isReadOnly()){
         		console.info("Drag and dropping on a read-only lookup being ignored");
         		return false;
         	}
@@ -696,7 +692,7 @@ define([
         	}));
         	
         	// Show the list of backup lookups
-        	if(this.table_editor_view.read_only !== true){
+        	if(!this.table_editor_view.isReadOnly()){
         		$('#load-backup', this.$el).show();
         	}
         	else{
@@ -922,7 +918,7 @@ define([
         				  this.showWarningMessage("The lookup could not be loaded from the server", true);
         			  }
         			  
-    				  this.table_editor_view.read_only = true;
+    				  this.table_editor_view.setReadOnly(true);
     				  this.hideEditingControls();
         		  }.bind(this)
         	});
@@ -1324,7 +1320,7 @@ define([
         doEditCell: function(row, col, new_value){
         	
         	// Stop if we are in read-only mode
-        	if(this.table_editor_view.read_only){
+        	if(this.table_editor_view.isReadOnly()){
         		return;
         	}
         	
@@ -1396,7 +1392,7 @@ define([
         doRemoveRow: function(row){
         	
         	// Stop if we are in read-only mode
-        	if(this.table_editor_view.read_only){
+        	if(this.table_editor_view.isReadOnly()){
         		return;
         	}
         	
@@ -1443,7 +1439,7 @@ define([
         doCreateRows: function(row, count){
         	
         	// Stop if we are in read-only mode
-        	if(this.table_editor_view.read_only){
+        	if(this.table_editor_view.isReadOnly()){
         		return;
         	}
         	
@@ -1761,49 +1757,23 @@ define([
 					// If we are editing an existing KV lookup, then get the information about the lookup and _then_ get the lookup data
 					if (this.lookup_type === "kv" && !this.is_new) {
 
-						// Get the info about the lookup configuration (for KV store lookups)
-						this.lookup_config = new KVLookup();
+						$.when(KVLookupInfo.getInfo(this.namespace, this.lookup))
+						.done(function(field_types, field_types_enforced, read_only){
+							// Configure the table editor
+							this.table_editor_view.setFieldTypes(field_types);
+							this.table_editor_view.setFieldTypeEnforcement(field_types_enforced);
+							this.table_editor_view.setReadOnly(read_only);
 
-						this.lookup_config.fetch({
-							// e.g. servicesNS/nobody/lookup_editor/storage/collections/config/test
-							url: splunkd_utils.fullpath(['/servicesNS', 'nobody', this.namespace, 'storage/collections/config', this.lookup].join('/')), // For some reason using the actual owner causes this call to fail
-							success: function (model, response, options) {
-								console.info("Successfully retrieved the information about the KV store lookup");
+							if(read_only){
+								this.showWarningMessage("You do not have permission to edit this lookup; it is being displayed read-only");
+							}
 
-								// Determine the types of the fields
-								for (var possible_field in model.entry.associated.content.attributes) {
-									// Determine if this a field
-									if (possible_field.indexOf('field.') === 0) {
-
-										// Save the type if it is a field
-										this.table_editor_view.field_types[possible_field.substr(6)] = model.entry.associated.content.attributes[possible_field];
-									}
-								}
-
-								// Determine if types are enforced
-								if (model.entry.associated.content.attributes.hasOwnProperty('enforceTypes')) {
-									if (model.entry.associated.content.attributes.enforceTypes === "true") {
-										this.table_editor_view.field_types_enforced = true;
-									}
-									else {
-										this.table_editor_view.field_types_enforced = false;
-									}
-								}
-
-								// If this lookup cannot be edited, then set the editor to read-only
-								if (!model.entry.acl.attributes.can_write) {
-									this.table_editor_view.read_only = true;
-									this.showWarningMessage("You do not have permission to edit this lookup; it is being displayed read-only");
-								}
-
-							}.bind(this),
-							error: function () {
-								console.warn("Unable to retrieve the information about the KV store lookup");
-							}.bind(this),
-							complete: function () {
-								this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type);
-							}.bind(this)
-						});
+							// Load the lookup
+							this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type);
+						}.bind(this))
+						.fail(function(){
+							console.warn("Unable to retrieve the information about the KV store lookup");
+						}.bind(this));
 					}
 
 					// If we are making an new KV lookup, then show the form that allows the user to define the meta-data
@@ -1828,7 +1798,7 @@ define([
 					}
 
 					// Stop if we didn't get enough information to load a lookup
-					else if (this.lookup == null || this.namespace == null || this.owner == null) {
+					else if (this.lookup === null || this.namespace === null || this.owner === null) {
 						this.showWarningMessage("Not enough information to identify the lookup file to load");
 					}
 
