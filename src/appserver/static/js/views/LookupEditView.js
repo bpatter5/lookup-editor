@@ -10,6 +10,7 @@
  *   |--- kvstore: a library for interacting with KV store collections (retrieving and editing values)
  *   |--- Users: a library getting the list of users
  *   |--- Capabilities: a library for get the capabilities of users
+ *   |--- KVLookupInfo: a library for get the capabilities of users
  */
 
 require.config({
@@ -166,8 +167,6 @@ define([
         	"click #choose-import-file"                    : "chooseImportFile",
         	"click #import-file"                           : "openFileImportModal",
         	"change #import-file-input"                    : "importFile",
-        	"dragenter #lookup-table"                      : "onDragFileEnter",
-        	"dragleave #lookup-table"                      : "onDragFileEnd",
 			"click #import-file-modal .btn-dialog-cancel"  : "cancelImport",
 			"click #import-file-modal .btn-dialog-close"   : "cancelImport",
 
@@ -403,27 +402,6 @@ define([
             evt.dataTransfer.dropEffect = 'copy'; // Make it clear this is a copy
         },
         
-		/**
-		 *  The handler for beginning to drag a file.
-		 * 
-		 *  @param evt The event
-		 */
-        onDragFileEnter: function(evt){
-        	evt.preventDefault();
-        	//$('#drop-zone', this.$el).show();
-        	//$('#drop-zone', this.$el).height($('#lookup-table', this.$el).height());
-        	//$('#lookup-table', this.$el).addClass('drop-target');
-        	return false;
-        },
-        
-		/**
-		 * Upon stopping a file drag.
-		 */
-        onDragFileEnd: function(){
-        	console.log("Dragging stopped");
-        	this.$el.removeClass('dragging');
-        },
-        
         /**
          * Import the dropped file.
 		 * 
@@ -528,7 +506,11 @@ define([
 
 			// Verify that the input file matches the KV store collection
 			// A file can only be imported if the import file has all of the columns of the schema (no gaps)
-			for(var field in this.table_editor_view.getFieldTypes()){
+			var fields = _.keys(this.table_editor_view.getFieldTypes());
+			var field = null;
+
+			for(var c = 0; c < fields.length; c++){
+				field = fields[c];
 
 				// See if the field exists in the input file
 				if(field !== "undefined"){
