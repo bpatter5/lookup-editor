@@ -87,7 +87,7 @@ define([
             $.when(this.getCapabilities()).done(function (capabilities) {
 
                 // Determine if the user should be considered as having access
-                if (this.is_using_free_license) {
+                if ($C.SPLUNKD_FREE_LICENSE) {
                     promise.resolve(true);
                 }
                 else {
