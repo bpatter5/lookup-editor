@@ -10,7 +10,7 @@
  *   |--- kvstore: a library for interacting with KV store collections (retrieving and editing values)
  *   |--- Users: a library getting the list of users
  *   |--- Capabilities: a library for get the capabilities of users
- *   |--- KVLookupInfo: a library for get the capabilities of users
+ *   |--- KVLookupInfo: a library for getting information for KV collections
  */
 
 require.config({
@@ -151,10 +151,6 @@ define([
         	
         	// Listen to changes in the KV field editor so that the validation can be refreshed
 			this.listenTo(Backbone, "kv_field:changed", this.validateForm.bind(this));
-			
-			// Retain a list of the capabilities
-			this.capabilities = null;
-			this.is_using_free_license = $C.SPLUNKD_FREE_LICENSE;
         },
         
         events: {
@@ -251,13 +247,6 @@ define([
         		$('.modal-body').addClass('dragging');
         		console.log("enter");
         	});
-        	
-        	/*
-        	$('#import-file-modal').on('dragleave', function(){
-        		$('.modal-body').removeClass('dragging');
-        		console.log("leave");
-        	});
-        	*/
         },
         
         /**
@@ -368,9 +357,10 @@ define([
          */
         loadLookupBackupsList: function(lookup_file, namespace, user){
         	
-        	var data = {"lookup_file":lookup_file,
-                	    "namespace":namespace};
-    	
+        	var data = {
+				"lookup_file":lookup_file,
+				"namespace":namespace
+			};
         	
         	// Populate the default parameter in case user wasn't provided
         	if( typeof user === 'undefined' ){
@@ -379,7 +369,7 @@ define([
 
         	// If a user was defined, then pass the name as a parameter
         	if(user !== null){
-        		data["owner"] = user;
+        		data.owner = user;
         	}
         	
         	// Fetch them
@@ -517,8 +507,8 @@ define([
 
 					var field_found = false;
 
-					for(var c = 0; c < data[0].length; c++){
-						if(data[0][c] === field){
+					for(var d = 0; d < data[0].length; d++){
+						if(data[0][d] === field){
 							field_found = true;
 						}
 					}
@@ -660,13 +650,13 @@ define([
          */
         renderBackupsList: function(){
         	
-        	var backup_list_template = ' \
-        		<% for(var c = 0; c < backups.length; c++){ %> \
-        			<li><a class="backup-version" href="#" data-backup-time="<%- backups[c].time %>"><%- backups[c].time_readable %></a></li> \
-        		<% } %> \
-        		<% if(backups.length == 0){ %> \
-        			<li><a class="backup-version" href="#">No backup versions available</a></li> \
-        		<% } %>';
+        	var backup_list_template = ' ' +
+        		'<% for(var c = 0; c < backups.length; c++){ %> ' +
+        		'	<li><a class="backup-version" href="#" data-backup-time="<%- backups[c].time %>"><%- backups[c].time_readable %></a></li> ' +
+        		'<% } %> ' +
+        		'<% if(backups.length == 0){ %> ' +
+        		'	<li><a class="backup-version" href="#">No backup versions available</a></li> ' +
+        		'<% } %>';
         	
         	// Render the list of backups
         	$('#backup-versions', this.$el).html(_.template(backup_list_template, {
@@ -804,7 +794,7 @@ define([
         	
         	// If a user was defined, then pass the name as a parameter
         	if(user !== null){
-        		data["owner"] = user;
+        		data.owner = user;
         	}
         	
         	// Make the URL
@@ -822,7 +812,7 @@ define([
 				success: function (data) {
 
 					// Data could not be loaded
-					if (data == null) {
+					if (data === null) {
 						console.error('JSON of lookup table could not be loaded (got an empty value)');
 						this.showWarningMessage("The requested lookup file could not be loaded", true);
 						$('.show-when-editing', this.$el).hide();
@@ -1162,17 +1152,17 @@ define([
 	        	
 	        	// If a user was defined, then pass the name as a parameter
 	        	if(this.owner !== null){
-	        		data["owner"] = this.owner;
+	        		data.owner = this.owner;
 	        	}
 	        	
 	        	// Validate the input if it is new
 	        	if(making_new_lookup){
 	        		
 		        	// Get the lookup file name from the form if we are making a new lookup
-	        		data["lookup_file"] = mvc.Components.getInstance("lookup-name").val();
+	        		data.lookup_file = mvc.Components.getInstance("lookup-name").val();
 		
 		        	// Make sure that the file name was included; stop if it was not
-		        	if (data["lookup_file"] === ""){
+		        	if (data.lookup_file === ""){
 		        		$("#lookup_file_error").text("Please define a file name"); // TODO
 		        		$("#lookup_file_error").show();
 		        		this.setSaveButtonTitle();
@@ -1180,7 +1170,7 @@ define([
 		        	}
 		        	
 		        	// Make sure that the file name is valid; stop if it is not
-		        	if( !data["lookup_file"].match(/^[-A-Z0-9_ ]+([.][-A-Z0-9_ ]+)*$/gi) ){
+		        	if( !data.lookup_file.match(/^[-A-Z0-9_ ]+([.][-A-Z0-9_ ]+)*$/gi) ){
 		        		$("#lookup_file_error").text("The file name contains invalid characters"); // TODO
 		        		$("#lookup_file_error").show();
 		        		this.setSaveButtonTitle();
@@ -1188,10 +1178,10 @@ define([
 		        	}
 		        		
 		        	// Get the namespace from the form if we are making a new lookup
-		        	data["namespace"] = mvc.Components.getInstance("lookup-app").val();
+		        	data.namespace = mvc.Components.getInstance("lookup-app").val();
 		
 		        	// Make sure that the namespace was included; stop if it was not
-		        	if (data["namespace"] === ""){
+		        	if (data.namespace === ""){
 		        		$("#lookup_namespace_error").text("Please define a namespace");
 		        		$("#lookup_namespace_error").show();
 		        		this.setSaveButtonTitle();
@@ -1200,7 +1190,7 @@ define([
 		        	
 		        	// Set the owner if the user wants a user-specific lookup
 		        	if($.inArray('user_only', mvc.Components.getInstance("lookup-user-only").val()) >= 0){
-		        		data["owner"] = Splunk.util.getConfigValue("USERNAME");
+		        		data.owner = Splunk.util.getConfigValue("USERNAME");
 		        	}
 		        }
 	
@@ -1223,71 +1213,70 @@ define([
 	        	
 	        	// Perform the request to save the lookups
 	        	$.ajax( {
-							url: Splunk.util.make_full_url("/splunkd/__raw/services/data/lookup_edit/lookup_contents"),
-	        				type: 'POST',
-	        				data: data,
-	        				
-	        				success: function(){
-	        					console.log("Lookup file saved successfully");
-	        					this.showInfoMessage("Lookup file saved successfully");
-	        					this.setSaveButtonTitle();
-	        					
-	        					// Persist the information about the lookup
-	        					if(this.is_new){
-		        					this.lookup = data["lookup_file"];
-		        					this.namespace = data["namespace"];
-		        					this.owner = data["owner"];
-		        					this.lookup_type = "csv";
-	        					}
-	        				}.bind(this),
-	        				
-	        				// Handle cases where the file could not be found or the user did not have permissions
-	        				complete: function(jqXHR, textStatus){
-	        					
-	        					var elapsed = new Date().getTime()-populateStart;
-	        					console.info("Lookup save operation completed in " + elapsed + "ms");
-	        					var success = true;
-	        					
-	        					if(jqXHR.status == 404){
-	        						console.info('Lookup file was not found');
-	        						this.showWarningMessage("This lookup file could not be found");
-	        						success = false;
-	        					}
-	        					else if(jqXHR.status == 403){
-	        						console.info('Inadequate permissions');
-	        						this.showWarningMessage("You do not have permission to edit this lookup file");
-	        						success = false;
-	        					}
-	        					else if(jqXHR.status == 400){
-	        						console.info('Invalid input');
-	        						this.showWarningMessage("This lookup file could not be saved because the input is invalid");
-	        						success = false;
-	        					}
-	        					else if(jqXHR.status == 500){
-	        						this.showWarningMessage("The lookup file could not be saved");
-	        				    	success = false;
-	        					}
-	        					
-	        					this.setSaveButtonTitle();
-	        					
-	        					// If we made a new lookup, then switch modes
-	        					if(this.is_new && success){
-	        						this.changeToEditMode();
-	        					}
-	        					
-	        					// Update the lookup backup list
-	        					if(success){
-	        						this.loadLookupBackupsList(this.lookup, this.namespace, this.owner);
-	        					}
-	        				}.bind(this),
-	        				
-	        				error: function(jqXHR,textStatus,errorThrown) {
-	        					console.log("Lookup file not saved");
-	        					this.showWarningMessage("Lookup file could not be saved");
-	        				}.bind(this)
-	        				
-	        			}
-	        	);
+					url: Splunk.util.make_full_url("/splunkd/__raw/services/data/lookup_edit/lookup_contents"),
+					type: 'POST',
+					data: data,
+
+					success: function () {
+						console.log("Lookup file saved successfully");
+						this.showInfoMessage("Lookup file saved successfully");
+						this.setSaveButtonTitle();
+
+						// Persist the information about the lookup
+						if (this.is_new) {
+							this.lookup = data.lookup_file;
+							this.namespace = data.namespace;
+							this.owner = data.owner;
+							this.lookup_type = "csv";
+						}
+					}.bind(this),
+
+					// Handle cases where the file could not be found or the user did not have permissions
+					complete: function (jqXHR, textStatus) {
+
+						var elapsed = new Date().getTime() - populateStart;
+						console.info("Lookup save operation completed in " + elapsed + "ms");
+						var success = true;
+
+						if (jqXHR.status == 404) {
+							console.info('Lookup file was not found');
+							this.showWarningMessage("This lookup file could not be found");
+							success = false;
+						}
+						else if (jqXHR.status == 403) {
+							console.info('Inadequate permissions');
+							this.showWarningMessage("You do not have permission to edit this lookup file");
+							success = false;
+						}
+						else if (jqXHR.status == 400) {
+							console.info('Invalid input');
+							this.showWarningMessage("This lookup file could not be saved because the input is invalid");
+							success = false;
+						}
+						else if (jqXHR.status == 500) {
+							this.showWarningMessage("The lookup file could not be saved");
+							success = false;
+						}
+
+						this.setSaveButtonTitle();
+
+						// If we made a new lookup, then switch modes
+						if (this.is_new && success) {
+							this.changeToEditMode();
+						}
+
+						// Update the lookup backup list
+						if (success) {
+							this.loadLookupBackupsList(this.lookup, this.namespace, this.owner);
+						}
+					}.bind(this),
+
+					error: function (jqXHR, textStatus, errorThrown) {
+						console.log("Lookup file not saved");
+						this.showWarningMessage("Lookup file could not be saved");
+					}.bind(this)
+
+				});
         	}
         	return false;
         },
@@ -1331,7 +1320,7 @@ define([
       		  		
       		  		// If this is a new row, then populate the _key
       		  		if(!_key){
-      		  			_key = data['_key'];
+      		  			_key = data._key;
       		  			this.table_editor_view.setDataAtCell(row, "_key", _key, "key_update");
       		  			console.info('KV store entry creation completed for entry ' + _key);
       		  		}
@@ -1549,7 +1538,7 @@ define([
          * Get a default table.
          */
         getDefaultData: function(){
-        	return   [
+        	return [
     		            ["Column1", "Column2", "Column3", "Column4", "Column5", "Column6"],
     		            ["", "", "", "", "", ""],
     		            ["", "", "", "", "", ""],
@@ -1562,13 +1551,14 @@ define([
 		 * Edit the ACLs.
 		 */
 		editACLs: function(){
+			var uri = null;
 
 			if(this.lookup_type == 'kv'){
-				var uri = '/servicesNS/nobody/' + this.namespace + '/storage/collections/config/' + this.lookup;
+				uri = '/servicesNS/nobody/' + this.namespace + '/storage/collections/config/' + this.lookup;
 				document.location = '/en-US/manager/permissions/' + this.namespace + '/storage/collections/config/' + this.lookup + '?uri=' + encodeURIComponent(uri);
 			}
 			else{
-				var uri = '/servicesNS/' + this.owner + '/' + this.namespace + '/data/lookup-table-files/' + this.lookup;
+				uri = '/servicesNS/' + this.owner + '/' + this.namespace + '/data/lookup-table-files/' + this.lookup;
 				document.location = '/en-US/manager/permissions/' + this.namespace + '/data/lookup-table-files/' + this.lookup + '?uri=' + encodeURIComponent(uri);
 			}
 
