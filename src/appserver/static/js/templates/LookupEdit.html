@@ -110,17 +110,11 @@
 					<a class="btn" target="_blank" href="<%- search_link %>">Open in Search</a>
 					<% } %>
 				</div>
-				<div class="btn-group">
+				<div class="btn-group ">
 					<button class="btn" id="refresh">Refresh</button>
-					<!-- <button class="btn" id="edit-acl">Edit Permissions</button> -->
-					<a class="btn dropdown-toggle right-offset-button" data-toggle="dropdown" href="#">
-						Revert to previous version
-						<span class="caret"></span>
-					</a>
-					<ul id="backup-versions" class="dropdown-menu">
-						<li><a class="backup-version" href="#">No backup versions available</a></li>
-					</ul>
+					<div id="backup-list"></div>
 				</div>
+
 				<% } else if(lookup_type === "kv") { %>
 					<div class="btn-group right-offset-button">
 						<button class="btn" id="import-file">Import</button>

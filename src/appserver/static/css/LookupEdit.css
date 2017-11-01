@@ -19,6 +19,17 @@
 	margin-right: 15px;
 }
 
+/* Make the backups list look like a group */
+#backup-list{
+	margin-left: -1px;
+	display: inline-block;
+}
+
+#backup-list > a{
+	border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+}
+
 /* Make sure the table breaks from the form elements above it */
 .lookup-edit-view #lookup-table{
 	clear: both;
