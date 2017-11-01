@@ -11,6 +11,8 @@
  *   |--- Users: a library getting the list of users
  *   |--- Capabilities: a library for get the capabilities of users
  *   |--- KVLookupInfo: a library for getting information for KV collections
+ *   |--- ImportModal: the modal for helping import files into the lookup
+ *   |--- BackupListInput: a view for displaying and selecting a list of the lookup backups
  */
 
 require.config({
@@ -24,6 +26,7 @@ require.config({
 		users: '../app/lookup_editor/js/utils/Users',
 		kv_lookup_info: '../app/lookup_editor/js/utils/KVLookupInfo',
 		import_modal: '../app/lookup_editor/js/views/ImportModal',
+		backups_list_input: '../app/lookup_editor/js/views/BackupListInput',
 
 		// Helper libraries
         text: '../app/lookup_editor/js/lib/text',
@@ -61,6 +64,7 @@ define([
 	"users",
 	"kv_lookup_info",
 	"import_modal",
+	"backups_list_input",
     "clippy",
     "csv",
     "bootstrap.dropdown",
@@ -87,20 +91,14 @@ define([
 	Capabilities,
 	Users,
 	KVLookupInfo,
-	ImportModal
+	ImportModal,
+	BackupListInput
 ){
 	var Apps = SplunkDsBaseCollection.extend({
 	    url: "apps/local?count=-1&search=disabled%3D0",
 	    initialize: function() {
 	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
 	    }
-	});
-	
-	var Backup = Backbone.Model.extend();
-	
-	var Backups = Backbone.Collection.extend({
-	    url: Splunk.util.make_full_url("/splunkd/__raw/services/data/lookup_edit/lookup_backups"),
-	    model: Backup
 	});
 	
     // Define the custom view class
@@ -112,8 +110,6 @@ define([
          */
         initialize: function() {
         	this.options = _.extend({}, this.defaults, this.options);
-        	
-            this.backups = null;
             
             // The information for the loaded lookup
             this.lookup = null;
@@ -128,6 +124,7 @@ define([
 			this.lookup_transform_create_view = null;
 			this.table_editor_view = null;
 			this.import_modal = null;
+			this.backups_list_input = null;
 
         	// Get the apps
         	this.apps = new Apps();
@@ -153,14 +150,9 @@ define([
         
         events: {
         	"click #save"                                  : "doSaveLookup",
-        	"click .backup-version"                        : "doLoadBackup",
         	"click .user-context"                          : "doLoadUserContext",
         	"click #export-file"                           : "doExport",
-
-			// Import related
         	"click #import-file"                           : "openFileImportModal",
-
-			// Misc options
 			"click #refresh"                               : "refreshLookup",
 			"click #edit-acl"                              : "editACLs",
 			"click #open-in-search"                        : "openInSearch"
@@ -198,20 +190,10 @@ define([
          * @param version The version of the lookup file to load (a value of null will load the latest version)
          */
         loadBackupFile: function(version){
-        	// Load a default for the version
-        	if( typeof version == 'undefined' ){
-        		version = null;
-        	}
-        	
-        	var r = confirm('This version the lookup file will now be loaded.\n\nUnsaved changes will be overridden.');
-        	
-        	if (r === true) {
-        		this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type, false, version);
-        		return true;
-        	}
-        	else{
-        		return false;
-        	}
+			if(this.agent){
+				this.agent.play("Processing");
+			}
+        	this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type, false, version);
         },
         
         /**
@@ -280,38 +262,6 @@ define([
         	this.unhide($("#info-message", this.$el));
         	
         	this.info_message_posted_time = new Date().getTime();
-        },
-        
-        /**
-         * Load the list of backup lookup files.
-         * 
-         * @param lookup_file The name of the lookup file
-         * @param namespace The app where the lookup file exists
-         * @param user The user that owns the file (in the case of user-based lookups)
-         */
-        loadLookupBackupsList: function(lookup_file, namespace, user){
-        	var data = {
-				"lookup_file":lookup_file,
-				"namespace":namespace
-			};
-        	
-        	// Populate the default parameter in case user wasn't provided
-        	if( typeof user === 'undefined' ){
-        		user = null;
-        	}
-
-        	// If a user was defined, then pass the name as a parameter
-        	if(user !== null){
-        		data.owner = user;
-        	}
-        	
-        	// Fetch them
-        	this.backups = new Backups();
-        	this.backups.fetch({
-        		data: $.param(data),
-        		success: this.renderBackupsList.bind(this)
-        	});
-        	
         },
 
 	     /* 
@@ -545,33 +495,6 @@ define([
         	
         },
         
-        /**
-         * Render the list of backup files.
-         */
-        renderBackupsList: function(){
-        	var backup_list_template = ' ' +
-        		'<% for(var c = 0; c < backups.length; c++){ %> ' +
-        		'	<li><a class="backup-version" href="#" data-backup-time="<%- backups[c].time %>"><%- backups[c].time_readable %></a></li> ' +
-        		'<% } %> ' +
-        		'<% if(backups.length == 0){ %> ' +
-        		'	<li><a class="backup-version" href="#">No backup versions available</a></li> ' +
-        		'<% } %>';
-        	
-        	// Render the list of backups
-        	$('#backup-versions', this.$el).html(_.template(backup_list_template, {
-        		'backups' : this.backups.toJSON()
-        	}));
-        	
-        	// Show the list of backup lookups
-        	if(!this.table_editor_view.isReadOnly()){
-        		$('#load-backup', this.$el).show();
-        	}
-        	else{
-        		$('#load-backup', this.$el).hide();
-        	}
-        	
-        },
-        
 		/**
 		 * Initialize a class for KV store editing.
 		 */
@@ -771,7 +694,7 @@ define([
         			  
         			  // Start the loading of the history
         			  if( version === undefined && this.lookup_type === "csv" ){
-        				  this.loadLookupBackupsList(lookup_file, namespace, user);
+        				  this.backups_list_input.loadLookupBackupsList(lookup_file, namespace, user);
         			  }
         			  else if(this.lookup_type === "csv" && jqXHR.status === 200){
         				  // Show a message noting that the backup was imported
@@ -945,24 +868,6 @@ define([
         	
         	$(".mod-time-icon > i").show();
         	$(".mod-time-icon > i").fadeOut(1000);
-        },
-        
-        /**
-         * Load the selected backup.
-		 * 
-		 * @param evt The event object
-         */
-        doLoadBackup: function(evt){
-        	var version = evt.currentTarget.dataset.backupTime;
-        	
-        	if(version){
-        		this.loadBackupFile(version);
-        		
-        		if(this.agent){
-            		this.agent.play("Processing");
-            	}
-        	}
-        	
         },
         
         /**
@@ -1156,7 +1061,7 @@ define([
 
 						// Update the lookup backup list
 						if (success) {
-							this.loadLookupBackupsList(this.lookup, this.namespace, this.owner);
+							this.backups_list_input.loadLookupBackupsList(this.lookup, this.namespace, this.owner);
 						}
 					}.bind(this),
 
@@ -1611,6 +1516,17 @@ define([
 
 					// Setup the handlers so that we can make the view support drag and drop
 					this.setupDragDropHandlers();
+
+					// Make the backups list input
+					if(this.backups_list_input === null){
+						this.backups_list_input = new BackupListInput({
+							el: '#backup-list'
+						});
+
+						this.backups_list_input.render();
+
+						this.listenTo(this.backups_list_input, 'loadBackup', this.loadBackupFile.bind(this));
+					}
 
 					// If we are editing an existing KV lookup, then get the information about the lookup and _then_ get the lookup data
 					if (this.lookup_type === "kv" && !this.is_new) {
