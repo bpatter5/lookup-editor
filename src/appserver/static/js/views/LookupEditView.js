@@ -1614,7 +1614,6 @@ define([
 
 					// If we are editing an existing KV lookup, then get the information about the lookup and _then_ get the lookup data
 					if (this.lookup_type === "kv" && !this.is_new) {
-
 						$.when(KVLookupInfo.getInfo(this.namespace, this.lookup))
 						.done(function(field_types, field_types_enforced, read_only){
 							// Configure the table editor
@@ -1636,7 +1635,6 @@ define([
 
 					// If we are making an new KV lookup, then show the form that allows the user to define the meta-data
 					else if (this.lookup_type === "kv" && this.is_new) {
-
 						this.kv_store_fields_editor = new KVStoreFieldEditor({
 							'el': $('#lookup-kv-store-edit', this.$el)
 						});
@@ -1650,7 +1648,6 @@ define([
 
 					// If this is a new lookup, then show default content accordingly
 					else if (this.is_new) {
-
 						// Show a default lookup if this is a new lookup
 						this.table_editor_view.renderLookup(this.getDefaultData());
 					}
