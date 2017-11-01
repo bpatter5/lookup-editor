@@ -89,7 +89,6 @@ define([
 	KVLookupInfo,
 	ImportModal
 ){
-	
 	var Apps = SplunkDsBaseCollection.extend({
 	    url: "apps/local?count=-1&search=disabled%3D0",
 	    initialize: function() {
@@ -107,10 +106,6 @@ define([
     // Define the custom view class
     var LookupEditView = SimpleSplunkView.extend({
         className: "LookupEditView",
-        
-        defaults: {
-        	
-        },
         
         /**
          * Initialize the class.
@@ -148,7 +143,6 @@ define([
             });
         	
         	this.is_new = true;
-        	
         	this.info_message_posted_time = null;
         	
         	setInterval(this.hideInfoMessageIfNecessary.bind(this), 1000);
@@ -204,7 +198,6 @@ define([
          * @param version The version of the lookup file to load (a value of null will load the latest version)
          */
         loadBackupFile: function(version){
-        	
         	// Load a default for the version
         	if( typeof version == 'undefined' ){
         		version = null;
@@ -227,7 +220,6 @@ define([
          * @param user The user context from which to load the lookup
          */
         loadUserKVEntries: function(user){
-        	
         	// Stop if user wasn't provided
         	if( typeof user == 'undefined' ){
         		return;
@@ -298,7 +290,6 @@ define([
          * @param user The user that owns the file (in the case of user-based lookups)
          */
         loadLookupBackupsList: function(lookup_file, namespace, user){
-        	
         	var data = {
 				"lookup_file":lookup_file,
 				"namespace":namespace
@@ -338,14 +329,13 @@ define([
 		  * @param promise A promise to resolve or reject when done
 		  */
 		 importKVRow: function(data, offset, promise){
-
 			// Get a promise ready
 			if(typeof promise === 'undefined'){
 				promise = jQuery.Deferred();
 			}
 
 			// Update the progress bar
-			this.import_modal.setProgress(data.length, this.import_successes, this.import_errors)
+			this.import_modal.setProgress(data.length, this.import_successes, this.import_errors);
 
 			// Stop if we hit the end (the base case)
 			if(offset >= data.length || this.cancel_import){
@@ -390,7 +380,6 @@ define([
 		  * @param data The data to import
           */
 		 importKVFile: function(data){
-			
 			// Make a promise
 			var promise = jQuery.Deferred();
 
@@ -459,7 +448,6 @@ define([
 		  * @param evt The event for handling file imports
           */
          importFile: function(evt){
-        	
         	// Stop if this is read-only
         	if(this.table_editor_view.isReadOnly()){
         		console.info("Drag and dropping on a read-only lookup being ignored");
@@ -561,7 +549,6 @@ define([
          * Render the list of backup files.
          */
         renderBackupsList: function(){
-        	
         	var backup_list_template = ' ' +
         		'<% for(var c = 0; c < backups.length; c++){ %> ' +
         		'	<li><a class="backup-version" href="#" data-backup-time="<%- backups[c].time %>"><%- backups[c].time_readable %></a></li> ' +
@@ -606,7 +593,6 @@ define([
 		 * @param owner The owner of the file
          */
         makeKVStoreLookup: function(namespace, lookup_file, owner){
-        	
         	// Set a default value for the owner
         	if( typeof owner == 'undefined' ){
         		owner = 'nobody';
@@ -680,7 +666,6 @@ define([
          * @param version The version to get from the archived history
          */
         loadLookupContents: function(lookup_file, namespace, user, lookup_type, header_only, version){
-
         	// Set a default value for header_only
         	if( typeof header_only === 'undefined' ){
         		header_only = false;
@@ -814,7 +799,6 @@ define([
 		 * @param hide A boolean indicating that the controls should be hidden or shown
          */
         hideEditingControls: function(hide){
-        	
         	// Load a default for the version
         	if( typeof hide === 'undefined' ){
         		hide = true;
@@ -833,7 +817,6 @@ define([
          * Validate the content of the form
          */
         validateForm: function(){
-        	
         	var issues = 0;
         	
         	// By default assume everything passes
@@ -894,7 +877,6 @@ define([
          * Get the list of apps as choices.
          */
         getAppsChoices: function(){
-        	
         	// If we don't have the apps yet, then just return an empty list for now
         	if(!this.apps){
         		return [];
@@ -917,7 +899,6 @@ define([
          * Get the apps
          */
         gotApps: function(){
-        	
         	// Update the list
         	if(mvc.Components.getInstance("lookup-app")){
         		mvc.Components.getInstance("lookup-app").settings.set("choices", this.getAppsChoices());
@@ -931,7 +912,6 @@ define([
 		 * @param title The title of the save button
          */
         setSaveButtonTitle: function(title){
-        	
         	if(typeof title == 'undefined' ){
         		$("#save").text("Save Lookup");
         	}
@@ -1018,7 +998,6 @@ define([
          * @returns {Boolean}
          */
         doSaveLookup: function(evt){
-        	
         	// Determine if we are making a new entry
         	var making_new_lookup = this.is_new;
         	
@@ -1048,7 +1027,6 @@ define([
         	
         	// Otherwise, save the lookup
         	else{
-	        	
 	        	// Get the row data
 	        	row_data = this.table_editor_view.getData();
 	        	
@@ -1145,7 +1123,6 @@ define([
 
 					// Handle cases where the file could not be found or the user did not have permissions
 					complete: function (jqXHR, textStatus) {
-
 						var elapsed = new Date().getTime() - populateStart;
 						console.info("Lookup save operation completed in " + elapsed + "ms");
 						var success = true;
@@ -1187,7 +1164,6 @@ define([
 						console.log("Lookup file not saved");
 						this.showWarningMessage("Lookup file could not be saved");
 					}.bind(this)
-
 				});
         	}
         	return false;
@@ -1201,7 +1177,6 @@ define([
 		 * @param new_value The new value
          */
         doEditCell: function(row, col, new_value){
-        	
         	// Stop if we are in read-only mode
         	if(this.table_editor_view.isReadOnly()){
         		return;
@@ -1243,7 +1218,6 @@ define([
       		  		this.updateTimeModified();
                 }.bind(this))
 				.error(function(jqXHR, result, message){
-					
 					// Detect cases where the user has inadequate permission
       		  		if(jqXHR !== null && jqXHR.status == 403){
       		  			console.info('Inadequate permissions');
@@ -1273,7 +1247,6 @@ define([
 		 * @param row The row number
          */
         doRemoveRow: function(row){
-        	
         	// Stop if we are in read-only mode
         	if(this.table_editor_view.isReadOnly()){
         		return;
@@ -1320,7 +1293,6 @@ define([
 		 * @param count The number of rows to add
          */
         doCreateRows: function(row, count){
-        	
         	// Stop if we are in read-only mode
         	if(this.table_editor_view.isReadOnly()){
         		return;
@@ -1386,7 +1358,6 @@ define([
          * Change from the new mode of the editor to the edit mode
          */
         changeToEditMode: function(){
-        	
         	// Set the lookup name
         	$('#lookup-name-static', this.$el).text(this.lookup);
         	this.unhide($('#lookup-name-static', this.$el));
@@ -1426,7 +1397,6 @@ define([
          * Turn clippy on or off.
          */
         toggleClippy: function(){
-        	
         	// Make the clippy instance if necessary
         	if(this.agent === null){
             	clippy.load('Clippy', function(agent) {
@@ -1436,7 +1406,7 @@ define([
         	}
         	
         	// Show clippy if he was made but is hidden
-        	else if($(".clippy").length == 0 || !$(".clippy").is(":visible")){
+        	else if($(".clippy").length === 0 || !$(".clippy").is(":visible")){
         		this.agent.show();
         	}
         	
@@ -1480,7 +1450,6 @@ define([
 		 * Open the lookup in search or create a transform so that it can be searched.
 		 */
 		openInSearch: function(){
-
 			// Make the lookup transform view if necessary
 			if(this.lookup_transform_create_view === null){
 				this.lookup_transform_create_view = new LookupTransformCreateView({
@@ -1509,10 +1478,7 @@ define([
          * Render the page.
          */
         render: function () {
-
 			$.when(Capabilities.hasCapability('admin_all_objects')).done(function(has_permission){
-				console.log("Rendering...");
-		
 				// Get the information from the lookup to load
 				this.lookup = Splunk.util.getParameter("lookup");
 				this.namespace = Splunk.util.getParameter("namespace");
@@ -1550,11 +1516,10 @@ define([
 						'readable_name' : Splunk.util.getConfigValue("USERNAME"),
 						'description' : ''
 					},
-				]
+				];
 
 				// Get a list of users to show from which to load the context
 				$.when(Users.getUsers(this.owner, user_descriptions, default_users)).done(function(users){
-
 					// Sort the users list
 					users = Users.sortUsersList(users, ['nobody', this.owner, Splunk.util.getConfigValue("USERNAME")]);
 						
@@ -1699,7 +1664,6 @@ define([
 					else {
 						this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type);
 					}
-
 				}.bind(this));
 			}.bind(this));
 		}
