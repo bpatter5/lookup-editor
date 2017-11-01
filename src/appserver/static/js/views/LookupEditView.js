@@ -23,6 +23,7 @@ require.config({
 		capabilities: '../app/lookup_editor/js/utils/Capabilities',
 		users: '../app/lookup_editor/js/utils/Users',
 		kv_lookup_info: '../app/lookup_editor/js/utils/KVLookupInfo',
+		import_modal: '../app/lookup_editor/js/views/ImportModal',
 
 		// Helper libraries
         text: '../app/lookup_editor/js/lib/text',
@@ -59,6 +60,7 @@ define([
 	"capabilities",
 	"users",
 	"kv_lookup_info",
+	"import_modal",
     "clippy",
     "csv",
     "bootstrap.dropdown",
@@ -84,7 +86,8 @@ define([
 	KVStore,
 	Capabilities,
 	Users,
-	KVLookupInfo
+	KVLookupInfo,
+	ImportModal
 ){
 	
 	var Apps = SplunkDsBaseCollection.extend({
@@ -125,10 +128,11 @@ define([
             
             this.agent = null; // This is for Clippy
 			
-			// These retain some sub-views that we may create
+			// These retain some classes that we may instantiate and use
 			this.kv_store_fields_editor = null;
 			this.lookup_transform_create_view = null;
 			this.table_editor_view = null;
+			this.import_modal = null;
 
         	// Get the apps
         	this.apps = new Apps();
@@ -160,11 +164,7 @@ define([
         	"click #export-file"                           : "doExport",
 
 			// Import related
-        	"click #choose-import-file"                    : "chooseImportFile",
         	"click #import-file"                           : "openFileImportModal",
-        	"change #import-file-input"                    : "importFile",
-			"click #import-file-modal .btn-dialog-cancel"  : "cancelImport",
-			"click #import-file-modal .btn-dialog-close"   : "cancelImport",
 
 			// Misc options
 			"click #refresh"                               : "refreshLookup",
@@ -183,77 +183,19 @@ define([
         },
         
         /**
-         * For some reason the backbone handlers don't work.
+         * Setup the drag-n-drop handler on the table.
          */
         setupDragDropHandlers: function(){
-        	
         	// Setup a handler for handling files dropped on the table
         	var drop_zone = document.getElementById('lookup-table');
-        	this.setupDragDropHandlerOnElement(drop_zone);
-        	
-        	// Setup a handler for handling files dropped on the import dialog
-        	drop_zone2 = document.getElementById('import-file-modal');
-        	this.setupDragDropHandlerOnElement(drop_zone2);
-        	
-        },
-        
-		/**
-		 * Setup a drag and handler on an element.
-		 * 
-		 * @param drop_zone An element to setup a drop-zone on.
-		 */
-        setupDragDropHandlerOnElement: function(drop_zone){
-			
-			if(drop_zone){
-				drop_zone.ondragover = function (e) {
-					e.preventDefault();
-					e.dataTransfer.dropEffect = 'copy';
-				}.bind(this);
-				
-				drop_zone.ondrop = function (e) {
-					e.preventDefault();
-					this.onDropFile(e);
-					return false;
-				}.bind(this);
-			}
+        	this.import_modal.setupDragDropHandlerOnElement(drop_zone);
         },
         
         /**
          * Open the modal for importing a file.
          */
         openFileImportModal: function(){
-        	
-        	$('.dragging').removeClass('dragging');
-        	
-			// Make sure we are showing the import dialog
-			$('#import-in-process', this.$el).hide();
-			$('#import-main', this.$el).show();
-
-			// Open the modal
-        	$('#import-file-modal', this.$el).modal();
-        	
-        	// Setup handlers for drag & drop
-        	$('.modal-backdrop').on('dragenter', function(){
-        		$('.modal-body').addClass('dragging');
-        		console.log("enter");
-        	});
-        	
-        	$('.modal-backdrop').on('dragleave', function(){
-        		$('.modal-body').removeClass('dragging');
-        		console.log("leave");
-        	});
-        	
-        	$('#import-file-modal').on('dragenter', function(){
-        		$('.modal-body').addClass('dragging');
-        		console.log("enter");
-        	});
-        },
-        
-        /**
-         * Open the file dialog to select a file to import.
-         */
-        chooseImportFile: function(){
-        	$("#import-file-input").click();
+			this.import_modal.show(this.lookup_type);
         },
         
         /**
@@ -270,7 +212,7 @@ define([
         	
         	var r = confirm('This version the lookup file will now be loaded.\n\nUnsaved changes will be overridden.');
         	
-        	if (r == true) {
+        	if (r === true) {
         		this.loadLookupContents(this.lookup, this.namespace, this.owner, this.lookup_type, false, version);
         		return true;
         	}
@@ -380,32 +322,6 @@ define([
         	});
         	
         },
-        
-		/**
-		 * The handler for file-dragging.
-		 * 
-		 * @param evt The event
-		 */
-        onDragFile: function(evt){
-        	evt.stopPropagation();
-            evt.preventDefault();
-            evt.dataTransfer.dropEffect = 'copy'; // Make it clear this is a copy
-        },
-        
-        /**
-         * Import the dropped file.
-		 * 
-		 *  @param evt The event
-         */
-        onDropFile: function(evt){
-        	
-        	console.log("Got a file via drag and drop");
-        	evt.stopPropagation();
-            evt.preventDefault();
-            var files = evt.dataTransfer.files;
-            
-            this.importFile(evt);
-        },
 
 	     /* 
 	      * Cancel an import that is in-progress.
@@ -429,15 +345,11 @@ define([
 			}
 
 			// Update the progress bar
-			$('#import-in-process', this.$el).show();
-			$('#import-main', this.$el).hide();
-			$('#import-file-modal .modal-body', this.$el).removeClass("dragging");
-
-			$('#import-progress', this.$el).css('width', 100*(this.import_successes/data.length) + "%");
-			$('#import-error', this.$el).css('width', 100*(this.import_errors/data.length) + "%");
+			this.import_modal.setProgress(data.length, this.import_successes, this.import_errors)
 
 			// Stop if we hit the end (the base case)
 			if(offset >= data.length || this.cancel_import){
+				this.import_modal.hide();
 				promise.resolve();
 				return;
 			}
@@ -523,7 +435,7 @@ define([
 			}
 
 			// Open the import modal
-			$('#import-file-modal', this.$el).modal();
+			this.import_modal.show(this.lookup_type);
 
 			// Start the importation
 			this.importKVRow(data, 1).done(function(){
@@ -1682,7 +1594,6 @@ define([
 					$(document).keydown(this.handleShortcuts.bind(this));
 					console.info("Press CTRL + E to see something interesting");
 
-
 					// Show the content that is specific to making new lookups
 					if (has_permission && this.is_new) {
 
@@ -1721,6 +1632,16 @@ define([
 							this.validateForm();
 						}.bind(this));
 
+					}
+
+					// Make the import modal
+					if(this.import_modal === null){
+						this.import_modal = new ImportModal({
+							el: '#import-modal'
+						});
+
+						this.listenTo(this.import_modal, 'cancelImport', this.cancelImport.bind(this));
+						this.listenTo(this.import_modal, 'startImport', this.importFile.bind(this));
 					}
 
 					// Setup the handlers so that we can make the view support drag and drop
