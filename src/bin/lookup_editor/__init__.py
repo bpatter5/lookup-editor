@@ -9,6 +9,7 @@ import codecs
 import json
 import shutil
 import csv
+from collections import OrderedDict
 
 import splunk
 from splunk import AuthorizationFailed, ResourceNotFound
@@ -52,7 +53,7 @@ class LookupEditor(LookupBackups):
         if response.status == 403:
             raise PermissionDeniedException("You do not have permission to view this lookup")
 
-        header = json.loads(content)
+        header = json.loads(content, object_pairs_hook=OrderedDict)
 
         fields = ['_key']
 
@@ -71,7 +72,7 @@ class LookupEditor(LookupBackups):
         if response.status == 403:
             raise PermissionDeniedException("You do not have permission to view this lookup")
 
-        rows = json.loads(content)
+        rows = json.loads(content, object_pairs_hook=OrderedDict)
 
         for row in rows:
             new_row = []
@@ -297,7 +298,7 @@ class LookupEditor(LookupBackups):
                                                           throw_not_found=False)
 
         # Parse the JSON
-        parsed_contents = json.loads(contents)
+        parsed_contents = json.loads(contents, object_pairs_hook=OrderedDict)
 
         # Create the temporary file
         temp_file_handle = lookupfiles.get_temporary_lookup_file()

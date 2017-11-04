@@ -80,7 +80,7 @@ class LookupBackupsHandler(rest_handler.RESTHandler):
 
             self.logger.warn("Unable to find the lookup to backup")
 
-            return self.render_error_json("Unable to find the lookup to backup", 403)
+            return self.render_error_json("Unable to find the lookup to backup", 404)
 
         except:
 

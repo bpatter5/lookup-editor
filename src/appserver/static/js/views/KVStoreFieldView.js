@@ -11,10 +11,7 @@ define([
     "splunkjs/mvc",
     "jquery",
     "splunkjs/mvc/simplesplunkview",
-    "splunkjs/mvc/simpleform/input/text",
-    "splunkjs/mvc/simpleform/input/dropdown",
     "text!../app/lookup_editor/js/templates/KVStoreFieldView.html",
-    "bootstrap.dropdown",
     "css!../app/lookup_editor/css/KVStoreFieldView.css"
 ], function(
     _,
@@ -22,8 +19,6 @@ define([
     mvc,
     $,
     SimpleSplunkView,
-    TextInput,
-    DropdownInput,
     Template
 ){
 
