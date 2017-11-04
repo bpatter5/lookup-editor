@@ -1559,7 +1559,7 @@ define([
 
 						$('#lookup-kv-store-edit', this.$el).show();
 						$('#save', this.$el).show();
-						$('#lookup-table', this.$el).hide();
+						$('.editing-content', this.$el).hide();
 					}
 
 					// If this is a new lookup, then show default content accordingly
