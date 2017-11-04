@@ -14,6 +14,8 @@ import os
 import json
 import hashlib
 import logging
+import errno
+import HTMLTestRunner
 
 import splunk
 from splunk.rest import simpleRequest
@@ -343,4 +345,17 @@ class TestLookupBackups(LookupEditorTestCase):
                           "/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv")
 
 if __name__ == "__main__":
-    unittest.main(exit=True)
+    report_path = os.path.join('..', os.environ.get('TEST_OUTPUT', 'tmp/test_report.html'))
+
+    # Make the test directory
+    try:
+        os.makedirs(os.path.dirname(report_path))
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
+
+    with open(report_path, 'w') as report_file:
+        test_runner = HTMLTestRunner.HTMLTestRunner(
+            stream=report_file
+        )
+        unittest.main(testRunner=test_runner)
