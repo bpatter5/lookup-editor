@@ -149,7 +149,8 @@ define([
         },
         
         events: {
-        	"click #save"                                  : "doSaveLookup",
+			"click #save"                                  : "doSaveLookup",
+			"click #create"                                : "doCreateLookup",
         	"click .user-context"                          : "doLoadUserContext",
         	"click #export-file"                           : "doExport",
         	"click #import-file"                           : "openFileImportModal",
@@ -737,7 +738,7 @@ define([
         },
         
         /**
-         * Validate the content of the form
+         * Validate the content of the form for creating a lookup.
          */
         validateForm: function(){
         	var issues = 0;
@@ -753,7 +754,7 @@ define([
         		$('#lookup-name-control-group', this.$el).addClass('error');
         		this.showWarningMessage("Please enter a lookup name");
         		issues = issues + 1;
-        	}
+			}
 			
         	// Make sure the lookup name doesn't include spaces (https://lukemurphey.net/issues/2035)
         	else if(this.is_new && mvc.Components.getInstance("lookup-name").val().match(/ /gi)){
@@ -763,7 +764,7 @@ define([
         	}
 
         	// Make sure the lookup name is acceptable
-        	else if(this.is_new && !mvc.Components.getInstance("lookup-name").val().match(/^[-A-Z0-9_]+([.][-A-Z0-9_]+)*$/gi)){
+        	else if(this.is_new && !mvc.Components.getInstance("lookup-name").val().match(/^[-A-Z0-9_ ]+([.][-A-Z0-9_ ]+)*$/gi)){
         		$('#lookup-name-control-group', this.$el).addClass('error');
         		this.showWarningMessage("Lookup name is invalid");
         		issues = issues + 1;
@@ -841,7 +842,20 @@ define([
         	else{
         		$("#save").text(title);
         	}
-        	
+		},
+		
+        /**
+         * Set the title of the create lookup button
+		 * 
+		 * @param title The title of the create button
+         */
+        setCreateButtonTitle: function(title){
+        	if(typeof title == 'undefined' ){
+        		$("#create").text("Create Lookup");
+        	}
+        	else{
+        		$("#create").text(title);
+        	}
         },
         
         /**
@@ -895,17 +909,44 @@ define([
 			var href= "../../../splunkd/__raw/services/data/lookup_edit/lookup_as_file?namespace=" + this.namespace + "&owner=" + this.owner + "&lookup_file=" + this.lookup + "&lookup_type=" + this.lookup_type;
 			document.location = href;
         },
-        
-        /**
-         * Perform the operation to save the lookup
+		
+		/**
+         * Perform the operation to create a new KV store lookup.
          * 
 		 * @param evt The event object
          * @returns {Boolean}
          */
-        doSaveLookup: function(evt){
-        	// Determine if we are making a new entry
-        	var making_new_lookup = this.is_new;
+		doCreateLookup: function(evt){
+        	// Change the title
+        	this.setCreateButtonTitle("Saving...");
         	
+        	if(this.agent){
+        		this.agent.play("Save");
+			}
+
+        	// Started recording the time so that we figure out how long it took to save the lookup file
+        	var populateStart = new Date().getTime();
+        	
+        	// Hide the warnings. We will repost them if the input is still invalid
+        	this.hideMessages();
+        	
+        	// Stop if the form didn't validate
+        	if(!this.validateForm()){
+        		this.setCreateButtonTitle();
+        		return;
+        	}
+        	
+        	// Make the lookup
+        	this.makeKVStoreLookup(mvc.Components.getInstance("lookup-app").val(), mvc.Components.getInstance("lookup-name").val());
+		},
+
+        /**
+         * Perform the operation to save the lookup.
+         * 
+		 * @param evt The event object
+         * @returns {Boolean}
+         */
+        doSaveLookup: function(evt){        	
         	// Change the title
         	this.setSaveButtonTitle("Saving...");
         	
@@ -918,159 +959,128 @@ define([
         	
         	// Hide the warnings. We will repost them if the input is still invalid
         	this.hideMessages();
-        	
-        	// Stop if the form didn't validate
-        	if(!this.validateForm()){
-        		this.setSaveButtonTitle();
-        		return;
-        	}
-        	
-        	// If we are making a new KV store lookup, then make it
-        	if(making_new_lookup && this.lookup_type === "kv"){
-        		this.makeKVStoreLookup(mvc.Components.getInstance("lookup-app").val(), mvc.Components.getInstance("lookup-name").val());
-        	}
-        	
-        	// Otherwise, save the lookup
-        	else{
-	        	// Get the row data
-	        	row_data = this.table_editor_view.getData();
-	        	
-	        	// Convert the data to JSON
-	        	json = JSON.stringify(row_data);
-	        	
-	        	// Make the arguments
-	        	var data = {
-	        			lookup_file : this.lookup,
-	        			namespace   : this.namespace,
-	        			contents    : json
-	        	};
-	        	
-	        	// If a user was defined, then pass the name as a parameter
-	        	if(this.owner !== null){
-	        		data.owner = this.owner;
-	        	}
-	        	
-	        	// Validate the input if it is new
-	        	if(making_new_lookup){
-	        		
-		        	// Get the lookup file name from the form if we are making a new lookup
-	        		data.lookup_file = mvc.Components.getInstance("lookup-name").val();
 		
-		        	// Make sure that the file name was included; stop if it was not
-		        	if (data.lookup_file === ""){
-		        		$("#lookup_file_error").text("Please define a file name"); // TODO
-		        		$("#lookup_file_error").show();
-		        		this.setSaveButtonTitle();
-		        		return false;
-		        	}
-		        	
-		        	// Make sure that the file name is valid; stop if it is not
-		        	if( !data.lookup_file.match(/^[-A-Z0-9_ ]+([.][-A-Z0-9_ ]+)*$/gi) ){
-		        		$("#lookup_file_error").text("The file name contains invalid characters"); // TODO
-		        		$("#lookup_file_error").show();
-		        		this.setSaveButtonTitle();
-		        		return false;
-		        	}
-		        		
-		        	// Get the namespace from the form if we are making a new lookup
-		        	data.namespace = mvc.Components.getInstance("lookup-app").val();
-		
-		        	// Make sure that the namespace was included; stop if it was not
-		        	if (data.namespace === ""){
-		        		$("#lookup_namespace_error").text("Please define a namespace");
-		        		$("#lookup_namespace_error").show();
-		        		this.setSaveButtonTitle();
-		        		return false;
-		        	}
-		        	
-		        	// Set the owner if the user wants a user-specific lookup
-		        	if($.inArray('user_only', mvc.Components.getInstance("lookup-user-only").val()) >= 0){
-		        		data.owner = Splunk.util.getConfigValue("USERNAME");
-		        	}
-		        }
-	
-	        	// Make sure at least a header exists; stop if not enough content is present
-	        	if(row_data.length === 0){		
-	        		this.showWarningMessage("Lookup files must contain at least one row (the header)");
-	        		return false;
-	        	}
-	        	
-	        	// Make sure the headers are not empty.
-	        	// If the editor is allowed to add extra columns then ignore the last row since this for adding a new column thus is allowed
-	        	for( i = 0; i < row_data[0].length; i++){
-	        		
-	        		// Determine if this row has an empty header cell
-	        		if( row_data[0][i] === "" ){
-	        			this.showWarningMessage("Header rows cannot contain empty cells (column " + (i + 1) + " of the header is empty)");
-	        			return false;
-	        		}
-	        	}
-	        	
-	        	// Perform the request to save the lookups
-	        	$.ajax( {
-					url: Splunk.util.make_full_url("/splunkd/__raw/services/data/lookup_edit/lookup_contents"),
-					type: 'POST',
-					data: data,
+			// Get the row data
+			row_data = this.table_editor_view.getData();
+			
+			// Convert the data to JSON
+			json = JSON.stringify(row_data);
+			
+			// Make the arguments
+			var data = {
+					lookup_file : this.lookup,
+					namespace   : this.namespace,
+					contents    : json
+			};
+			
+			// If a user was defined, then pass the name as a parameter
+			if(this.owner !== null){
+				data.owner = this.owner;
+			}
+			
+			// Validate the input if it is a new CSV lookup
+			if(this.is_new){
 
-					success: function () {
-						console.log("Lookup file saved successfully");
-						this.showInfoMessage("Lookup file saved successfully");
-						this.setSaveButtonTitle();
+				// Check the form
+				if(!this.validateForm()){
+					this.setSaveButtonTitle();
+					return false;
+				}
+				
+				// Get the lookup file name from the form if we are making a new lookup
+				data.lookup_file = mvc.Components.getInstance("lookup-name").val();
+					
+				// Get the namespace from the form if we are making a new lookup
+				data.namespace = mvc.Components.getInstance("lookup-app").val();
+				
+				// Set the owner if the user wants a user-specific lookup
+				if($.inArray('user_only', mvc.Components.getInstance("lookup-user-only").val()) >= 0){
+					data.owner = Splunk.util.getConfigValue("USERNAME");
+				}
+			}
 
-						// Persist the information about the lookup
-						if (this.is_new) {
-							this.lookup = data.lookup_file;
-							this.namespace = data.namespace;
-							this.owner = data.owner;
-							this.lookup_type = "csv";
-						}
-					}.bind(this),
+			// Make sure at least a header exists; stop if not enough content is present
+			if(row_data.length === 0){		
+				this.showWarningMessage("Lookup files must contain at least one row (the header)");
+				return false;
+			}
+			
+			// Make sure the headers are not empty.
+			// If the editor is allowed to add extra columns then ignore the last row since this for adding a new column thus is allowed
+			for( i = 0; i < row_data[0].length; i++){
+				
+				// Determine if this row has an empty header cell
+				if( row_data[0][i] === "" ){
+					this.showWarningMessage("Header rows cannot contain empty cells (column " + (i + 1) + " of the header is empty)");
+					return false;
+				}
+			}
+			
+			// Perform the request to save the lookups
+			$.ajax( {
+				url: Splunk.util.make_full_url("/splunkd/__raw/services/data/lookup_edit/lookup_contents"),
+				type: 'POST',
+				data: data,
 
-					// Handle cases where the file could not be found or the user did not have permissions
-					complete: function (jqXHR, textStatus) {
-						var elapsed = new Date().getTime() - populateStart;
-						console.info("Lookup save operation completed in " + elapsed + "ms");
-						var success = true;
+				success: function () {
+					console.log("Lookup file saved successfully");
+					this.showInfoMessage("Lookup file saved successfully");
+					this.setSaveButtonTitle();
 
-						if (jqXHR.status == 404) {
-							console.info('Lookup file was not found');
-							this.showWarningMessage("This lookup file could not be found");
-							success = false;
-						}
-						else if (jqXHR.status == 403) {
-							console.info('Inadequate permissions');
-							this.showWarningMessage("You do not have permission to edit this lookup file");
-							success = false;
-						}
-						else if (jqXHR.status == 400) {
-							console.info('Invalid input');
-							this.showWarningMessage("This lookup file could not be saved because the input is invalid");
-							success = false;
-						}
-						else if (jqXHR.status == 500) {
-							this.showWarningMessage("The lookup file could not be saved");
-							success = false;
-						}
+					// Persist the information about the lookup
+					if (this.is_new) {
+						this.lookup = data.lookup_file;
+						this.namespace = data.namespace;
+						this.owner = data.owner;
+						this.lookup_type = "csv";
+					}
+				}.bind(this),
 
-						this.setSaveButtonTitle();
+				// Handle cases where the file could not be found or the user did not have permissions
+				complete: function (jqXHR, textStatus) {
+					var elapsed = new Date().getTime() - populateStart;
+					console.info("Lookup save operation completed in " + elapsed + "ms");
+					var success = true;
 
-						// If we made a new lookup, then switch modes
-						if (this.is_new && success) {
-							this.changeToEditMode();
-						}
+					if (jqXHR.status == 404) {
+						console.info('Lookup file was not found');
+						this.showWarningMessage("This lookup file could not be found");
+						success = false;
+					}
+					else if (jqXHR.status == 403) {
+						console.info('Inadequate permissions');
+						this.showWarningMessage("You do not have permission to edit this lookup file");
+						success = false;
+					}
+					else if (jqXHR.status == 400) {
+						console.info('Invalid input');
+						this.showWarningMessage("This lookup file could not be saved because the input is invalid");
+						success = false;
+					}
+					else if (jqXHR.status == 500) {
+						this.showWarningMessage("The lookup file could not be saved");
+						success = false;
+					}
 
-						// Update the lookup backup list
-						if (success) {
-							this.backups_list_input.loadLookupBackupsList(this.lookup, this.namespace, this.owner);
-						}
-					}.bind(this),
+					this.setSaveButtonTitle();
 
-					error: function (jqXHR, textStatus, errorThrown) {
-						console.log("Lookup file not saved");
-						this.showWarningMessage("Lookup file could not be saved");
-					}.bind(this)
-				});
-        	}
+					// If we made a new lookup, then switch modes
+					if (this.is_new && success) {
+						this.changeToEditMode();
+					}
+
+					// Update the lookup backup list
+					if (success) {
+						this.backups_list_input.loadLookupBackupsList(this.lookup, this.namespace, this.owner);
+					}
+				}.bind(this),
+
+				error: function (jqXHR, textStatus, errorThrown) {
+					console.log("Lookup file not saved");
+					this.showWarningMessage("Lookup file could not be saved");
+				}.bind(this)
+			});
+
         	return false;
         },
         
