@@ -238,9 +238,12 @@ class LookupEditorHandler(rest_handler.RESTHandler):
                 'owner' : owner
             }
 
-            _, _ = simpleRequest('/services/data/lookup_backup/backup',
-                                 sessionKey=request_info.session_key,
-                                 method='POST', postargs=data)
+            try:
+                _, _ = simpleRequest('/services/data/lookup_backup/backup',
+                                    sessionKey=request_info.session_key,
+                                    method='POST', postargs=data)
+            except ResourceNotFound:
+                self.logger.info("Existing lookup could not be found for backup")
 
             file_name = self.lookup_editor.update(contents, lookup_file, namespace, owner,
                                                   request_info.session_key, request_info.user)
