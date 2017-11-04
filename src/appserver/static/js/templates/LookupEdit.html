@@ -8,7 +8,7 @@
 	</div>
 
 	<% if(lookup_type === "kv") { %>
-		<div class="modification-time-holder pull-right">
+		<div class="modification-time-holder pull-right editing-content">
 			<div class="mod-time-icon">
 				<i class="icon-circle-filled hide"></i>
 			</div>
@@ -157,9 +157,9 @@
 	
 <div id="lookup-table" class="editing-content"></div>
 
-<button class="btn btn-primary pull-right editing-content <% if(lookup_type === "kv" && !is_new ){ %>hide<% } %>" id="save">Save Lookup</button>
+<button class="btn btn-primary pull-right <% if(lookup_type === "kv" && !is_new ){ %>hide<% } %>" id="save">Save Lookup</button>
 <% } %>
 </div>
-<div id="lookup-kv-store-edit" class="hide editing-content"></div>
+<div id="lookup-kv-store-edit" class="hide"></div>
 <div id="lookup-transform-modal"></div>
 <div id="import-modal"></div>
