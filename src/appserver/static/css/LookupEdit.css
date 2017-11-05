@@ -20,9 +20,11 @@
 }
 
 /* Push the save button a little bit away from the table */
-.LookupEditView #save{
-	margin-top: 16px;
+.LookupEditView #save,
+.LookupEditView #create{
 	float: right;
+	margin-right: 15px;
+	margin-top: 15px;
 }
 
 /* Make the backups list look like a group */
