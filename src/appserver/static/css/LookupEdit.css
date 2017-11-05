@@ -1,13 +1,13 @@
 /* Style the header */
-.lookup-header{
+.lookup-edit-view .lookup-header{
 	display: inline-block;
 }
 
-.lookup-header h2:first-child{
+.lookup-edit-view .lookup-header h2:first-child{
 	margin: 10px 4px 0 16px;
 }
 
-.lookup-header h2{
+.lookup-edit-view .lookup-header h2{
 	display: inline-block;
 	font-size: 24px;
 	margin: 10px 0 0 0;
@@ -15,17 +15,23 @@
     font-weight: 200;
 }
 
-.controls-holder{
+.lookup-edit-view .controls-holder{
 	margin-right: 15px;
 }
 
+/* Push the save button a little bit away from the table */
+.LookupEditView #save{
+	margin-top: 16px;
+	float: right;
+}
+
 /* Make the backups list look like a group */
-#backup-list{
+.lookup-edit-view #backup-list{
 	margin-left: -1px;
 	display: inline-block;
 }
 
-#backup-list > a{
+.lookup-edit-view #backup-list > a{
 	border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
 }
@@ -49,12 +55,6 @@
 .lookup-edit-view .list-link{
 	margin-left: 16px;
     margin-bottom: 16px;
-}
-
-/* Push the save button a little bit away from the table */
-.lookup-edit-view #save{
-	margin-top: 16px;
-	float: right;
 }
 
 /* Make sure the controls are the aligned with the other buttons (such as a the save button) */
@@ -108,7 +108,7 @@
 }
 
 /* Tell the dialogs to use an inline-block so that they fit nicely next to other elements */
-.lookup-edit-view #info-message, #warning-message{
+.lookup-edit-view .info-message, .lookup-edit-view .warning-message{
 	display: inline-block;
     vertical-align: top;
     padding-bottom: 0px;
@@ -116,7 +116,7 @@
 }
 
 /* Reinstate the display none if the hide class is set (since the CSS about overrides this) */
-.lookup-edit-view #info-message.hide, .lookup-edit-view #warning-message.hide{
+.lookup-edit-view .info-message.hide, .lookup-edit-view .warning-message.hide{
 	display: none;
 }
 

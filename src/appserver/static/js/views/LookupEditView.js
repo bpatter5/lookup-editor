@@ -153,7 +153,7 @@ define([
 			"click #create"                                : "doCreateLookup",
         	"click .user-context"                          : "doLoadUserContext",
         	"click #export-file"                           : "doExport",
-        	"click #import-file"                           : "openFileImportModal",
+        	"click .import-file"                           : "openFileImportModal",
 			"click #refresh"                               : "refreshLookup",
 			"click #edit-acl"                              : "editACLs",
 			"click #open-in-search"                        : "openInSearch"
@@ -165,7 +165,7 @@ define([
         hideInfoMessageIfNecessary: function(){
         	if(this.info_message_posted_time && ((this.info_message_posted_time + 5000) < new Date().getTime() )){
         		this.info_message_posted_time = null;
-        		$("#info-message", this.$el).fadeOut(200);
+        		$(".info-message", this.$el).fadeOut(200);
         	}
         },
         
@@ -225,14 +225,14 @@ define([
          * Hide the warning message.
          */
         hideWarningMessage: function(){
-        	this.hide($("#warning-message", this.$el));
+        	this.hide($(".warning-message", this.$el));
         },
         
         /**
          * Hide the informational message
          */
         hideInfoMessage: function(){
-        	this.hide($("#info-message", this.$el));
+        	this.hide($(".info-message", this.$el));
         },
         
         /**
@@ -249,8 +249,8 @@ define([
 		 * @param message The message to show
          */
         showWarningMessage: function(message){
-        	$("#warning-message > .message", this.$el).text(message);
-        	this.unhide($("#warning-message", this.$el));
+        	$(".warning-message > .message", this.$el).text(message);
+        	this.unhide($(".warning-message", this.$el));
         },
         
         /**
@@ -259,8 +259,8 @@ define([
 		 * @param message The message to show
          */
         showInfoMessage: function(message){
-        	$("#info-message > .message", this.$el).text(message);
-        	this.unhide($("#info-message", this.$el));
+        	$(".info-message > .message", this.$el).text(message);
+        	this.unhide($(".info-message", this.$el));
         	
         	this.info_message_posted_time = new Date().getTime();
         },
@@ -1031,7 +1031,13 @@ define([
 					if (this.is_new) {
 						this.lookup = data.lookup_file;
 						this.namespace = data.namespace;
-						this.owner = data.owner;
+						if(data.owner){
+							this.owner = data.owner;
+						}
+						else{
+							this.owner = 'nobody';
+						}
+						
 						this.lookup_type = "csv";
 					}
 				}.bind(this),
@@ -1273,15 +1279,12 @@ define([
          * Change from the new mode of the editor to the edit mode
          */
         changeToEditMode: function(){
-        	// Set the lookup name
-        	$('#lookup-name-static', this.$el).text(this.lookup);
-        	this.unhide($('#lookup-name-static', this.$el));
-        	
         	// Hide the creation controls
-        	this.hide($('.show-when-creating', this.$el));
+			this.hide($('.show-when-creating', this.$el));
+			this.unhide($('.show-when-editing', this.$el));
         	
         	// Change the title
-        	$('h2', this.$el).text("Edit Lookup");
+        	$('h2.lookup-name', this.$el).text("/ " + this.lookup);
         	
         	// Remember that we are not editing a file
 			this.is_new = false;
