@@ -267,7 +267,7 @@ define([
         		}
         	}
         	
-        	console.warn('Unable to find the field with the name "' + field_name + '"')
+        	console.warn('Unable to find the field with the name "' + field_name + '"');
         	return null;
         },
 
@@ -336,7 +336,7 @@ define([
         	
         	// Stop if we don't have the required data yet
         	if(!this.getTableHeader()){
-        		console.warn("The table header is not available yet")
+        		console.warn("The table header is not available yet");
         	}
         	
         	// If this is a CSV lookup, then add a column renderer to excape the content
@@ -346,7 +346,7 @@ define([
         	
         	// Stop if we didn't get the types necessary
         	if(!this.field_types){
-        		console.warn("The table field types are not available yet")
+        		console.warn("The table field types are not available yet");
         	}
         	
         	// This variable will contain the meta-data about the columns
@@ -360,23 +360,23 @@ define([
         		
         		// Use a checkbox for the boolean
         		if(field_info === 'boolean'){
-        			column['type'] = 'checkbox';
-        			column['editor'] = this.getCheckboxRenderer();
+        			column.type = 'checkbox';
+        			column.editor = this.getCheckboxRenderer();
         		}
         		
         		// Use format.js for the time fields
         		else if(field_info === 'time'){
-        			column['type'] = 'time';
-        			column['timeFormat'] = 'YYYY/MM/DD HH:mm:ss';
-        			column['correctFormat'] = true;
-        			column['renderer'] = this.timeRenderer.bind(this); // Convert epoch times to a readable string
-        			column['editor'] = this.getTimeRenderer();
+        			column.type = 'time';
+        			column.timeFormat = 'YYYY/MM/DD HH:mm:ss';
+        			column.correctFormat = true;
+        			column.renderer = this.timeRenderer.bind(this); // Convert epoch times to a readable string
+        			column.editor = this.getTimeRenderer();
         		}
         		
         		// Handle number fields
         		else if(field_info === 'number'){
-					column['type'] = 'numeric';
-					column['format'] = '0.[00000]';
+					column.type = 'numeric';
+					column.format = '0.[00000]';
         		}
         		
         		columns.push(column);
@@ -579,7 +579,7 @@ define([
 	    				        }.bind(this)
 	    					}
 	    				}
-	    		}
+	    		};
         	}
         	else{
 	    		contextMenu = {
@@ -631,7 +631,7 @@ define([
 	    				        }.bind(this)
 	    					}
 	    				}
-	    		}
+	    		};
         	}
         	
         	// Put in a class name so that the styling can be done by the type of the lookup
@@ -680,7 +680,7 @@ define([
         			var cellProperties = {};
         			  
         			// Don't allow the _key row to be editable on KV store lookups since the keys are auto-assigned
-        		    if (this.read_only || (this.lookup_type === "kv" && col == 0)) {
+        		    if (this.read_only || (this.lookup_type === "kv" && col === 0)) {
         		        cellProperties.readOnly = true;
         		    }
 
@@ -696,7 +696,7 @@ define([
         			}
         			  
         			// Warn about the header being deleted and make sure the user wants to proceed.
-        			if(index == 0 && self.lookup_type !== "kv"){
+        			if(index === 0 && self.lookup_type !== "kv"){
         				var continue_with_deletion = confirm("Are you sure you want to delete the header row?\n\nNote that a valid lookup file needs at least a header.");
         				  
         				if (!continue_with_deletion){
@@ -716,14 +716,14 @@ define([
         		
         		// Don't allow removal of all columns
         		afterRemoveCol: function(index, amount){
-        			if(this.countCols() == 0){
+        			if(this.countCols() === 0){
         				alert("You must have at least one cell to have a valid lookup");
         			}
         		},
         		
         		// If all rows have been removed, all in some blank ones
         		afterRemoveRow: function(index, amount){
-        			if(this.countRows() == 0){
+        			if(this.countRows() === 0){
         				//self.loadLookupContents(self.lookup, self.namespace, self.owner, self.lookup_type, false);
         			}
         		},
