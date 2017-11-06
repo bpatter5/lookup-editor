@@ -1,7 +1,7 @@
 /*
  * Hide the header since we are going to show our own header
  */
-.dashboard-header.dashboard-header-dashboardheader{
+.dashboard-header{
 	display: none;
 }
 
