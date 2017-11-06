@@ -65,7 +65,6 @@ define([
             this.field_types_enforced = false; // This will store whether this lookup enforces types
             this.read_only = false; // We will update this to true if the lookup cannot be edited
             this.table_header = null; // This will store the header of the table so that can recall the relative offset of the fields in the table
-            this.columns = null; // This will store meta-data about the columns
 
             // These are copies of editor classes used with the handsontable
             this.forgiving_checkbox_editor = null;
@@ -333,13 +332,64 @@ define([
          * Get colummn configuration data for the columns so that the table presents a UI for editing the cells appropriately. 
          */
         getColumnsMetadata: function(){
+			if(this.lookup_type === 'kv'){
+				return this.getKVColumnsMetadata();
+			}
+			else {
+				return this.getCSVColumnsMetadata();
+			}
+		},
+
+        /**
+         * Get colummn configuration data for the columns from a CSV lookup so that the table presents a UI for editing the cells appropriately. 
+		 * 
+		 * This function is for getting the columns meta-data for KV store lookup editing; it won't work for CSV lookups since
+		 * they don't have field_types nor an _key field.
+         */
+        getCSVColumnsMetadata: function(){
         	
         	// Stop if we don't have the required data yet
         	if(!this.getTableHeader()){
         		console.warn("The table header is not available yet");
         	}
+
+			var table_header = this.getTableHeader();
+        	var column = null;
+        	var columns = []; 
         	
-        	// If this is a CSV lookup, then add a column renderer to excape the content
+        	for(var c = 0; c < table_header.length; c++){
+        		
+				column = {};
+
+        		// Use format.js for the time fields
+        		if(table_header[c] === '_time'){
+        			column.type = 'time';
+        			column.timeFormat = 'YYYY/MM/DD HH:mm:ss';
+        			column.correctFormat = true;
+        			column.renderer = this.timeRenderer.bind(this); // Convert epoch times to a readable string
+        			column.editor = this.getTimeRenderer();
+        		}
+        		
+        		columns.push(column);
+        		
+    		}
+    		
+        	return columns;
+        },
+
+        /**
+         * Get colummn configuration data for the columns from a KV store collection so that the table presents a UI for editing the cells appropriately. 
+		 * 
+		 * This function is for getting the columns meta-data for KV store lookup editing; it won't work for CSV lookups since
+		 * they don't have field_types nor an _key field.
+         */
+        getKVColumnsMetadata: function(){
+        	
+        	// Stop if we don't have the required data yet
+        	if(!this.getTableHeader()){
+        		console.warn("The table header is not available yet");
+        	}
+
         	var table_header = this.getTableHeader();
         	var column = null;
         	var columns = []; 
@@ -350,7 +400,7 @@ define([
         	}
         	
         	// This variable will contain the meta-data about the columns
-        	// Columns is going to have a single field by default for the _key field which is not included in the field-types
+        	// Columns are going to have a single field by default for the _key field which is not included in the field-types
         	var field_info = null;
         	
         	for(var c = 0; c < table_header.length; c++){
@@ -384,7 +434,6 @@ define([
     		}
     		
         	return columns;
-        	
         },
 
         /**
@@ -477,8 +526,17 @@ define([
          */
         timeRenderer: function(instance, td, row, col, prop, value, cellProperties) {
         	value = this.escapeHtml(Handsontable.helper.stringify(value));
-            
-        	td.innerHTML = this.formatTime(value);
+
+			// Set the cell header class if it is for the first row
+			if(row === 0 && this.lookup_type === 'csv') {
+				td.className = 'cellHeader';
+				td.innerHTML = value;
+			}
+			
+			// Otherwise, format the time value
+			else{
+				td.innerHTML = this.formatTime(value);
+			}
 
             return td;
         },
@@ -637,11 +695,10 @@ define([
         	// Put in a class name so that the styling can be done by the type of the lookup
         	if(this.lookup_type === "kv"){
         		this.$el.addClass('kv-lookup');
-        		this.columns = this.getColumnsMetadata();
         	}
         	else{
         		this.$el.addClass('csv-lookup');
-        	}
+			}
         	
         	// Make sure some empty rows exist if it is empty
         	if(data.length === 1){
@@ -660,7 +717,7 @@ define([
         		minSpareRows: 0,
         		minSpareCols: 0,
         		colHeaders: this.lookup_type === "kv" ? this.table_header : false,
-        		columns: this.columns,
+        		columns: this.getColumnsMetadata(),
         		rowHeaders: true,
         		fixedRowsTop: this.lookup_type === "kv" ? 0 : 1,
         		height: function(){ return $(window).height() - 320; }, // Set the window height so that the user doesn't have to scroll to the bottom to set the save button
