@@ -1,12 +1,12 @@
 
 require.config({
     paths: {
-        transform_create_view: "../app/lookup_editor/js/views/LookupTransformCreateView"
+        lookupTransformCreateView: "../app/lookup_editor/js/views/LookupTransformCreateView"
     }
 });
 
 define([
-    'transform_create_view',
+    'lookupTransformCreateView',
 ], function(
     LookupTransformCreateView
 ) {
