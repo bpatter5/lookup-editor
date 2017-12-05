@@ -45,10 +45,6 @@ define([
     var TableEditorView = SimpleSplunkView.extend({
         className: "TableEditorView",
         
-        defaults: {
-        	
-        },
-        
         /**
          * Initialize the class.
          */
@@ -68,7 +64,8 @@ define([
 
             // These are copies of editor classes used with the handsontable
             this.forgiving_checkbox_editor = null;
-            this.time_editor = null;
+			this.time_editor = null;
+			this.default_editor = null;
         },
 
         /**
@@ -128,7 +125,10 @@ define([
         	// Execute the renderer
         	if(row !== 0 && this.isCellTypeInvalid(row, col, value)) { // Cell type is incorrect
         		td.className = 'cellInvalidType';
-        	}
+			}
+			else if(row !== 0 && this.getFieldForColumn(col) === "_time") { // Cell type is _time
+				td.innerHTML = this.formatTime(value, true);
+			}
         	else if(!value || value === '') {
         		td.className = 'cellEmpty';
         	}
@@ -178,16 +178,42 @@ define([
         	if(cellProperties.readOnly) {
         	    td.style.opacity = 0.7;
         	}
-        	
         },
         
         /**
          * Get the data from the table.
          * 
-         * Note: this is just a pass-through to HandsOnTable
+         * This is largely just a pass-through to HandsOnTable with the exception of for lookups
+		 * with a _time field. In that case, the time value will be converted from a string to an
+		 * integer.
          */
         getData: function(){
-            return this.handsontable.getData();
+			var data = this.handsontable.getData();
+
+			// Figure out if any columns must be converted from _time
+			var time_columns = [];
+			var row_header = this.getTableHeader();
+
+			for(var c = 0; c < row_header.length; c++){
+        		if(row_header[c] === '_time'){
+        			time_columns.push(c);
+        		}
+        	}
+
+			// Return the current data if there are no times
+			if(time_columns.length === 0){
+				return data;
+			}
+
+			// Process each row
+			for(c = 1; c < data.length; c++){
+				for(var d = 0; d < time_columns.length; d++){
+					var column = time_columns[d];
+					data[c][column] = String(new Date(data[c][column]).valueOf() / 1000);
+				}
+			}
+
+			return data;
         },
 
         /**
@@ -329,61 +355,12 @@ define([
         },
 
         /**
-         * Get colummn configuration data for the columns so that the table presents a UI for editing the cells appropriately. 
+         * Get column configuration data for the columns from a KV store collection so that the table presents a UI for editing the cells appropriately. 
+		 * 
+		 * This function is for getting the columns meta-data for KV store lookup editing; it won't work for CSV lookups since
+		 * they don't have field_types nor an _key field.
          */
         getColumnsMetadata: function(){
-			if(this.lookup_type === 'kv'){
-				return this.getKVColumnsMetadata();
-			}
-			else {
-				return this.getCSVColumnsMetadata();
-			}
-		},
-
-        /**
-         * Get colummn configuration data for the columns from a CSV lookup so that the table presents a UI for editing the cells appropriately. 
-		 * 
-		 * This function is for getting the columns meta-data for KV store lookup editing; it won't work for CSV lookups since
-		 * they don't have field_types nor an _key field.
-         */
-        getCSVColumnsMetadata: function(){
-        	
-        	// Stop if we don't have the required data yet
-        	if(!this.getTableHeader()){
-        		console.warn("The table header is not available yet");
-        	}
-
-			var table_header = this.getTableHeader();
-        	var column = null;
-        	var columns = []; 
-        	
-        	for(var c = 0; c < table_header.length; c++){
-        		
-				column = {};
-
-        		// Use format.js for the time fields
-        		if(table_header[c] === '_time'){
-        			column.type = 'time';
-        			column.timeFormat = 'YYYY/MM/DD HH:mm:ss';
-        			column.correctFormat = true;
-        			column.renderer = this.timeRenderer.bind(this); // Convert epoch times to a readable string
-        			column.editor = this.getTimeRenderer();
-        		}
-        		
-        		columns.push(column);
-        		
-    		}
-    		
-        	return columns;
-        },
-
-        /**
-         * Get colummn configuration data for the columns from a KV store collection so that the table presents a UI for editing the cells appropriately. 
-		 * 
-		 * This function is for getting the columns meta-data for KV store lookup editing; it won't work for CSV lookups since
-		 * they don't have field_types nor an _key field.
-         */
-        getKVColumnsMetadata: function(){
         	
         	// Stop if we don't have the required data yet
         	if(!this.getTableHeader()){
@@ -496,6 +473,34 @@ define([
         	};
         	
         	return this.time_editor;
+		},
+		
+        /**
+         * Get the default editor that handles _time values.
+         */
+        getDefaultEditor: function(){
+        	
+        	// Return the existing editor
+        	if(this.default_editor !== null){
+        		return this.default_editor;
+        	}
+        	
+        	this.default_editor = Handsontable.editors.TextEditor.prototype.extend();
+        	
+			var formatTime = this.formatTime;
+			var table_header = this.getTableHeader();
+        	
+        	this.default_editor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
+				// Convert the seconds-since-epoch to a nice string if necessary
+				if(row > 0 && table_header[col] === "_time"){
+					Handsontable.editors.TextEditor.prototype.prepare.apply(this, [row, col, prop, td, formatTime(originalValue, true), cellProperties]);
+				}
+				else {
+					Handsontable.editors.TextEditor.prototype.prepare.apply(this, [row, col, prop, td, originalValue, cellProperties]);
+				}
+        	};
+        	
+        	return this.default_editor;
         },
 
 
@@ -504,9 +509,20 @@ define([
 		 * 
 		 * @param value The value of the time (a number) to convert into a string
          */
-        formatTime: function(value){
+        formatTime: function(value, includes_microseconds){
+
+			if(typeof includes_microseconds === "undefined"){
+				includes_microseconds = false;
+			}
+
         	if(/^\d+$/.test(value)){
-        		return moment(parseInt(value, 10)).format('YYYY/MM/DD HH:mm:ss');
+				var epoch = parseInt(value, 10);
+				
+				if(includes_microseconds){
+					epoch = epoch * 1000;
+				}
+
+        		return moment(epoch).format('YYYY/MM/DD HH:mm:ss');
         	}
         	else{
         		return value;
@@ -527,16 +543,7 @@ define([
         timeRenderer: function(instance, td, row, col, prop, value, cellProperties) {
         	value = this.escapeHtml(Handsontable.helper.stringify(value));
 
-			// Set the cell header class if it is for the first row
-			if(row === 0 && this.lookup_type === 'csv') {
-				td.className = 'cellHeader';
-				td.innerHTML = value;
-			}
-			
-			// Otherwise, format the time value
-			else{
-				td.innerHTML = this.formatTime(value);
-			}
+			td.innerHTML = this.formatTime(value);
 
             return td;
         },
@@ -717,7 +724,7 @@ define([
         		minSpareRows: 0,
         		minSpareCols: 0,
         		colHeaders: this.lookup_type === "kv" ? this.table_header : false,
-        		columns: this.getColumnsMetadata(),
+				columns: this.lookup_type === 'csv' ? null : this.getColumnsMetadata(),
         		rowHeaders: true,
         		fixedRowsTop: this.lookup_type === "kv" ? 0 : 1,
         		height: function(){ return $(window).height() - 320; }, // Set the window height so that the user doesn't have to scroll to the bottom to set the save button
@@ -730,7 +737,8 @@ define([
         		allowInsertColumn: this.lookup_type === "kv" ? false : true,
         		allowRemoveColumn: this.lookup_type === "kv" ? false : true,
         		
-        		renderer: this.lookupRenderer.bind(this),
+				renderer: this.lookupRenderer.bind(this),
+				editor: this.lookup_type !== 'csv' ? null : this.getDefaultEditor(),
         		
         		cells: function(row, col, prop) {
         			  
