@@ -10,9 +10,9 @@ define([
 ], function(
     LookupListView
 ) {
-    describe('Lookup List:', () => {
+    describe('Lookup List:', function(){
         
-        it('should render content', done => {
+        it('should render content', function(){
             var dom = $('<div><div id="base"></div></div>');
 
             var lookupListView = new LookupListView({
@@ -28,6 +28,6 @@ define([
                 }
             }.bind(this), 3000);
             
-        });
-    });
+        }.bind(this));
+    }.bind(this));
 });

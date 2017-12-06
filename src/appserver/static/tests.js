@@ -84,7 +84,7 @@ function loadSuitesForApp($, app) {
         type: 'GET',
         cache: false,
         async: true,
-    }).done(result => {
+    }).done(function(result){
         if (result === undefined) {
             deferred.reject(result);
         } else if (typeof result === 'string') {
@@ -94,7 +94,7 @@ function loadSuitesForApp($, app) {
         } else {
             deferred.reject(result);
         }
-    }).fail(result => {
+    }.bind(this)).fail(function(result){
         deferred.reject(result);
     });
     return deferred.promise();
@@ -106,15 +106,17 @@ function runTests(testApps) {
     require(['jquery',
              '../app/' + app + '/js/lib/console'
     ], function($, console) {
-        var suites = testApps.map(s => loadSuitesForApp($, s));
+        var suites = testApps.map(function(suite){
+            loadSuitesForApp($, suite);
+        }.bind(this));
 
         // Load all of the test suites before running the tests
         $.when(...suites).done((...suite) => {
             // Merge the tests together into a single array
             var tests = {};
-            suite.forEach(s => {
-                $.extend(tests, s);
-            });
+            suite.forEach(function(test){
+                $.extend(tests, test);
+            }.bind(this));
 
             // Run the tests
             runJasmineTests($, tests);

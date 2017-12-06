@@ -10,9 +10,9 @@ define([
 ], function(
     LookupTransformCreateView
 ) {
-    describe('Lookup Transform Create View:', () => {
+    describe('Lookup Transform Create View:', function(){
         
-        it('should find the transform for a collection', (done) => {
+        it('should find the transform for a collection', function(done) {
             var dom = $('<div><div id="base"></div></div>');
 
             var lookupTransformCreateView = new LookupTransformCreateView({
@@ -23,9 +23,9 @@ define([
                 expect(transform_name).toBe('test_kv_store_lookup');
                 done();
             });
-        });
+        }.bind(this));
 
-        it('should return null when attempting to find the transform for a non-existent collection', (done) => {
+        it('should return null when attempting to find the transform for a non-existent collection', function(done){
             var dom = $('<div><div id="base"></div></div>');
 
             var lookupTransformCreateView = new LookupTransformCreateView({
@@ -36,9 +36,9 @@ define([
                 expect(transform_name).toBe(null);
                 done();
             });
-        });
+        }.bind(this));
 
-        it('should load lookup transforms', (done) => {
+        it('should load lookup transforms', function(done) {
             var dom = $('<div><div id="base"></div></div>');
 
             var lookupTransformCreateView = new LookupTransformCreateView({
@@ -49,9 +49,9 @@ define([
                 expect(transforms.models.length).toBeGreaterThan(0);
                 done();
             });
-        });
+        }.bind(this));
 
-        it('should get the fields for a transform', (done) => {
+        it('should get the fields for a transform', function(done){
             var dom = $('<div><div id="base"></div></div>');
 
             var lookupTransformCreateView = new LookupTransformCreateView({
@@ -62,9 +62,9 @@ define([
                 expect(fields.length).toBe(3);
                 done();
             });
-        });
+        }.bind(this));
 
-        it('should return null when attempting to get fields for a non-existent collection', (done) => {
+        it('should return null when attempting to get fields for a non-existent collection', function(done) {
             var dom = $('<div><div id="base"></div></div>');
 
             var lookupTransformCreateView = new LookupTransformCreateView({
@@ -75,7 +75,7 @@ define([
                 expect(fields).toBe(null);
                 done();
             });
-        });
+        }.bind(this));
 
     });
 });
