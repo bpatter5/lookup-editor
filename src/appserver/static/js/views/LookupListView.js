@@ -1009,6 +1009,8 @@ define([
 					'</table>',
 				ok_button_title: 'Yes, Delete'
 			});
+
+			this.deleteModal.render();
         }
     });
     
