@@ -187,8 +187,7 @@ define([
 			"click .open-in-search" : "openInSearch",
 
 			// Options for delete
-			"click .delete-lookup" : "confirmAndDeleteLookup",
-			"click .delete-this-lookup" : "deleteLookup"
+			"click .delete-lookup" : "confirmAndDeleteLookup"
 
         },
 		
@@ -636,7 +635,7 @@ define([
 						this.deleteCSVLookup(lookup, namespace, owner);
 					}
 					else{
-						this.deleteKVLookup(lookup, namespace, owner);
+						this.deleteKVLookup(lookup, namespace);
 					}
 				}.bind(this));
         	return false;
@@ -646,7 +645,7 @@ define([
 		 * Delete the given CSV lookup.
 		 */
 		deleteCSVLookup: function(lookup_name, namespace, owner){
-			var lookup = new KVLookup();
+			var lookup = new SplunkDBaseModel();
 
 			lookup.fetch({
 				url: Splunk.util.make_url('splunkd/__raw/servicesNS/' + owner + '/' + namespace + '/data/lookup-table-files/' + lookup_name),
@@ -666,8 +665,22 @@ define([
 		/**
 		 * Delete the given KV lookup.
 		 */
-		deleteKVLookup: function(lookup_name, namespace, owner){			
-			debugger;
+		deleteKVLookup: function(lookup_name, namespace){			
+			var lookup = new SplunkDBaseModel();
+
+			lookup.fetch({
+				url: Splunk.util.make_url('splunkd/__raw/servicesNS/nobody/' + namespace + '/storage/collections/config/' + lookup_name),
+				success: function() {
+					lookup.destroy({
+						success: function() {
+							this.getKVLookups();
+						}.bind(this),
+					});
+				}.bind(this),
+				error: function() {
+					debugger;
+				}.bind(this)
+			});
 		},
         
         /**
