@@ -105,7 +105,6 @@ define([
         	
         	// Options for disabling lookups
         	"click .disable-kv-lookup" : "openDisableKVLookupDialog",
-        	"click #disable-this-lookup" : "disableLookup",
         		
             // Options for enabling lookups
 			"click .enable-kv-lookup" : "enableLookup",
@@ -188,6 +187,7 @@ define([
 
 			// Below are the modals we will be using
 			this.deleteModal = null;
+			this.disableModal = null;
         },
 		
 		/**
@@ -436,13 +436,8 @@ define([
         /**
          * Disable the given lookup. 
          */
-        disableLookup: function(ev){
-        	
-        	// Get the lookup that is being requested to disable
-        	var lookup = $(ev.target).data("name");
-        	var namespace = $(ev.target).data("namespace");
-        	var owner = $(ev.target).data("owner");
-        	
+        disableLookup: function(lookup, namespace, owner){
+
         	// Perform the call
         	$.ajax({
         			url: splunkd_utils.fullpath(['/servicesNS', "nobody", namespace, 'storage/collections/config', lookup, 'disable'].join('/')),
@@ -497,9 +492,11 @@ define([
         	$(".disable-lookup-owner", this.$el).text(owner);
         	
         	// Show the modal
-        	$("#disable-lookup-modal", this.$el).modal();
-        	
-        	return false;
+			$.when(this.disableModal.show())
+			.done(function(){
+				this.disableLookup(lookup, namespace, owner);
+			}.bind(this));
+		return false;
         	
         },
         
@@ -989,6 +986,7 @@ define([
         render: function () {
 			this.$el.html(Template);
 			
+			// Render the delete modal
 			this.deleteModal = new ModalDialog({
 				el: $('#delete-lookup-modal', this.$el),
 				title: 'Delete Lookup',
@@ -1011,6 +1009,30 @@ define([
 			});
 
 			this.deleteModal.render();
+
+			// Render the disable modal
+			this.disableModal = new ModalDialog({
+				el: $('#disable-lookup-modal', this.$el),
+				title: 'Disable Lookup',
+				body: 'Are you sure you want to disable this lookup?' +
+					'<table class="disable-lookup-info-table">' +
+					'   <tr>' +
+					'	    <td class="disable-lookup-info">Lookup</td>' +
+					'	    <td class="disable-lookup-name"></td>' +
+					'    </tr>' +
+					'    <tr>' +
+					'	    <td class="disable-lookup-info">Namespace</td>' +
+					'	    <td class="disable-lookup-namespace"></td>' +
+					'    </tr>' +
+					'    <tr>' +
+					'	    <td class="disable-lookup-info">Owner</td>' +
+					'	    <td class="disable-lookup-owner"></td>' +
+					'    </tr>' +
+					'</table>',
+				ok_button_title: 'Yes, Disable'
+			});
+
+			this.disableModal.render();
         }
     });
     
