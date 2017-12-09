@@ -1075,14 +1075,23 @@ Below is an example of the entry in the file:
           target: appinspect
          ================================= -->
     <target name="appinspect" description="Inspect the app appinspect" depends="package">
+		<if>
+			<not>
+				<isset property="value.test.appinspect_path"/>
+			</not>
+			<then>
+				<property name="value.test.appinspect_path" value="splunk-appinspect"/>
+			</then>
+		</if>
+
+		<!-- Check to see if it appinspect is defined in the appinspect_path parameter -->
+		<available file="${value.test.appinspect_path}"  
+             filepath="${value.test.appinspect_path}"  
+             property="appinspect.present" />
+
 		<!-- Check to see if appinspect is on the path -->
 		<available file="splunk-appinspect"  
              filepath="${env.PATH}"  
-             property="appinspect.present" />
-
-		<!-- Check to see if it appinspect is defined in the appinspect_path parameter -->
-		<available file="splunk-appinspect"  
-             filepath="${value.test.appinspect_path}"  
              property="appinspect.present" />
 
 		<if>
