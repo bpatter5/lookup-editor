@@ -47,7 +47,7 @@ define([
 ){
 	
 	var Apps = SplunkDsBaseCollection.extend({
-	    url: "apps/local?count=-1", //&search=disabled%3D0
+	    url: "apps/local?count=-1",
 	    initialize: function() {
 	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
 	    }
@@ -93,7 +93,30 @@ define([
     // Define the custom view class
     var LookupListView = SimpleSplunkView.extend({
         className: "LookupListView",
-        
+
+        events: {
+        	// Filtering
+        	"click .type-filter > .dropdown-menu > li > a" : "onClickTypeFilter",
+        	"click .app-filter > .dropdown-menu > li > a" : "onClickAppFilter",
+        	"click .scope-filter > .btn" : "onClickScopeFilter",
+        	"change #free-text-filter" : "applyFilter",
+        	"keyup #free-text-filter" : "goFilter",
+        	"keypress #free-text-filter" : "goFilter",
+        	
+        	// Options for disabling lookups
+        	"click .disable-kv-lookup" : "openDisableKVLookupDialog",
+        	"click #disable-this-lookup" : "disableLookup",
+        		
+            // Options for enabling lookups
+			"click .enable-kv-lookup" : "enableLookup",
+			
+			// Open the lookup in search
+			"click .open-in-search" : "openInSearch",
+
+			// Options for delete
+			"click .delete-lookup" : "confirmAndDeleteLookup"
+        },
+
         defaults: {
         	change_dropdown_titles: true
         },
@@ -165,30 +188,6 @@ define([
 
 			// Below are the modals we will be using
 			this.deleteModal = null;
-        },
-        
-        events: {
-        	// Filtering
-        	"click .type-filter > .dropdown-menu > li > a" : "onClickTypeFilter",
-        	"click .app-filter > .dropdown-menu > li > a" : "onClickAppFilter",
-        	"click .scope-filter > .btn" : "onClickScopeFilter",
-        	"change #free-text-filter" : "applyFilter",
-        	"keyup #free-text-filter" : "goFilter",
-        	"keypress #free-text-filter" : "goFilter",
-        	
-        	// Options for disabling lookups
-        	"click .disable-kv-lookup" : "openDisableKVLookupDialog",
-        	"click #disable-this-lookup" : "disableLookup",
-        		
-            // Options for enabling lookups
-			"click .enable-kv-lookup" : "enableLookup",
-			
-			// Open the lookup in search
-			"click .open-in-search" : "openInSearch",
-
-			// Options for delete
-			"click .delete-lookup" : "confirmAndDeleteLookup"
-
         },
 		
 		/**
