@@ -4,6 +4,7 @@ require.config({
         datatables: "../app/lookup_editor/js/lib/DataTables/js/jquery.dataTables",
 		bootstrapDataTables: "../app/lookup_editor/js/lib/DataTables/js/dataTables.bootstrap",
 		lookupTransformCreateView: "../app/lookup_editor/js/views/LookupTransformCreateView",
+		modalDialog: "../app/lookup_editor/js/views/ModalDialog",
         text: "../app/lookup_editor/js/lib/text",
         console: '../app/lookup_editor/js/lib/console'
     },
@@ -25,6 +26,7 @@ define([
     "text!../app/lookup_editor/js/templates/LookupList.html",
 	"bootstrapDataTables",
 	"lookupTransformCreateView",
+	"modalDialog",
     "util/splunkd_utils",
     "bootstrap.dropdown",
     "css!../app/lookup_editor/css/LookupList.css",
@@ -40,6 +42,7 @@ define([
     Template,
 	dataTable,
 	LookupTransformCreateView,
+	ModalDialog,
     splunkd_utils
 ){
 	
@@ -57,15 +60,31 @@ define([
 	    }
 	});
 	
-	var CSVLookups = SplunkDsBaseCollection.extend({
-		url: '/servicesNS/' + Splunk.util.getConfigValue("USERNAME") + '/-/data/lookup-table-files?count=-1',
+	var CSVLookup = SplunkDBaseModel.extend({
+		url: "data/lookup-table-files",
 		initialize: function() {
 			SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
 		}
 	});
-	
+
+	var CSVLookups = SplunkDsBaseCollection.extend({
+		url: '/servicesNS/' + Splunk.util.getConfigValue("USERNAME") + '/-/data/lookup-table-files?count=-1',
+		model: CSVLookup,
+		initialize: function() {
+			SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
+		}
+	});
+
+	var KVLookup = SplunkDBaseModel.extend({
+		url: "storage/collections",
+		initialize: function() {
+			SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
+		}
+	});
+
 	var KVLookups = SplunkDsBaseCollection.extend({
-	    url: '/servicesNS/nobody/-/storage/collections/config?count=-1',
+		url: '/servicesNS/nobody/-/storage/collections/config?count=-1',
+		model: KVLookup,
 	    initialize: function() {
 	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
 	    }
@@ -107,17 +126,8 @@ define([
             this.retain_state = false;
         	
         	// Get the CSV lookups
-        	this.csv_lookups = new CSVLookups();
-        	this.csv_lookups.on('reset', this.gotCSVLookups.bind(this), this);
-        	
-        	this.csv_lookups.fetch({
-                success: function() {
-                  console.info("Successfully retrieved the CSV lookup files");
-                },
-                error: function() {
-                  console.error("Unable to fetch the CSV lookup files");
-                }
-            });
+			this.csv_lookups = null;
+			this.getCSVLookups();
         	
         	// Get the KV store lookups
 			this.kv_lookups_supported = true;
@@ -152,6 +162,9 @@ define([
 
 			// Keep a reference around for the lookup transform editor
 			this.lookup_transform_editor = null;
+
+			// Below are the modals we will be using
+			this.deleteModal = null;
         },
         
         events: {
@@ -171,9 +184,31 @@ define([
 			"click .enable-kv-lookup" : "enableLookup",
 			
 			// Open the lookup in search
-			"click .open-in-search" : "openInSearch"
+			"click .open-in-search" : "openInSearch",
+
+			// Options for delete
+			"click .delete-lookup" : "confirmAndDeleteLookup",
+			"click .delete-this-lookup" : "deleteLookup"
+
         },
-        
+		
+		/**
+		 * Get the CSV lookups
+		 */
+		getCSVLookups: function(){
+        	this.csv_lookups = new CSVLookups();
+        	this.csv_lookups.on('reset', this.gotCSVLookups.bind(this), this);
+        	
+        	this.csv_lookups.fetch({
+                success: function() {
+                  console.info("Successfully retrieved the CSV lookup files");
+                },
+                error: function() {
+                  console.error("Unable to fetch the CSV lookup files");
+                }
+            });
+		},
+
         /**
          * Get the KV store lookups
          */
@@ -571,7 +606,69 @@ define([
     		}
     		
     		return name;
-        },
+		},
+		
+		/**
+		 * Confirm and then delete the given CSV lookup.
+		 */
+		confirmAndDeleteLookup: function(ev){
+        	// Get the lookup that is being requested to remove
+        	var lookup = $(ev.target).data("name");
+        	var namespace = $(ev.target).data("namespace");
+			var owner = $(ev.target).data("owner");
+			var type = $(ev.target).data("type");
+        	
+        	// Record the info about the lookup to remove
+        	$("#delete-this-lookup", this.$el).data("name", lookup);
+        	$("#delete-this-lookup", this.$el).data("namespace", namespace);
+			$("#delete-this-lookup", this.$el).data("owner", owner);
+			$("#delete-this-lookup", this.$el).data("type", type);
+        	
+        	// Show the info about the lookup to remove
+        	$(".delete-lookup-name", this.$el).text(lookup);
+        	$(".delete-lookup-namespace", this.$el).text(namespace);
+        	$(".delete-lookup-owner", this.$el).text(owner);
+        	
+        	// Show the modal
+			$.when(this.deleteModal.show())
+				.done(function(){
+					if(type === 'csv'){
+						this.deleteCSVLookup(lookup, namespace, owner);
+					}
+					else{
+						this.deleteKVLookup(lookup, namespace, owner);
+					}
+				}.bind(this));
+        	return false;
+		},
+
+		/**
+		 * Delete the given CSV lookup.
+		 */
+		deleteCSVLookup: function(lookup_name, namespace, owner){
+			var lookup = new KVLookup();
+
+			lookup.fetch({
+				url: Splunk.util.make_url('splunkd/__raw/servicesNS/' + owner + '/' + namespace + '/data/lookup-table-files/' + lookup_name),
+				success: function() {
+					lookup.destroy({
+						success: function() {
+							this.getCSVLookups();
+						}.bind(this),
+					});
+				}.bind(this),
+				error: function() {
+					debugger;
+				}.bind(this)
+			});
+		},
+
+		/**
+		 * Delete the given KV lookup.
+		 */
+		deleteKVLookup: function(lookup_name, namespace, owner){			
+			debugger;
+		},
         
         /**
          * Got the CSV lookups
@@ -754,7 +851,7 @@ define([
         	}
         	
         	// Deduplicate the list
-        	var apps_json = _.uniq(apps_json, function(item, key, a) { 
+        	apps_json = _.uniq(apps_json, function(item, key, a) { 
         	    return item.name;
         	});
         	
@@ -780,7 +877,7 @@ define([
         			transforms.push({
             			'transform': this.lookup_transforms.models[c].entry.attributes.name,
             			'collection': this.lookup_transforms.models[c].entry.associated.content.attributes.collection
-            		})
+            		});
         		}
         		
         		// Add entries for the CSV files
@@ -878,7 +975,28 @@ define([
          * Render the page.
          */
         render: function () {
-        	this.$el.html(Template);
+			this.$el.html(Template);
+			
+			this.deleteModal = new ModalDialog({
+				el: $('#delete-lookup-modal', this.$el),
+				title: 'Delete Lookup',
+				body: 'Are you sure you want to delete this lookup?' +
+					'<table class="delete-lookup-info-table">' +
+					'   <tr>' +
+					'	    <td class="delete-lookup-info">Lookup</td>' +
+					'	    <td class="delete-lookup-name"></td>' +
+					'    </tr>' +
+					'    <tr>' +
+					'	    <td class="delete-lookup-info">Namespace</td>' +
+					'	    <td class="delete-lookup-namespace"></td>' +
+					'    </tr>' +
+					'    <tr>' +
+					'	    <td class="delete-lookup-info">Owner</td>' +
+					'	    <td class="delete-lookup-owner"></td>' +
+					'    </tr>' +
+					'</table>',
+				ok_button_title: 'Yes, Delete'
+			});
         }
     });
     

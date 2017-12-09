@@ -13,6 +13,8 @@
     </div>
 </div>
 
+<div tabindex="-1" id="delete-lookup-modal"></div>
+
 <div tabindex="-1" id="disable-lookup-modal" class="modal fade in hide">
     <div class="modal-header">
         <button type="button" class="close btn-dialog-close" data-dismiss="modal">x</button>
@@ -160,10 +162,11 @@
                 <% } else if (lookups[i].type == "kv") { %>
                         <a class="action-link external open-in-search" target="_blank" href="#" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>">Open in Search</a>
 				<% } if (lookups[i].type == "kv" && !lookups[i].disabled) { %>
-					<a class="action-link disable-kv-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" href="#">Disable</a>
+                    <a class="action-link disable-kv-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" href="#">Disable</a>
 				<% } if (lookups[i].type == "kv" && lookups[i].disabled) { %>
-					<a class="action-link enable-kv-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" href="#">Enable</a>
-				<% } %> 
+                    <a class="action-link enable-kv-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" href="#">Enable</a>
+                <% } %>
+                <a class="action-link delete-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" data-type="<%- lookups[i].type %>" href="#">Delete</a>
 			</td>
         </tr>
 		<% } %>
