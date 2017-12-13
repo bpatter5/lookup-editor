@@ -651,8 +651,8 @@ define([
 							this.retain_state = true;
 							this.getCSVLookups();
 						}.bind(this),
-						error: function() {
-							alert("Lookup file could not be deleted");
+						error: function(model, response) {
+							alert("Lookup file could not be deleted: " + response.responseJSON.messages[0].text);
 						}.bind(this)
 					});
 				}.bind(this),
@@ -676,8 +676,8 @@ define([
 							this.retain_state = true;
 							this.getKVLookups();
 						}.bind(this),
-						error: function() {
-							alert("Lookup file could not be deleted");
+						error: function(model, response) {
+							alert("Lookup file could not be deleted: " + response.responseJSON.messages[0].text);
 						}.bind(this)
 					});
 				}.bind(this),
