@@ -193,7 +193,7 @@ define([
 		/**
 		 * Get the CSV lookups
 		 */
-		getCSVLookups: function(){
+		getCSVLookups: function(retainState){
         	this.csv_lookups = new CSVLookups();
         	this.csv_lookups.on('reset', this.gotCSVLookups.bind(this), this);
         	
@@ -648,12 +648,16 @@ define([
 				success: function() {
 					lookup.destroy({
 						success: function() {
+							this.retain_state = true;
 							this.getCSVLookups();
 						}.bind(this),
+						error: function() {
+							alert("Lookup file could not be deleted");
+						}.bind(this)
 					});
 				}.bind(this),
 				error: function() {
-					debugger;
+					alert("Lookup file could not be deleted");
 				}.bind(this)
 			});
 		},
@@ -669,12 +673,16 @@ define([
 				success: function() {
 					lookup.destroy({
 						success: function() {
+							this.retain_state = true;
 							this.getKVLookups();
 						}.bind(this),
+						error: function() {
+							alert("Lookup file could not be deleted");
+						}.bind(this)
 					});
 				}.bind(this),
 				error: function() {
-					debugger;
+					alert("Lookup file could not be deleted");
 				}.bind(this)
 			});
 		},
