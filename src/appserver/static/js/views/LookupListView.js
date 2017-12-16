@@ -784,7 +784,8 @@ define([
         				'owner': this.csv_lookups.models[c].entry.acl.attributes.owner,
         				'type' : 'csv',
         				'sharing' : this.csv_lookups.models[c].entry.acl.attributes.sharing,
-        				'endpoint_owner' : endpoint_owner
+						'endpoint_owner' : endpoint_owner,
+						'can_write' : this.csv_lookups.models[c].entry.acl.attributes.can_write
         		};
         		
         		// Don't include KMZ files
@@ -803,7 +804,8 @@ define([
 						'owner': this.kv_lookups.models[c].entry.acl.attributes.owner,
         				'type' : 'kv',
         				'endpoint_owner' : 'nobody',
-        				'disabled': this.kv_lookups.models[c].entry.associated.content.attributes.disabled
+						'disabled': this.kv_lookups.models[c].entry.associated.content.attributes.disabled,
+						'can_write' : this.kv_lookups.models[c].entry.acl.attributes.can_write
         		};
         		
         		lookups_json.push(new_entry);

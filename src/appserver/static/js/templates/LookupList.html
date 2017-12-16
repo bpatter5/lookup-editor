@@ -134,12 +134,15 @@
                         <a class="action-link external" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- getLookupTransform(lookups[i].name) %>">Open in Search</a>
                 <% } else if (lookups[i].type == "kv") { %>
                         <a class="action-link external open-in-search" target="_blank" href="#" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>">Open in Search</a>
-				<% } if (lookups[i].type == "kv" && !lookups[i].disabled) { %>
+				<% } if (lookups[i].type == "kv" && !lookups[i].disabled && lookups[i].can_write) { %>
                     <a class="action-link disable-kv-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" href="#">Disable</a>
-				<% } if (lookups[i].type == "kv" && lookups[i].disabled) { %>
+				<% } if (lookups[i].type == "kv" && lookups[i].disabled && lookups[i].can_write) { %>
                     <a class="action-link enable-kv-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" href="#">Enable</a>
                 <% } %>
+
+                <% if (lookups[i].can_write) { %>
                 <a class="action-link delete-lookup" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>" data-type="<%- lookups[i].type %>" href="#">Delete</a>
+                <% } %>
 			</td>
         </tr>
 		<% } %>
