@@ -11,14 +11,15 @@
  */
 require.config({
     paths: {
-    	handsontable: "../app/lookup_editor/js/lib/handsontable.full.min",
-        console: '../app/lookup_editor/js/lib/console',
-        moment: '../app/lookup_editor/js/lib/moment.min'
+		Handsontable: "../app/lookup_editor/js/lib/handsontable/handsontable",
+		pikaday: "../app/lookup_editor/js/lib/pikaday/pikaday",
+		numbro: "../app/lookup_editor/js/lib/numbro/numbro",
+		moment: '../app/lookup_editor/js/lib/moment',
+		console: '../app/lookup_editor/js/lib/console'
     },
     shim: {
-        'handsontable': {
-        	deps: ['jquery'],
-            exports: 'Handsontable'
+        'Handsontable': {
+        	deps: ['jquery', 'pikaday', 'numbro', 'moment']
         }
     }
 });
@@ -27,18 +28,18 @@ define([
     "underscore",
     "backbone",
     "jquery",
-    "handsontable",
     "splunkjs/mvc/simplesplunkview",
-    "moment",
+	"moment",
+	"Handsontable",
     "splunk.util",
-    "css!../app/lookup_editor/css/lib/handsontable.full.min.css"
+    "css!../app/lookup_editor/css/lib/handsontable.full.css"
 ], function(
     _,
     Backbone,
     $,
-    Handsontable,
     SimpleSplunkView,
-    moment
+	moment,
+	Handsontable
 ){
 
     // Define the custom view class
