@@ -739,7 +739,7 @@ define([
         		allowRemoveColumn: this.lookup_type === "kv" ? false : true,
         		
 				renderer: this.lookupRenderer.bind(this),
-				editor: this.lookup_type !== 'csv' ? null : this.getDefaultEditor(),
+				editor: this.lookup_type !== 'csv' ? Handsontable.editors.TextEditor : this.getDefaultEditor(),
         		
         		cells: function(row, col, prop) {
         			  
