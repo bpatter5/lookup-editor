@@ -404,7 +404,9 @@ define([
         		// Handle number fields
         		else if(field_info === 'number'){
 					column.type = 'numeric';
-					column.format = '0.[00000]';
+					column.numericFormat = {
+						pattern: '0.[00000]',
+					};
         		}
         		
         		columns.push(column);
@@ -726,6 +728,26 @@ define([
         		minSpareCols: 0,
         		colHeaders: this.lookup_type === "kv" ? this.table_header : false,
 				columns: this.lookup_type === 'csv' ? null : this.getColumnsMetadata(),
+				/*
+				columns: [
+					{
+
+					},
+					{
+
+					},
+					{
+						'type': 'numeric',
+						'format': '$0,0.00'
+					},
+					{
+
+					},
+					{
+
+					},
+				],*/
+				
         		rowHeaders: true,
         		fixedRowsTop: this.lookup_type === "kv" ? 0 : 1,
         		height: function(){ return $(window).height() - 320; }, // Set the window height so that the user doesn't have to scroll to the bottom to set the save button
