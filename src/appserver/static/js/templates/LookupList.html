@@ -111,7 +111,7 @@
 			<td><%- getAppDescriptionFromName(lookups[i].namespace) %></td>
 			<td><%- lookups[i].owner %></td>
 			<td>
-				<a class="action-link" href="../../../splunkd/__raw/services/data/lookup_edit/lookup_as_file?namespace=<%- lookups[i].namespace %>&owner=<%- lookups[i].endpoint_owner %>&lookup_file=<%- lookups[i].name %>&lookup_type=<%- lookups[i].type %>">Export</a>
+				<a class="action-link export" href="../../../splunkd/__raw/services/data/lookup_edit/lookup_as_file?namespace=<%- lookups[i].namespace %>&owner=<%- lookups[i].endpoint_owner %>&lookup_file=<%- lookups[i].name %>&lookup_type=<%- lookups[i].type %>">Export</a>
 				
                 <% 
                     var uri_parameter = null;
@@ -126,12 +126,12 @@
                         edit_acls_uri = '../../manager/permissions/' + lookups[i].namespace + '/data/lookup-table-files/' + lookups[i].name + '?uri=' + encodeURIComponent(uri_parameter);
                     }
                 %>
-                <a class="action-link external" target="_blank" href="<%- edit_acls_uri %>">Edit Permissions</a>
+                <a class="action-link external edit-permissions" target="_blank" href="<%- edit_acls_uri %>">Edit Permissions</a>
                 
                 <% if (lookups[i].type == "csv") { %>
-                    <a class="action-link external" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- lookups[i].name %>">Open in Search</a>
+                    <a class="action-link external open-in-search" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- lookups[i].name %>">Open in Search</a>
                 <% } else if (lookups[i].type == "kv" && getLookupTransform(lookups[i].name)) { %>
-                        <a class="action-link external" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- getLookupTransform(lookups[i].name) %>">Open in Search</a>
+                        <a class="action-link external open-in-search" target="_blank" href="search?q=%7C%20inputlookup%20append%3Dt%20<%- getLookupTransform(lookups[i].name) %>">Open in Search</a>
                 <% } else if (lookups[i].type == "kv") { %>
                         <a class="action-link external open-in-search" target="_blank" href="#" data-owner="<%- lookups[i].owner %>" data-namespace="<%- lookups[i].namespace %>" data-name="<%- lookups[i].name %>">Open in Search</a>
 				<% } if (lookups[i].type == "kv" && !lookups[i].disabled && lookups[i].can_write) { %>

@@ -837,9 +837,11 @@ define([
          */
         setSaveButtonTitle: function(title){
         	if(typeof title == 'undefined' ){
+				$("#save").addClass("custom-title");
         		$("#save").text("Save Lookup");
         	}
         	else{
+				$("#save").removeClass("custom-title");
         		$("#save").text(title);
         	}
 		},
