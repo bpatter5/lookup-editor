@@ -1,6 +1,18 @@
 <project default="package" name="lookup_editor">
-	
+
 	<import file="basebuild.xml"/>
+
+	<patternset id="minified_files">
+    	<include name="src/appserver/static/*.js" />
+		<include name="src/appserver/static/views/*.js" />
+        <include name="**/*.css" />
+    </patternset>
+
+	<patternset id="exclude_minified_files">
+    	<exclude name="src/appserver/static/*.js" />
+		<exclude name="src/appserver/static/views/*.js" />
+        <exclude name="**/*.css" />
+    </patternset>
 
     <!-- ================================= 
           target: test.run_ui
