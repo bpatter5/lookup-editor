@@ -2,6 +2,7 @@
 
 	<import file="basebuild.xml"/>
 
+	<!-- Override the patterns that match the library JS/CSS files -->
 	<patternset id="minified_files">
     	<include name="src/appserver/static/*.js" />
 		<include name="src/appserver/static/views/*.js" />
