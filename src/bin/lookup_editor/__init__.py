@@ -5,7 +5,7 @@ shouldn't need to call functions in the dependencies.
 """
 
 import os
-import codecs
+import io
 import json
 import shutil
 import csv
@@ -134,7 +134,7 @@ class LookupEditor(LookupBackups):
         # Get the file handle
         # Note that we are assuming that the file is in UTF-8. Any characters that don't match
         # will be replaced.
-        return codecs.open(file_path, 'rb', encoding='utf-8', errors='replace')
+        return io.open(file_path, 'r', encoding='utf-8', errors='replace')
 
 
     def resolve_lookup_filename(self, lookup_file, namespace="lookup_editor", owner=None,
