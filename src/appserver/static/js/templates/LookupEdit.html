@@ -87,7 +87,7 @@
 		<!--
 			Here are the controls for editing lookups.
 		-->
-	<div class="row-fluid show-when-editing <% if(is_new){ %>hide<% } %>">
+	<div class="row-fluid <% if(is_new){ %>hide<% } %>">
 		<div class="span4">
 			<div class="alert alert-warning hide warning-message">
 				<i class="icon-alert"></i>
@@ -98,9 +98,9 @@
 				<i class="icon-alert"></i>
 				<div class="message">Ok!</div>
 			</div>
-			<div class="right-click-help-message"><i class="icon-info-circle" />Right-click the table for editing options</div>
+			<div class="right-click-help-message show-when-editing"><i class="icon-info-circle" />Right-click the table for editing options</div>
 		</div>
-		<div class="span8">
+		<div class="span8 show-when-editing">
 			<div class="pull-right controls-holder">
 				<% if(lookup_type === "csv"){ %>
 				<div class="btn-group">
