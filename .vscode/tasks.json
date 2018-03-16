@@ -10,7 +10,7 @@
         {
             "taskName": "deploy",
             "command": "ant",
-            "args": ["deploy"],
+            "args": ["splunk.deploy_and_refresh"],
             "isShellCommand": true,
             "isBuildCommand": true
         }
