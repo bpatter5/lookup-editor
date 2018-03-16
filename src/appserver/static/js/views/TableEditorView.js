@@ -14,7 +14,7 @@ require.config({
 		Handsontable: "../app/lookup_editor/js/lib/handsontable/handsontable",
 		pikaday: "../app/lookup_editor/js/lib/pikaday/pikaday",
 		numbro: "../app/lookup_editor/js/lib/numbro/numbro",
-		moment: '../app/lookup_editor/js/lib/moment',
+		moment: '../app/lookup_editor/js/lib/moment/moment',
 		console: '../app/lookup_editor/js/lib/console'
     },
     shim: {
