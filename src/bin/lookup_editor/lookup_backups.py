@@ -90,7 +90,7 @@ class LookupBackups(object):
 
         return backup_directory
 
-    def backup_lookup_file(self, session_key, lookup_file, namespace, resolved_file_path, owner=None):
+    def backup_lookup_file(self, session_key, lookup_file, namespace, resolved_file_path, owner=None, file_save_time=None):
         """
         Make a backup if the lookup file.
         """
@@ -109,6 +109,12 @@ class LookupBackups(object):
                 self.logger.warning('Unable to get the file modification time for the existing lookup file="%s"', resolved_file_path)
                 file_time = None
 
+            # If we got the time for backup file, then use that time
+            # This is important because the times ought to be consistent between search heads in a
+            # cluster
+            if file_save_time is not None:
+                file_time = file_save_time
+            
             # If we couldn't get the time, then just use the current time (the time we are making
             # a backup)
             if file_time is None:

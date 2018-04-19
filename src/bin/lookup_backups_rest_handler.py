@@ -4,6 +4,7 @@ This controller provides helper methods to the front-end views that manage looku
 
 import logging
 import csv
+import time
 
 from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 from splunk import AuthorizationFailed, ResourceNotFound
@@ -50,7 +51,7 @@ class LookupBackupsHandler(rest_handler.RESTHandler):
         self.lookup_editor = LookupEditor(logger)
 
     def post_backup(self, request_info, lookup_file=None, namespace="lookup_editor",
-                    owner=None, **kwargs):
+                    owner=None, file_time=None, **kwargs):
         """
         Make a backup of the given lookup file.
         """
@@ -63,10 +64,12 @@ class LookupBackupsHandler(rest_handler.RESTHandler):
                                                                             session_key=request_info.session_key,
                                                                             throw_not_found=True)
 
-            # Backup the file
+            # Backup the file passing the time so that the REST handler will use the same time for
+            # all lookups even when the REST call is being replayed in an SHC cluster
             file_path = self.lookup_editor.backup_lookup_file(request_info.session_key,
                                                               lookup_file, namespace,
-                                                              resolved_file_path, owner)
+                                                              resolved_file_path, owner,
+                                                              file_time)
 
             self.logger.info("Created a backup of a lookup file, file_path=%s", file_path)
 

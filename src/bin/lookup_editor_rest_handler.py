@@ -5,6 +5,7 @@ This controller provides helper methods to the front-end views that manage looku
 import logging
 import csv
 import json
+import time
 import datetime
 
 from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
@@ -235,7 +236,8 @@ class LookupEditorHandler(rest_handler.RESTHandler):
             data = {
                 'lookup_file' : lookup_file,
                 'namespace' : namespace,
-                'owner' : owner
+                'owner' : owner,
+                'file_time' : time.time()
             }
 
             try:
