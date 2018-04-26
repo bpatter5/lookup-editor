@@ -60,7 +60,8 @@
 }
 
 /* Make sure the controls are the aligned with the other buttons (such as a the save button) */
-.lookup-edit-view .btn-primary.pull-right, .btn-group.pull-right{
+.lookup-edit-view .btn-primary.pull-right,
+.btn-group.pull-right{
 	margin-right: 16px
 }
 
@@ -84,6 +85,17 @@
 .lookup-edit-view .control-label{
 	margin-left: 8px;
 	margin-top: 10px;
+}
+
+/* This makes the alignment work better on Splunk 7.1.0 */
+#lookup-name-control-group,
+#lookup-app-control-group{
+	float: left;
+    display: block;
+}
+
+#lookup-app-control-group .splunk-choice-input-message{
+	display: none;	
 }
 
 /* Style the modification time that is shown when editing KV store lookups */
@@ -110,7 +122,8 @@
 }
 
 /* Tell the dialogs to use an inline-block so that they fit nicely next to other elements */
-.lookup-edit-view .info-message, .lookup-edit-view .warning-message{
+.lookup-edit-view .info-message,
+.lookup-edit-view .warning-message{
 	display: inline-block;
     vertical-align: top;
     padding-bottom: 0px;
@@ -118,7 +131,8 @@
 }
 
 /* Reinstate the display none if the hide class is set (since the CSS about overrides this) */
-.lookup-edit-view .info-message.hide, .lookup-edit-view .warning-message.hide{
+.lookup-edit-view .info-message.hide,
+.lookup-edit-view .warning-message.hide{
 	display: none;
 }
 
@@ -126,8 +140,13 @@
 .lookup-edit-view .right-click-help-message{
 	padding-left: 16px;
 	position: relative;
+	/*
     top: 50%;
-    transform: translateY(100%);
+	transform: translateY(100%);*/
+    float: left;
+	clear: both;
+	padding-top: 10px;
+	/*margin-bottom: 12px;*/
 }
 
 .lookup-edit-view .right-click-help-message .icon-info-circle{
