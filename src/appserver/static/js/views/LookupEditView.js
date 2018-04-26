@@ -153,7 +153,7 @@ define([
 			"click #create"                                : "doCreateLookup",
         	"click .user-context"                          : "doLoadUserContext",
         	"click #export-file"                           : "doExport",
-        	"click .import-file"                           : "openFileImportModal",
+        	"click #import-file"                           : "openFileImportModal",
 			"click #refresh"                               : "refreshLookup",
 			"click #edit-acl"                              : "editACLs",
 			"click #open-in-search"                        : "openInSearch"
@@ -1163,7 +1163,7 @@ define([
 					}
 				}.bind(this));
         },
-        
+		
         /**
          * Do the removal of a row (for KV store lookups since edits are dynamic).
 		 * 
