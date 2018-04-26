@@ -158,4 +158,11 @@ Change History
 |         | Edit ACLs page now opens in a new page                                                                           |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 2.7.1   | Fixing issue where lookups with spaces in the names were allowed                                                 |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.0.0   | Added support for Splunk 7.1                                                                                     |
+|         | Numerous user interface enhancements                                                                             |
+|         | Added ability to replicate lookup backup files in a Search Head Cluster                                          |
+|         | Added a link to open a lookup in search from the lookup editor                                                   |
+|         | Added a dialog that will guide the user in creating a lookup transform in order to open it in search             |
+|         | Added support for editing on an iPad                                                                             |
 +---------+------------------------------------------------------------------------------------------------------------------+
