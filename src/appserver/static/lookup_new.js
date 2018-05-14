@@ -13,7 +13,7 @@ require([
 ){
 	
 	var KVLookups = SplunkDsBaseCollection.extend({
-	    url: '/servicesNS/nobody/lookup_editor/storage/collections/config?count=-1',
+	    url: '/splunkd/__raw/servicesNS/nobody/lookup_editor/storage/collections/config?count=-1',
 	    initialize: function() {
 	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
 	    }

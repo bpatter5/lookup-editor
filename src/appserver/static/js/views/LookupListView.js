@@ -68,7 +68,7 @@ define([
 	});
 
 	var CSVLookups = SplunkDsBaseCollection.extend({
-		url: '/servicesNS/' + Splunk.util.getConfigValue("USERNAME") + '/-/data/lookup-table-files?count=-1',
+		url: Splunk.util.make_url('/splunkd/__raw/servicesNS', encodeURIComponent(encodeURIComponent(Splunk.util.getConfigValue("USERNAME")))) + '/-/data/lookup-table-files?count=-1',
 		model: CSVLookup,
 		initialize: function() {
 			SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
@@ -83,7 +83,7 @@ define([
 	});
 
 	var KVLookups = SplunkDsBaseCollection.extend({
-		url: '/servicesNS/nobody/-/storage/collections/config?count=-1',
+		url: '/en-US/splunkd/__raw/servicesNS/nobody/-/storage/collections/config?count=-1',
 		model: KVLookup,
 	    initialize: function() {
 	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
@@ -401,7 +401,7 @@ define([
         	
         	// Perform the call
         	$.ajax({
-        			url: splunkd_utils.fullpath(['/servicesNS', "nobody", namespace, 'storage/collections/config', lookup, 'enable'].join('/')),
+        			url: splunkd_utils.fullpath(['/en-US/splunkd/__raw/servicesNS', "nobody", namespace, 'storage/collections/config', lookup, 'enable'].join('/')),
         			type: 'POST',
         			
         			// On success, populate the table
@@ -440,7 +440,7 @@ define([
 
         	// Perform the call
         	$.ajax({
-        			url: splunkd_utils.fullpath(['/servicesNS', "nobody", namespace, 'storage/collections/config', lookup, 'disable'].join('/')),
+        			url: splunkd_utils.fullpath(['/en-US/splunkd/__raw/servicesNS', "nobody", namespace, 'storage/collections/config', lookup, 'disable'].join('/')),
         			type: 'POST',
         			
         			// On success
@@ -644,7 +644,7 @@ define([
 			var lookup = new SplunkDBaseModel();
 
 			lookup.fetch({
-				url: Splunk.util.make_url('splunkd/__raw/servicesNS/' + owner + '/' + namespace + '/data/lookup-table-files/' + lookup_name),
+				url: Splunk.util.make_url('splunkd/__raw/servicesNS', owner, namespace, '/data/lookup-table-files/', lookup_name),
 				success: function() {
 					lookup.destroy({
 						success: function() {
@@ -669,7 +669,7 @@ define([
 			var lookup = new SplunkDBaseModel();
 
 			lookup.fetch({
-				url: Splunk.util.make_url('splunkd/__raw/servicesNS/nobody/' + namespace + '/storage/collections/config/' + lookup_name),
+				url: Splunk.util.make_url('/en-US/splunkd/__raw/servicesNS/nobody/' + namespace + '/storage/collections/config/' + lookup_name),
 				success: function() {
 					lookup.destroy({
 						success: function() {

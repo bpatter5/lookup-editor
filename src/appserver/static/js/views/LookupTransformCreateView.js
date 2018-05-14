@@ -36,7 +36,7 @@ define([
 ){
 
 	var KVLookups = SplunkDsBaseCollection.extend({
-	    url: '/servicesNS/nobody/-/storage/collections/config?count=-1',
+	    url: '/splunkd/__raw/servicesNS/nobody/-/storage/collections/config?count=-1',
 	    initialize: function() {
 	      SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
 	    }

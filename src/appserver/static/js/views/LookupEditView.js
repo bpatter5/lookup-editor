@@ -529,7 +529,7 @@ define([
         	
         	// Perform the call
         	$.ajax({
-        			url: splunkd_utils.fullpath(['/servicesNS', owner, namespace, 'storage/collections/config'].join('/')),
+        			url: splunkd_utils.fullpath(['/en-US/splunkd/__raw/servicesNS', owner, namespace, 'storage/collections/config'].join('/')),
         			data: data,
         			type: 'POST',
         			
@@ -1356,11 +1356,11 @@ define([
 			var uri = null;
 
 			if(this.lookup_type == 'kv'){
-				uri = '/servicesNS/nobody/' + this.namespace + '/storage/collections/config/' + this.lookup;
+				uri = '/en-US/splunkd/__raw/servicesNS/nobody/' + this.namespace + '/storage/collections/config/' + this.lookup;
 				document.location = '/en-US/manager/permissions/' + this.namespace + '/storage/collections/config/' + this.lookup + '?uri=' + encodeURIComponent(uri);
 			}
 			else{
-				uri = '/servicesNS/' + this.owner + '/' + this.namespace + '/data/lookup-table-files/' + this.lookup;
+				uri = '/en-US/splunkd/__raw/servicesNS/' + this.owner + '/' + this.namespace + '/data/lookup-table-files/' + this.lookup;
 				document.location = '/en-US/manager/permissions/' + this.namespace + '/data/lookup-table-files/' + this.lookup + '?uri=' + encodeURIComponent(uri);
 			}
 

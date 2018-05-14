@@ -246,7 +246,7 @@ define([
         	
         	// Perform the call
         	$.ajax({
-        			url: splunkd_utils.fullpath(['/servicesNS', owner, namespace, 'storage/collections/config', lookup_file].join('/')),
+        			url: splunkd_utils.fullpath(['/en-US/splunkd/__raw/servicesNS', owner, namespace, 'storage/collections/config', lookup_file].join('/')),
         			data: data,
         			type: 'POST',
         			
@@ -286,7 +286,39 @@ define([
         			}.bind(this)
         	});
         },
+		
+        /**
+         * Show a warning noting that something bad happened.
+		 * 
+		 * @param message The message to show
+         */
+        showWarningMessage: function(message){
+        	$(".warning-message > .message", this.$el).text(message);
+        	this.unhide($(".warning-message", this.$el));
+		},
+		
+        /**
+         * Hide the given item while retaining the display value
+		 * 
+		 * @param selector A jQuery selector of the element to process
+         */
+        hide: function(selector){
+        	selector.css("display", "none");
+        	selector.addClass("hide");
+        },
         
+        /**
+         * Un-hide the given item.
+         * 
+         * Note: this removes all custom styles applied directly to the element.
+		 * 
+		 * @param selector A jQuery selector of the element to process
+         */
+        unhide: function(selector){
+        	selector.removeClass("hide");
+        	selector.removeAttr("style");
+        },
+
         render: function () {
 
         	// Render the base HTML

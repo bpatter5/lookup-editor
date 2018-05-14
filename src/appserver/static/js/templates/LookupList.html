@@ -118,12 +118,12 @@
                     var edit_acls_uri = null;
 
                     if(lookups[i].type == 'kv'){
-                        uri_parameter = '/servicesNS/nobody/' + lookups[i].namespace + '/storage/collections/config/' + lookups[i].name;
-                        edit_acls_uri = '../../manager/permissions/' + lookups[i].namespace + '/storage/collections/config/' + lookups[i].name + '?uri=' + encodeURIComponent(uri_parameter);
+                        uri_parameter = '/servicesNS/nobody/' + encodeURIComponent(lookups[i].namespace) + '/storage/collections/config/' + encodeURIComponent(lookups[i].name);
+                        edit_acls_uri = '../../manager/permissions/' + encodeURIComponent(lookups[i].namespace) + '/storage/collections/config/' + encodeURIComponent(lookups[i].name) + '?uri=' + encodeURIComponent(uri_parameter);
                     }
                     else{
-                        uri_parameter = '/servicesNS/' + lookups[i].owner + '/' + lookups[i].namespace + '/data/lookup-table-files/' + lookups[i].name;
-                        edit_acls_uri = '../../manager/permissions/' + lookups[i].namespace + '/data/lookup-table-files/' + lookups[i].name + '?uri=' + encodeURIComponent(uri_parameter);
+                        uri_parameter = '/servicesNS/' + encodeURIComponent(lookups[i].owner) + '/' + encodeURIComponent(lookups[i].namespace) + '/data/lookup-table-files/' + encodeURIComponent(lookups[i].name);
+                        edit_acls_uri = '../../manager/permissions/' + encodeURIComponent(lookups[i].namespace) + '/data/lookup-table-files/' + encodeURIComponent(lookups[i].name) + '?uri=' + encodeURIComponent(uri_parameter);
                     }
                 %>
                 <a class="action-link external edit-permissions" target="_blank" href="<%- edit_acls_uri %>">Edit Permissions</a>

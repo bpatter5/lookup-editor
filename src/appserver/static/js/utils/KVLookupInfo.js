@@ -65,7 +65,7 @@ define([
 
             lookup_config.fetch({
                 // e.g. servicesNS/nobody/lookup_editor/storage/collections/config/test
-                url: splunkd_utils.fullpath(['/servicesNS', 'nobody', namespace, 'storage/collections/config', collection].join('/')), // For some reason using the actual owner causes this call to fail
+                url: splunkd_utils.fullpath(['/en-US/splunkd/__raw/servicesNS', 'nobody', namespace, 'storage/collections/config', collection].join('/')), // For some reason using the actual owner causes this call to fail
                 success: function (model, response, options) {
                     console.info("Successfully retrieved the information about the KV store lookup");
 
