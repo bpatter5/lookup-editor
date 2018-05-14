@@ -167,4 +167,5 @@ Change History
 |         | Added support for editing on an iPad                                                                             |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.0.1   | Fixing issue where CSVs didn't loaded for some user names (such as those with slashes)                           |
+|         | Fixing broken open-in-search link                                                                                |
 +---------+------------------------------------------------------------------------------------------------------------------+

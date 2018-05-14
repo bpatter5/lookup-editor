@@ -584,9 +584,20 @@ define([
 				this.lookup_transform_editor.render();
 			}
 
+			// Get the transform information for KV lookups
 			var data = $(e.currentTarget).data();
+			
+			if(data.owner && data.namespace && data.name){
+				debugger;
+				this.lookup_transform_editor.openInSearchOrCreateTransform(data.owner, data.namespace, data.name);
+			}
 
-			this.lookup_transform_editor.openInSearchOrCreateTransform(data.name, data.namespace, data.name);
+
+			// Otherwise, just open the link
+			else{
+				debugger;
+				//return true;
+			}
 		},
 
         /**
