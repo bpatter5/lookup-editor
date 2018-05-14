@@ -165,4 +165,6 @@ Change History
 |         | Added a link to open a lookup in search from the lookup editor                                                   |
 |         | Added a dialog that will guide the user in creating a lookup transform in order to open it in search             |
 |         | Added support for editing on an iPad                                                                             |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.0.1   | Fixing issue where CSVs didn't loaded for some user names (such as those with slashes)                           |
 +---------+------------------------------------------------------------------------------------------------------------------+
