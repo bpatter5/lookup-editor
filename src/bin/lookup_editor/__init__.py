@@ -367,5 +367,11 @@ class LookupEditor(LookupBackups):
             self.force_lookup_replication(namespace, lookup_file, session_key)
         except ResourceNotFound:
             self.logger.info("Unable to force replication of the lookup file to other search heads; upgrade Splunk to 6.2 or later in order to support CSV file replication")
+        except AuthorizationFailed:
+            self.logger.warn("Unable to force replication of the lookup file (not authorized), user=%s, namespace=%s, lookup_file=%s",
+                             user, namespace, lookup_file)
+        except:
+            self.logger.exception("Unable to force replication of the lookup file, user=%s, namespace=%s, lookup_file=%s",
+                                  user, namespace, lookup_file)
 
         return resolved_file_path
