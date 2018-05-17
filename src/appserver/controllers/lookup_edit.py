@@ -502,7 +502,7 @@ class LookupEditor(controllers.BaseController):
             except ResourceNotFound:
                 logger.info("Unable to force replication of the lookup file to other search heads; upgrade Splunk to 6.2 or later in order to support CSV file replication")
             except AuthorizationFailed:
-                logger.warn("Unable to force replication of the lookup file (not authorized), user=%s, namespace=%s, lookup_file=%s',
+                logger.warn("Unable to force replication of the lookup file (not authorized), user=%s, namespace=%s, lookup_file=%s",
                             user, namespace, lookup_file)
             except:
                 logger.exception("Lookup replication could not be forced")
