@@ -158,4 +158,6 @@ Change History
 |         | Edit ACLs page now opens in a new page                                                                           |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 2.7.1   | Fixing issue where lookups with spaces in the names were allowed                                                 |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 2.7.2   | Fixing issue where lookup saving would be considered a failure when replication could not be forced              |
 +---------+------------------------------------------------------------------------------------------------------------------+

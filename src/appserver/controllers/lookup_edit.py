@@ -501,6 +501,13 @@ class LookupEditor(controllers.BaseController):
                 force_lookup_replication(namespace, lookup_file, session_key)
             except ResourceNotFound:
                 logger.info("Unable to force replication of the lookup file to other search heads; upgrade Splunk to 6.2 or later in order to support CSV file replication")
+            except AuthorizationFailed:
+                logger.warn("Unable to force replication of the lookup file (not authorized), user=%s, namespace=%s, lookup_file=%s',
+                            user, namespace, lookup_file)
+            except:
+                logger.exception("Lookup replication could not be forced")
+                cherrypy.response.status = 500
+                return self.render_error_json("Lookup was saved but replication could not be forced")
 
         except:
             logger.exception("Unable to save the lookup")
