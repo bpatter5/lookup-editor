@@ -185,6 +185,18 @@
 	border-color: rgba(82,168,236,0.8);
 }
 
+/*
+ * Style the loading message
+ */
+.lookup-edit-view .lookup-loading{
+	min-height: 300px;
+	padding-left: 30px;
+	padding-top: 60px;
+	margin-right: 16px;
+	margin-left: 10px;
+	border: 1px solid #ddd;
+}
+
 /**
  * Cell renderers
  */
