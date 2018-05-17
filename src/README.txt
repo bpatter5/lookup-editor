@@ -159,6 +159,8 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 2.7.1   | Fixing issue where lookups with spaces in the names were allowed                                                 |
 |---------|------------------------------------------------------------------------------------------------------------------|
+| 2.7.2   | Fixing issue where lookup saving would be considered a failure when replication could not be forced              |
+|---------|------------------------------------------------------------------------------------------------------------------|
 | 3.0.0   | Added support for Splunk 7.1                                                                                     |
 |         | Numerous user interface enhancements                                                                             |
 |         | Added ability to replicate lookup backup files in a Search Head Cluster                                          |
@@ -168,4 +170,7 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.0.1   | Fixing issue where CSVs didn't loaded for some user names (such as those with slashes)                           |
 |         | Fixing broken open-in-search link                                                                                |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.0.2   | Fixing issue where lookup saving would be considered a failure when replication could not be forced              |
+|         | Added message noting that lookup file is being loaded                                                            |
 +---------+------------------------------------------------------------------------------------------------------------------+
