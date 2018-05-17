@@ -55,7 +55,7 @@ def setup_logger(level):
     logger.addHandler(file_handler)
     return logger
 
-logger = setup_logger(logging.INFO)
+logger = setup_logger(logging.DEBUG)
 
 from splunk.models.base import SplunkAppObjModel
 from splunk.models.field import BoolField, Field
@@ -411,6 +411,8 @@ class LookupEditor(controllers.BaseController):
             if namespace is None:
                 namespace = "lookup_editor"
 
+            logger.debug("Checking capabilities...")
+
             # Check capabilities
             LookupEditor.check_capabilities(lookup_file, user, session_key)
 
@@ -419,27 +421,30 @@ class LookupEditor(controllers.BaseController):
                 cherrypy.response.status = 400
                 return self.render_error_json("The lookup filename contains disallowed characters")
 
+            logger.debug("Resolving file path...")
             # Determine the final path of the file
             resolved_file_path = self.resolve_lookup_filename(lookup_file, namespace, owner,
                                                               throw_not_found=False)
 
+            logger.debug("Backing up lookup file...")
             # Make a backup
             self.backupLookupFile(lookup_file, namespace, owner)
-
+            logger.debug("Parsing the JSON...")
             # Parse the JSON
             parsed_contents = json.loads(contents)
-
+            logger.debug("Getting the temporary file...")
             # Create the temporary file
             temp_file_handle = lookupfiles.get_temporary_lookup_file()
 
             # This is a full path already; no need to call make_splunkhome_path().
             temp_file_name = temp_file_handle.name
 
+            logger.debug("Making a lookup filename...")
             # Make the lookups directory if it does not exist
             destination_lookup_full_path = self.makeLookupFilename(lookup_file, namespace, owner)
             logger.debug("destination_lookup_full_path=%s", destination_lookup_full_path)
             destination_lookup_path_only, _ = os.path.split(destination_lookup_full_path)
-
+            logger.debug("Making necessary directory...")
             try:
                 os.makedirs(destination_lookup_path_only, 0755)
                 os.chmod(destination_lookup_path_only, 0755)
@@ -449,6 +454,7 @@ class LookupEditor(controllers.BaseController):
 
             # Write out the new file to a temporary location
             try:
+                logger.debug("Making the CSV writer...")
                 if temp_file_handle is not None and os.path.isfile(temp_file_name):
 
                     csv_writer = csv.writer(temp_file_handle, lineterminator='\n')
@@ -464,6 +470,7 @@ class LookupEditor(controllers.BaseController):
 
             # Determine if the lookup file exists, create it if it doesn't
             if resolved_file_path is None:
+                logger.debug("Moving the existing file to the backup location...")
                 shutil.move(temp_file_name, destination_lookup_full_path)
                 logger.info('Lookup created successfully, user=%s, namespace=%s, lookup_file=%s, path="%s"', user, namespace, lookup_file, destination_lookup_full_path)
 
@@ -477,12 +484,14 @@ class LookupEditor(controllers.BaseController):
                 try:
 
                     if not self.isLookupInUsersPath(resolved_file_path) or owner == 'nobody':
+                        logger.debug("Updating the existing file (as nobody)...")
                         lookupfiles.update_lookup_table(filename=temp_file_name,
                                                         lookup_file=lookup_file,
                                                         namespace=namespace,
                                                         owner="nobody",
                                                         key=session_key)
                     else:
+                        logger.debug("Updating the existing file (as a user)...")
                         lookupfiles.update_lookup_table(filename=temp_file_name,
                                                         lookup_file=lookup_file,
                                                         namespace=namespace,
@@ -498,6 +507,7 @@ class LookupEditor(controllers.BaseController):
 
             # Tell the SHC environment to replicate the file
             try:
+                logger.debug("Triggering replication...")
                 force_lookup_replication(namespace, lookup_file, session_key)
             except ResourceNotFound:
                 logger.info("Unable to force replication of the lookup file to other search heads; upgrade Splunk to 6.2 or later in order to support CSV file replication")
