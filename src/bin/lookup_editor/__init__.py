@@ -32,6 +32,39 @@ class LookupEditor(LookupBackups):
     def __init__(self, logger):
         super(LookupEditor, self).__init__(logger)
 
+    def get_kv_fields_from_transform(self, session_key, collection_name, namespace="lookup_editor", owner=None):
+        """
+        Get the list of fields for the given lookup from the transform.
+        """
+
+        response, content = splunk.rest.simpleRequest('/servicesNS/nobody/' + namespace +
+                                                      '/data/transforms/lookups',
+                                                      sessionKey=session_key,
+                                                      getargs={
+                                                          'output_mode': 'json',
+                                                          'search': 'collection=' + collection_name
+                                                        })
+
+        # Make sure we found something
+        if response.status < 200 or response.status > 300:
+            return None
+
+        # Parse the output
+        transforms = json.loads(content, object_pairs_hook=OrderedDict)
+        transform = None
+
+        # Make sure we got entries
+        if len(transforms['entry']) == 0:
+            return None
+        else:
+            transform = transforms['entry'][0]
+    
+        # If we got a match, then get the fields
+        if transform is not None and 'content' in transform and 'fields_array' in transform['content']:
+            return transform['content']['fields_array']
+        else:
+            return None
+
     def get_kv_lookup(self, session_key, lookup_file, namespace="lookup_editor", owner=None):
         """
         Get the contents of a KV store lookup.
@@ -61,6 +94,18 @@ class LookupEditor(LookupBackups):
             if field.startswith('field.'):
                 fields.append(field[6:])
 
+        # If we couldn't get fields from the collections config, try to get it from transforms.conf
+        if len(fields) <= 1:
+            fields = self.get_kv_fields_from_transform(session_key, lookup_file, namespace, owner)
+
+            # See if we got the fields from the transform. If we didn't, then just assume the _key field exists
+            if fields is None:
+                self.logger.info('Unable to get the fields list from lookup transforms', fields)
+                fields = ['_key']
+            else:
+                self.logger.info('Got fields list from the transform, fields=%r', fields)
+
+        # Add the fields as the first row
         lookup_contents.append(fields)
 
         # Get the contents

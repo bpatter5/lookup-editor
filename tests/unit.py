@@ -303,6 +303,16 @@ class TestLookupEditor(LookupEditorTestCase):
         self.assertEquals(self.strip_splunk_path(file_path),
                           '/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv/1234')
 
+    @skipIfLookupTestNotInstalled
+    def test_get_kv_fields_from_transform(self):
+        """
+        Test getting the fields of a lookup from a transform.
+        """
+
+        fields = self.lookup_editor.get_kv_fields_from_transform(self.get_session_key(), 'test_kv_store_transform_fields', 'lookup_test', None)
+
+        self.assertEquals(len(fields), 4)
+
 class TestLookupBackups(LookupEditorTestCase):
     """
     This tests the class which manages lookup backups.
