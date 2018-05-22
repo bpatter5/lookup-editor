@@ -174,4 +174,7 @@ Change History
 | 3.0.2   | Fixing issue where lookup saving would be considered a failure when replication could not be forced              |
 |         | Added message noting that lookup file is being loaded                                                            |
 |         | KV store lookup fields are correctly loaded when the fields are declared in transforms.conf                      |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.0.3   | Fixing issue where time fields could be mis-interpreting and saved as "NaN"                                      |
+|         | Fixing double encoding issue causing lookups files to not be listed                                              |
 +---------+------------------------------------------------------------------------------------------------------------------+
