@@ -173,4 +173,5 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.0.2   | Fixing issue where lookup saving would be considered a failure when replication could not be forced              |
 |         | Added message noting that lookup file is being loaded                                                            |
+|         | KV store lookup fields are correctly loaded when the fields are declared in transforms.conf                      |
 +---------+------------------------------------------------------------------------------------------------------------------+
