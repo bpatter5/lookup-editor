@@ -68,7 +68,7 @@ define([
 	});
 
 	var CSVLookups = SplunkDsBaseCollection.extend({
-		url: Splunk.util.make_url('/splunkd/__raw/servicesNS', encodeURIComponent(encodeURIComponent(Splunk.util.getConfigValue("USERNAME")))) + '/-/data/lookup-table-files?count=-1',
+		url: Splunk.util.make_url('/splunkd/__raw/servicesNS', encodeURIComponent(Splunk.util.getConfigValue("USERNAME"))) + '/-/data/lookup-table-files?count=-1',
 		model: CSVLookup,
 		initialize: function() {
 			SplunkDsBaseCollection.prototype.initialize.apply(this, arguments);
