@@ -529,7 +529,7 @@ define([
         	
         	// Perform the call
         	$.ajax({
-        			url: splunkd_utils.fullpath(['/en-US/splunkd/__raw/servicesNS', owner, namespace, 'storage/collections/config'].join('/')),
+        			url: splunkd_utils.fullpath(['/servicesNS', owner, namespace, 'storage/collections/config'].join('/')),
         			data: data,
         			type: 'POST',
         			
@@ -1356,12 +1356,12 @@ define([
 			var uri = null;
 
 			if(this.lookup_type == 'kv'){
-				uri = '/en-US/splunkd/__raw/servicesNS/nobody/' + this.namespace + '/storage/collections/config/' + this.lookup;
-				document.location = '/en-US/manager/permissions/' + this.namespace + '/storage/collections/config/' + this.lookup + '?uri=' + encodeURIComponent(uri);
+				uri = Splunk.util.make_url('/splunkd/__raw/servicesNS/nobody/' + this.namespace + '/storage/collections/config/' + this.lookup);
+				document.location = Splunk.util.make_url('/manager/permissions/' + this.namespace + '/storage/collections/config/' + this.lookup + '?uri=' + encodeURIComponent(uri));
 			}
 			else{
-				uri = '/en-US/splunkd/__raw/servicesNS/' + this.owner + '/' + this.namespace + '/data/lookup-table-files/' + this.lookup;
-				document.location = '/en-US/manager/permissions/' + this.namespace + '/data/lookup-table-files/' + this.lookup + '?uri=' + encodeURIComponent(uri);
+				uri = Splunk.util.make_url('/splunkd/__raw/servicesNS/' + this.owner + '/' + this.namespace + '/data/lookup-table-files/' + this.lookup);
+				document.location = Splunk.util.make_url('/manager/permissions/' + this.namespace + '/data/lookup-table-files/' + this.lookup + '?uri=' + encodeURIComponent(uri));
 			}
 
 		},
@@ -1402,7 +1402,14 @@ define([
 				// Get the information from the lookup to load
 				this.lookup = decodeURIComponent(Splunk.util.getParameter("lookup"));
 				this.namespace = decodeURIComponent(Splunk.util.getParameter("namespace"));
-				this.owner = decodeURIComponent(Splunk.util.getParameter("owner"));
+
+				if(Splunk.util.getParameter("owner")){
+					this.owner = decodeURIComponent(Splunk.util.getParameter("owner"));
+				}
+				else{
+					this.owner = null;
+				}
+
 				this.lookup_type = decodeURIComponent(Splunk.util.getParameter("type"));
 				
 				// Determine if we are making a new lookup

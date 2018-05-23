@@ -244,9 +244,9 @@ define([
         	// Enable replication by default
         	data['replicate'] = 'true';
         	
-        	// Perform the call
+			// Perform the call
         	$.ajax({
-        			url: splunkd_utils.fullpath(['/en-US/splunkd/__raw/servicesNS', owner, namespace, 'storage/collections/config', lookup_file].join('/')),
+        			url: splunkd_utils.fullpath(['/servicesNS', owner, namespace, 'storage/collections/config', lookup_file].join('/')),
         			data: data,
         			type: 'POST',
         			
