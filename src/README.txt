@@ -177,4 +177,5 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.0.3   | Fixing issue where time fields could be mis-interpreting and saved as "NaN"                                      |
 |         | Fixing double encoding issue causing lookups files to not be listed                                              |
+|         | Fixing issue where lookups that were user-owned by a user with a slash couldn't be loaded or deleted             |
 +---------+------------------------------------------------------------------------------------------------------------------+
