@@ -735,25 +735,6 @@ define([
         		minSpareCols: 0,
         		colHeaders: this.lookup_type === "kv" ? this.table_header : false,
 				columns: this.lookup_type === 'csv' ? null : this.getColumnsMetadata(),
-				/*
-				columns: [
-					{
-
-					},
-					{
-
-					},
-					{
-						'type': 'numeric',
-						'format': '$0,0.00'
-					},
-					{
-
-					},
-					{
-
-					},
-				],*/
 				
         		rowHeaders: true,
         		fixedRowsTop: this.lookup_type === "kv" ? 0 : 1,
