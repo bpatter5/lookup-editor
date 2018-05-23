@@ -149,14 +149,14 @@ define([
         },
         
         events: {
-			"click #save"                                  : "doSaveLookup",
-			"click #create"                                : "doCreateLookup",
-        	"click .user-context"                          : "doLoadUserContext",
-        	"click #export-file"                           : "doExport",
-        	"click #import-file"                           : "openFileImportModal",
-			"click #refresh"                               : "refreshLookup",
-			"click #edit-acl"                              : "editACLs",
-			"click #open-in-search"                        : "openInSearch"
+			"click #save"           : "doSaveLookup",
+			"click #create"         : "doCreateLookup",
+        	"click .user-context"   : "doLoadUserContext",
+        	"click #export-file"    : "doExport",
+        	"click #import-file"    : "openFileImportModal",
+			"click #refresh"        : "refreshLookup",
+			"click #edit-acl"       : "editACLs",
+			"click #open-in-search" : "openInSearch"
         },
         
         /**
@@ -1400,10 +1400,10 @@ define([
         render: function () {
 			$.when(Capabilities.hasCapability('admin_all_objects')).done(function(has_permission){
 				// Get the information from the lookup to load
-				this.lookup = Splunk.util.getParameter("lookup");
-				this.namespace = Splunk.util.getParameter("namespace");
-				this.owner = Splunk.util.getParameter("owner");
-				this.lookup_type = Splunk.util.getParameter("type");
+				this.lookup = decodeURIComponent(Splunk.util.getParameter("lookup"));
+				this.namespace = decodeURIComponent(Splunk.util.getParameter("namespace"));
+				this.owner = decodeURIComponent(Splunk.util.getParameter("owner"));
+				this.lookup_type = decodeURIComponent(Splunk.util.getParameter("type"));
 				
 				// Determine if we are making a new lookup
 				this.is_new = false;
