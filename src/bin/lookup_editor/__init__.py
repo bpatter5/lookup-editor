@@ -194,8 +194,8 @@ class LookupEditor(LookupBackups):
         correctly; this shouldn't be used for determining the path of a new file.
         """
 
-        # Strip out invalid characters like ".." so that this cannot be used to conduct an
-        # directory traversal
+        # Strip out invalid characters like ".." so that this cannot be used to conduct a
+        # directory traversal attack
         lookup_file = os.path.basename(lookup_file)
         namespace = os.path.basename(namespace)
 
