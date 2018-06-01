@@ -256,6 +256,9 @@ class LookupEditorHandler(rest_handler.RESTHandler):
                 'status': 200 # HTTP status code
             }
 
+        except (AuthorizationFailed, PermissionDeniedException):
+            return self.render_error_json("You do not have permission to perform this operation", 403)
+
         except LookupNameInvalidException:
             return self.render_error_json("Lookup name is invalid", 400)
 

@@ -381,12 +381,15 @@ class LookupEditor(LookupBackups):
 
         # Determine if the lookup file exists, create it if it doesn't
         if resolved_file_path is None:
-            shutil.move(temp_file_name, destination_lookup_full_path)
-            self.logger.info('Lookup created successfully, user=%s, namespace=%s, lookup_file=%s, path="%s"', user, namespace, lookup_file, destination_lookup_full_path)
+            self.logger.debug('Creating a new lookup file, user=%s, namespace=%s, lookup_file=%s, path="%s"', owner, namespace, lookup_file, temp_file_name)
+            
+            lookupfiles.create_lookup_table(filename=temp_file_name,
+                                            lookup_file=lookup_file,
+                                            namespace=namespace,
+                                            owner=owner,
+                                            key=session_key)
 
-            # If the file is new, then make sure that the list is reloaded so that the editors
-            # notice the change
-            lookupfiles.SplunkLookupTableFile.reload(session_key=session_key)
+            self.logger.info('Lookup created successfully, user=%s, namespace=%s, lookup_file=%s, path="%s"', user, namespace, lookup_file, destination_lookup_full_path)
 
         # Edit the existing lookup otherwise
         else:

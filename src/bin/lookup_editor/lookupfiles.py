@@ -10,6 +10,7 @@ from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 
 import os
 import sys
+import shutil
 import tempfile
 import time
 
@@ -70,8 +71,44 @@ def get_lookup_table_location(lookup_name, namespace, owner, key, fullpath=True)
         sys.stderr.write(Errors.ERR_UNKNOWN_EXCEPTION + ': %s\n' % str(e))
         pass
 
+def create_lookup_table(filename, lookup_file, namespace, owner, key):
+    '''
+    Create a new lookup file.
+
+    @param filename: The full path to the replacement lookup table file.
+    @param lookup_file: The lookup FILE name (NOT the stanza name)
+    @param namespace: A Splunk namespace to limit the search to.
+    @param owner: A Splunk user.
+    @param key: A Splunk session key.
+    
+    @return: Boolean success status.
+    
+    WARNING: "owner" should be "nobody" to update
+    a public lookup table file; otherwise the file will be replicated
+    only for the admin user.
+    '''
+    
+    # Create the temporary location path
+    lookup_tmp = make_splunkhome_path(['var', 'run', 'splunk', 'lookup_tmp'])
+    destination_lookup_full_path = os.path.join(lookup_tmp, lookup_file)
+
+    # Copy the file to the temporary location
+    shutil.move(filename, destination_lookup_full_path)
+
+    # CReate the URL for the REST call
+    url = '/servicesNS/%s/%s/data/lookup-table-files' % (owner, namespace)
+    postargs = {
+        'output_mode': 'json',
+        'eai:data': str(destination_lookup_full_path),
+        'name': lookup_file
+    }
+
+    # Perform the call
+    rest.simpleRequest(
+         url, postargs=postargs, sessionKey=key, raiseAllErrors=True)
+
 def update_lookup_table(filename, lookup_file, namespace, owner, key):
-    '''Update a  Splunk lookup table file with a new file.
+    '''Update a Splunk lookup table file with a new file.
     
     @param filename: The full path to the replacement lookup table file.
     @param lookup_file: The lookup FILE name (NOT the stanza name)
@@ -84,29 +121,25 @@ def update_lookup_table(filename, lookup_file, namespace, owner, key):
     WARNING: "owner" should be "nobody" to update
     a public lookup table file; otherwise the file will be replicated
     only for the admin user.
-    
-    Also, the temporary CSV file MUST be located in the following directory:
-    
-        $SPLUNK_HOME/var/run/splunk/lookup_tmp
-        
-    This staging area is hard-coded as a "safe" area in the
-    LookupTableConfPathMapper.
-    
     '''
-    try:
-        # When using Owner passed in should be nobody, otherwise
-        id_val = SplunkLookupTableFile.build_id(lookup_file, namespace, owner)
-        lookup_table_file = SplunkLookupTableFile.get(id_val, sessionKey=key)
-        lookup_table_file.manager()._put_args(id_val, {'eai:data': filename}, sessionKey=key)
-        
-        return True
-    except splunk.ResourceNotFound as e:
-        sys.stderr.write(Errors.ERR_NO_LOOKUP + ': %s\n' % str(e))
-        raise e
+    
+    # Create the temporary location path
+    lookup_tmp = make_splunkhome_path(['var', 'run', 'splunk', 'lookup_tmp'])
+    destination_lookup_full_path = os.path.join(lookup_tmp, lookup_file)
 
-    except Exception as e:
-        sys.stderr.write(Errors.ERR_UNKNOWN_EXCEPTION + ': %s\n' % str(e))
-        raise e
+    # Copy the file to the temporary location
+    shutil.move(filename, destination_lookup_full_path)
+
+    # CReate the URL for the REST call
+    url = '/servicesNS/%s/%s/data/lookup-table-files/%s' % (owner, namespace, lookup_file)
+    postargs = {
+        'output_mode': 'json',
+        'eai:data': str(destination_lookup_full_path)
+    }
+
+    # Perform the call
+    rest.simpleRequest(
+         url, postargs=postargs, sessionKey=key, raiseAllErrors=True)
 
 def get_temporary_lookup_file(prefix=None, basedir=None):
     '''Create a temporary file and return the filehandle.
