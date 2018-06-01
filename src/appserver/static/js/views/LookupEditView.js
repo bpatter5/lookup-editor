@@ -1449,10 +1449,12 @@ define([
 				$.when(Users.getUsers(this.owner, user_descriptions, default_users)).done(function(users){
 					// Sort the users list
 					users = Users.sortUsersList(users, ['nobody', this.owner, Splunk.util.getConfigValue("USERNAME")]);
-						
+					
+					var insufficient_permissions = !has_permission && this.is_new && this.lookup_type === "kv";
+
 					// Render the HTML content
 					this.$el.html(_.template(Template, {
-						'insufficient_permissions' : !has_permission && this.is_new,
+						'insufficient_permissions' : insufficient_permissions,
 						'is_new' : this.is_new,
 						'lookup_name': this.lookup,
 						'lookup_type' : this.lookup_type,
@@ -1487,7 +1489,7 @@ define([
 					console.info("Press CTRL + E to see something interesting");
 
 					// Show the content that is specific to making new lookups
-					if (has_permission && this.is_new) {
+					if (!insufficient_permissions && this.is_new) {
 
 						// Make the lookup name input
 						var name_input = new TextInput({
