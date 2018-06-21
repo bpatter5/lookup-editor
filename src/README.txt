@@ -180,4 +180,6 @@ Change History
 |         | Fixing issue where lookups that were user-owned by a user with a slash couldn't be loaded or deleted             |
 |         | New CSV lookup files are no longer created via direct access                                                     |
 |         | Lookup creation was disallowed unnecessarily for CSVs for non-admins                                             |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.0.4   | Fixing issue where app was incompatible with apps that had copied components from the Lookup Editor              |
 +---------+------------------------------------------------------------------------------------------------------------------+
