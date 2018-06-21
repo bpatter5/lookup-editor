@@ -174,11 +174,13 @@ define([
             // Get the list of fields for this lookup
             $.when(this.getFieldsForLookup(lookup)).done(function(fields){
 
+                var fields_escaped = _.map(fields, function(field){ return field.indexOf(" ") >= 0 ? '"' + field + '"' : field; });
+
                 // Modify the model
                 lookupTransform.entry.content.set('collection', lookup);
                 lookupTransform.entry.content.set('external_type', 'kvstore');
                 lookupTransform.entry.content.set('name', transform_name);
-                lookupTransform.entry.content.set('fields_list', fields.join(","));
+                lookupTransform.entry.content.set('fields_list', fields_escaped.join(","));
 
                 // Kick off the request to edit the entry
                 lookupTransform.save({}, {
