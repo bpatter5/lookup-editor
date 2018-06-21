@@ -182,4 +182,5 @@ Change History
 |         | Lookup creation was disallowed unnecessarily for CSVs for non-admins                                             |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.0.4   | Fixing issue where app was incompatible with apps that had copied components from the Lookup Editor              |
+|         | Fixing issue where transform entry was made incorrectly for KV store lookups with a field name containing a space|                                                     |
 +---------+------------------------------------------------------------------------------------------------------------------+
