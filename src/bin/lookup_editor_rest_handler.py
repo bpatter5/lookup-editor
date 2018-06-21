@@ -12,12 +12,6 @@ from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
 from splunk import AuthorizationFailed, ResourceNotFound
 from splunk.rest import simpleRequest
 
-from lookup_editor import LookupEditor
-from lookup_editor import shortcuts
-from lookup_editor.exceptions import LookupFileTooBigException, PermissionDeniedException, LookupNameInvalidException
-
-from lookup_editor import rest_handler
-
 # The default of the csv module is 128KB; upping to 10MB. See SPL-12117 for
 # the background on issues surrounding field sizes.
 # (this method is new in python 2.5)
@@ -42,6 +36,16 @@ def setup_logger(level):
     return logger
 
 logger = setup_logger(logging.DEBUG)
+
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from lookup_editor import LookupEditor
+from lookup_editor import shortcuts
+from lookup_editor.exceptions import LookupFileTooBigException, PermissionDeniedException, LookupNameInvalidException
+
+from lookup_editor import rest_handler
 
 class LookupEditorHandler(rest_handler.RESTHandler):
     """
