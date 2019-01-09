@@ -713,9 +713,6 @@ define([
         	if(this.lookup_type === "kv"){
         		this.$el.addClass('kv-lookup');
         	}
-        	else{
-        		this.$el.addClass('csv-lookup');
-			}
         	
         	// Make sure some empty rows exist if it is empty
         	if(data.length === 1){
@@ -727,17 +724,18 @@ define([
         	
         	// Make the handsontable instance
         	this.handsontable = new Handsontable(this.$el[0], {
-        	    data: this.lookup_type === "kv" ? data.slice(1) : data,
+        	    data: this.lookup_type === "kv" || this.lookup_type === "csv" ? data.slice(1) : data,
         		startRows: 1,
         		startCols: 1,
         		contextMenu: contextMenu,
         		minSpareRows: 0,
         		minSpareCols: 0,
-        		colHeaders: this.lookup_type === "kv" ? this.table_header : false,
+				colHeaders: this.lookup_type === "kv" || this.lookup_type === "csv" ? this.table_header : false,
+				columnSorting: true,
 				columns: this.lookup_type === 'csv' ? null : this.getColumnsMetadata(),
 				
         		rowHeaders: true,
-        		fixedRowsTop: this.lookup_type === "kv" ? 0 : 1,
+        		fixedRowsTop: this.lookup_type === "kv" || this.lookup_type === "csv" ? 0 : 1,
         		height: function(){ return $(window).height() - 320; }, // Set the window height so that the user doesn't have to scroll to the bottom to set the save button
         		
         		stretchH: 'all',
