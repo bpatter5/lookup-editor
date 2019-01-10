@@ -704,20 +704,17 @@ define([
         		this.$el.addClass('kv-lookup');
         	}
         	
-        	// Make sure some empty rows exist if it is empty
-        	if(data.length === 1){
-        		this.addEmptyRows(data, data[0].length, 5);
-        	}
-        	
         	// Make a variable that defines the this point so that it can be used in the scope of the handsontable handlers
         	self = this;
         	
         	// Make the handsontable instance
         	this.handsontable = new Handsontable(this.$el[0], {
+				// Make sure some empty rows exist if it is empty
+				minRows: 1,
         	    data: this.lookup_type === "kv" || this.lookup_type === "csv" ? data.slice(1) : data,
         		startRows: 1,
         		startCols: 1,
-        		contextMenu: contextMenu,
+				contextMenu: contextMenu,
         		minSpareRows: 0,
         		minSpareCols: 0,
 				colHeaders: this.lookup_type === "kv" || this.lookup_type === "csv" ? this.table_header : false,
