@@ -145,9 +145,6 @@ define([
         	else if (parseFloat(value) > 0) { //if row contains positive number
         		td.className = 'cellPositive';
         	}
-        	else if(row === 0 && this.lookup_type === 'csv') {
-        		td.className = 'cellHeader';
-        	}
         	else if(value !== null && is_a_string && value.toLowerCase() === 'true') {
         		td.className = 'cellTrue';
         	}
@@ -272,15 +269,8 @@ define([
         	if(use_cached && this.table_header !== null){
         		return this.table_header;
         	}
-        	
-        	// If the lookup is a CSV, then the first row is the header
-        	if(this.lookup_type === "csv"){
-        		this.table_header = this.handsontable.getDataAtRow(0);
-        	}
-        	// If the lookup is a KV store lookup, then ask handsontable for the header
-        	else{
-        		this.table_header = this.handsontable.getColHeader();
-        	}
+			
+			this.table_header = this.handsontable.getColHeader();
         	
         	return this.table_header;
         },
@@ -685,7 +675,7 @@ define([
 	    					'remove_row': {
 	    						disabled: function () {
 	    							// If read-only or the first row, disable this option
-	    				            return this.read_only;
+	    				            return this.read_only || (this.handsontable.getSelectedLast() !== undefined && this.handsontable.getSelectedLast()[0] === 0);
 	    				        }.bind(this)
 	    					},
 	    					'remove_col': {
@@ -762,21 +752,7 @@ define([
         		}.bind(this),
         		
         		beforeRemoveRow: function(index, amount){
-        			  
-        			// Don't allow deletion of all cells
-        			if( (this.countRows() - amount) <= 0 && self.lookup_type !== "kv"){
-        				alert("A valid lookup file requires at least one row (for the header).");
-        				return false;
-        			}
-        			  
-        			// Warn about the header being deleted and make sure the user wants to proceed.
-        			if(index === 0 && self.lookup_type !== "kv"){
-        				var continue_with_deletion = confirm("Are you sure you want to delete the header row?\n\nNote that a valid lookup file needs at least a header.");
-        				  
-        				if (!continue_with_deletion){
-        					return false;
-        				}
-        			}
+					// Nothing to do
         		},
         		
         		beforeRemoveCol: function(index, amount){
