@@ -697,9 +697,12 @@ define([
 								}.bind(this),
 			  
 								disabled: function(){
-									var th_elements = document.getElementsByClassName('ht_master handsontable')[0].getElementsByClassName('ht__highlight'),
-										len = this.handsontable.getData().length +1;
-									return th_elements.length != len;
+									var range = this.handsontable.getSelectedRangeLast(),
+										len = this.handsontable.getData().length-1;
+									if (range.from.row === 0 && range.to.row === len){
+										return false;
+									}
+									return true;
 								}.bind(this)
 							},
 							'hsep1': "---------",
