@@ -649,52 +649,71 @@ define([
         	else{
 	    		contextMenu = {
 	    				items: {
-	    					'row_above': {
-	    						disabled: function () {
-	    				            // If read-only or the first row, disable this option
-	    				            return this.read_only || (this.handsontable.getSelected() !== undefined && this.handsontable.getSelected()[0] === 0);
-	    				        }.bind(this)
-	    					},
-	    					'row_below': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					"hsep1": "---------",
-	    					'col_left': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					'col_right': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					'hsep2': "---------",
-	    					'remove_row': {
-	    						disabled: function () {
-	    							// If read-only or the first row, disable this option
-	    				            return this.read_only || (this.handsontable.getSelectedLast() !== undefined && this.handsontable.getSelectedLast()[0] === 0);
-	    				        }.bind(this)
-	    					},
-	    					'remove_col': {
-	    						disabled: function () {
-	    							// If read-only or the first row, disable this option
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
+							'edit': {
+								name: "Edit",
+			  
+								callback: function() { // Callback for specific option
+								  var instance = this.handsontable;
+			  
+								  setTimeout(function() {
+									var input = document.createElement('input'),
+										th = document.getElementsByClassName('ht_master handsontable')[0].getElementsByClassName('ht__highlight')[0],
+										coords = th.cellIndex -1,
+										rect = th.getBoundingClientRect(),
+										addListeners = (events, headers, index) => {
+										  events.split(' ').forEach(e => {
+											input.addEventListener(e, () => {
+											  headers[index] = input.value;
+											  if (input.value.length > 0){
+												  instance.updateSettings({colHeaders: headers});
+											  }
+											  setTimeout(() => {
+												if (input.parentNode) input.parentNode.removeChild(input)
+											  });
+											})
+										  })
+										},
+										appendInput = () => {
+										  input.setAttribute('type', 'text');
+										  input.style.cssText = '' +
+											'position:absolute;' +
+											'left:' + rect.left + 'px;' +
+											'top:' + rect.top + 'px;' +
+											'width:' + (rect.width - 4) + 'px;' +
+											'height:' + (rect.height - 4) + 'px;' +
+											'z-index:1000;' +
+											'text-align:center';
+										  document.body.appendChild(input);
+										};
+			  
+									// Start doing something
+									input.value = th.querySelector('.colHeader').innerText;
+									appendInput();
+									setTimeout(() => {
+										input.select();
+										addListeners('change blur', instance['getColHeader'](), coords);
+									});
+								  }, 0);
+								}.bind(this),
+			  
+								disabled: function(){
+									var th_elements = document.getElementsByClassName('ht_master handsontable')[0].getElementsByClassName('ht__highlight'),
+										len = this.handsontable.getData().length +1;
+									return th_elements.length != len;
+								}.bind(this)
+							},
+							'hsep1': "---------",
+	    					'row_above': {},
+	    					'row_below': {},
+	    					"hsep2": "---------",
+	    					'col_left': {},
+	    					'col_right': {},
 	    					'hsep3': "---------",
-	    					'undo': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					'redo': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					}
+	    					'remove_row': {},
+	    					'remove_col': {},
+	    					'hsep4': "---------",
+	    					'undo': {},
+	    					'redo': {}
 	    				}
 	    		};
         	}
@@ -714,7 +733,7 @@ define([
         	    data: this.lookup_type === "kv" || this.lookup_type === "csv" ? data.slice(1) : data,
         		startRows: 1,
         		startCols: 1,
-				contextMenu: contextMenu,
+				contextMenu: this.lookup_type === "csv" && self.read_only ? false : contextMenu,
         		minSpareRows: 0,
         		minSpareCols: 0,
 				colHeaders: this.lookup_type === "kv" || this.lookup_type === "csv" ? this.table_header : false,
