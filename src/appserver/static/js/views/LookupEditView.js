@@ -964,6 +964,8 @@ define([
 		
 			// Get the row data
 			row_data = this.table_editor_view.getData();
+			header_row_data = this.table_editor_view.getTableHeader(false);
+			row_data.unshift(header_row_data);
 			
 			// Convert the data to JSON
 			json = JSON.stringify(row_data);

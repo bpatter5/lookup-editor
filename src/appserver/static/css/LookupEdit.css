@@ -226,12 +226,6 @@
 	color: green;
 }
 
-/* This selector needs to specific enough to override the built-in styling such that the header looks like the un-editable KV store header */
-.lookup-edit-view .csv-lookup tr > td.cellHeader{
-	background-color: #EEE;
-	text-align: center
-}
-
 .lookup-edit-view .cellTrue{
 	fontstyle: italic;
 	color: green;

@@ -145,9 +145,6 @@ define([
         	else if (parseFloat(value) > 0) { //if row contains positive number
         		td.className = 'cellPositive';
         	}
-        	else if(row === 0 && this.lookup_type === 'csv') {
-        		td.className = 'cellHeader';
-        	}
         	else if(value !== null && is_a_string && value.toLowerCase() === 'true') {
         		td.className = 'cellTrue';
         	}
@@ -272,15 +269,8 @@ define([
         	if(use_cached && this.table_header !== null){
         		return this.table_header;
         	}
-        	
-        	// If the lookup is a CSV, then the first row is the header
-        	if(this.lookup_type === "csv"){
-        		this.table_header = this.handsontable.getDataAtRow(0);
-        	}
-        	// If the lookup is a KV store lookup, then ask handsontable for the header
-        	else{
-        		this.table_header = this.handsontable.getColHeader();
-        	}
+			
+			this.table_header = this.handsontable.getColHeader();
         	
         	return this.table_header;
         },
@@ -659,52 +649,74 @@ define([
         	else{
 	    		contextMenu = {
 	    				items: {
-	    					'row_above': {
-	    						disabled: function () {
-	    				            // If read-only or the first row, disable this option
-	    				            return this.read_only || (this.handsontable.getSelected() !== undefined && this.handsontable.getSelected()[0] === 0);
-	    				        }.bind(this)
-	    					},
-	    					'row_below': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					"hsep1": "---------",
-	    					'col_left': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					'col_right': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					'hsep2': "---------",
-	    					'remove_row': {
-	    						disabled: function () {
-	    							// If read-only or the first row, disable this option
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					'remove_col': {
-	    						disabled: function () {
-	    							// If read-only or the first row, disable this option
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
+							'edit': {
+								name: "Edit",
+			  
+								callback: function() { // Callback for specific option
+								  var instance = this.handsontable;
+			  
+								  setTimeout(function() {
+									var input = document.createElement('input'),
+										th = document.getElementsByClassName('ht_master handsontable')[0].getElementsByClassName('ht__highlight')[0],
+										coords = th.cellIndex -1,
+										rect = th.getBoundingClientRect(),
+										addListeners = (events, headers, index) => {
+										  events.split(' ').forEach(e => {
+											input.addEventListener(e, () => {
+											  headers[index] = input.value;
+											  if (input.value.length > 0){
+												  instance.updateSettings({colHeaders: headers});
+											  }
+											  setTimeout(() => {
+												if (input.parentNode) input.parentNode.removeChild(input)
+											  });
+											})
+										  })
+										},
+										appendInput = () => {
+										  input.setAttribute('type', 'text');
+										  input.style.cssText = '' +
+											'position:absolute;' +
+											'left:' + rect.left + 'px;' +
+											'top:' + rect.top + 'px;' +
+											'width:' + (rect.width - 4) + 'px;' +
+											'height:' + (rect.height - 4) + 'px;' +
+											'z-index:1000;' +
+											'text-align:center';
+										  document.body.appendChild(input);
+										};
+			  
+									// Start doing something
+									input.value = th.querySelector('.colHeader').innerText;
+									appendInput();
+									setTimeout(() => {
+										input.select();
+										addListeners('change blur', instance['getColHeader'](), coords);
+									});
+								  }, 0);
+								}.bind(this),
+			  
+								disabled: function(){
+									var range = this.handsontable.getSelectedRangeLast(),
+										len = this.handsontable.getData().length-1;
+									if (range.from.row === 0 && range.to.row === len){
+										return false;
+									}
+									return true;
+								}.bind(this)
+							},
+							'hsep1': "---------",
+	    					'row_above': {},
+	    					'row_below': {},
+	    					"hsep2": "---------",
+	    					'col_left': {},
+	    					'col_right': {},
 	    					'hsep3': "---------",
-	    					'undo': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					'redo': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					}
+	    					'remove_row': {},
+	    					'remove_col': {},
+	    					'hsep4': "---------",
+	    					'undo': {},
+	    					'redo': {}
 	    				}
 	    		};
         	}
@@ -713,31 +725,26 @@ define([
         	if(this.lookup_type === "kv"){
         		this.$el.addClass('kv-lookup');
         	}
-        	else{
-        		this.$el.addClass('csv-lookup');
-			}
-        	
-        	// Make sure some empty rows exist if it is empty
-        	if(data.length === 1){
-        		this.addEmptyRows(data, data[0].length, 5);
-        	}
         	
         	// Make a variable that defines the this point so that it can be used in the scope of the handsontable handlers
         	self = this;
         	
         	// Make the handsontable instance
         	this.handsontable = new Handsontable(this.$el[0], {
-        	    data: this.lookup_type === "kv" ? data.slice(1) : data,
+				// Make sure some empty rows exist if it is empty
+				minRows: 1,
+        	    data: this.lookup_type === "kv" || this.lookup_type === "csv" ? data.slice(1) : data,
         		startRows: 1,
         		startCols: 1,
-        		contextMenu: contextMenu,
+				contextMenu: this.lookup_type === "csv" && self.read_only ? false : contextMenu,
         		minSpareRows: 0,
         		minSpareCols: 0,
-        		colHeaders: this.lookup_type === "kv" ? this.table_header : false,
+				colHeaders: this.lookup_type === "kv" || this.lookup_type === "csv" ? this.table_header : false,
+				columnSorting: true,
 				columns: this.lookup_type === 'csv' ? null : this.getColumnsMetadata(),
 				
         		rowHeaders: true,
-        		fixedRowsTop: this.lookup_type === "kv" ? 0 : 1,
+        		fixedRowsTop: this.lookup_type === "kv" || this.lookup_type === "csv" ? 0 : 1,
         		height: function(){ return $(window).height() - 320; }, // Set the window height so that the user doesn't have to scroll to the bottom to set the save button
         		
         		stretchH: 'all',
@@ -764,21 +771,7 @@ define([
         		}.bind(this),
         		
         		beforeRemoveRow: function(index, amount){
-        			  
-        			// Don't allow deletion of all cells
-        			if( (this.countRows() - amount) <= 0 && self.lookup_type !== "kv"){
-        				alert("A valid lookup file requires at least one row (for the header).");
-        				return false;
-        			}
-        			  
-        			// Warn about the header being deleted and make sure the user wants to proceed.
-        			if(index === 0 && self.lookup_type !== "kv"){
-        				var continue_with_deletion = confirm("Are you sure you want to delete the header row?\n\nNote that a valid lookup file needs at least a header.");
-        				  
-        				if (!continue_with_deletion){
-        					return false;
-        				}
-        			}
+					// Nothing to do
         		},
         		
         		beforeRemoveCol: function(index, amount){
