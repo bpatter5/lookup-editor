@@ -185,4 +185,6 @@ Change History
 |         | Fixing issue where transform entry was made incorrectly for KV store lookups with a field name containing a space|
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.0.5   | Lookup backup files are no longer replicated to the indexers                                                     |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.1.0   | Numerous improvements to the editor (sorting support, bug fixes, etc.)                                           |
 +---------+------------------------------------------------------------------------------------------------------------------+
