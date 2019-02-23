@@ -221,7 +221,7 @@ define([
         /**
          * Modify the KV store collection schema
          */
-        modifyKVStoreLookupSchema: function(namespace, lookup_file, owner, success_callback){
+        modifyKVStoreLookupSchema: function(namespace, lookup_file, owner, replicate, success_callback){
         	
         	// Set a default value for the owner and callback
         	if( typeof owner == 'undefined' ){
@@ -241,8 +241,8 @@ define([
         		}
         	}
         	
-        	// Enable replication by default
-        	data['replicate'] = 'true';
+        	// Enable replication if necessary
+        	data.replicate = replicate;
         	
 			// Perform the call
         	$.ajax({

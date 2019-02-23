@@ -115,7 +115,8 @@
 }
 
 /* Make the check-box fit with the other inputs */
-.lookup-edit-view #lookup-user-only{
+.lookup-edit-view #lookup-user-only,
+.lookup-edit-view #lookup-replicate{
 	display: inline-block;
     vertical-align: top;
     margin-top: 2px;

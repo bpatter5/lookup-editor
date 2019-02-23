@@ -60,6 +60,12 @@
 							<span class="help-block"><% if(lookup_type === "csv"){ %>Specifies the app where the lookup file will reside<% } else { %>Specifies the app where the collection will reside<% } %></span>
 						</div>
 					</span>
+
+					<% if(lookup_type === "kv"){ %>
+					<span id="replicate-control-group" class="control-group">
+						<div class="input input-checkbox" id="lookup-replicate"></div>
+					</span>
+					<% } %>
 		
 					<div class="alert alert-warning hide warning-message">
 						<i class="icon-alert"></i>

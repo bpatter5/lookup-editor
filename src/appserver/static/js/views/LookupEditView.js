@@ -516,10 +516,15 @@ define([
 		 * @param lookup_file The name of the lookup
 		 * @param owner The owner of the file
          */
-        makeKVStoreLookup: function(namespace, lookup_file, owner){
+        makeKVStoreLookup: function(namespace, lookup_file, replicate, owner){
         	// Set a default value for the owner
         	if( typeof owner == 'undefined' ){
         		owner = 'nobody';
+			}
+			
+        	// Set a default value for the replicate parameter
+        	if( typeof replicate == 'undefined' ){
+        		replicate = false;
         	}
         	
         	// Make the data that will be posted to the server
@@ -545,7 +550,7 @@ define([
 
 						this.initializeKVStoreModel();
         				
-        				this.kv_store_fields_editor.modifyKVStoreLookupSchema(this.namespace, this.lookup, 'nobody', function(){
+        				this.kv_store_fields_editor.modifyKVStoreLookupSchema(this.namespace, this.lookup, 'nobody', replicate, function(){
         					this.showInfoMessage("Lookup created successfully");
         					document.location = "?lookup=" + lookup_file + "&owner=" + owner + "&type=kv&namespace=" + namespace;
         				}.bind(this));
@@ -937,9 +942,15 @@ define([
         		this.setCreateButtonTitle();
         		return;
         	}
-        	
+			
+			// Determine if we are to replicate the lookup
+			var replicate = false;
+			if($.inArray('replicate', mvc.Components.getInstance("lookup-replicate").val()) >= 0){
+				replicate = true;
+			}
+
         	// Make the lookup
-        	this.makeKVStoreLookup(mvc.Components.getInstance("lookup-app").val(), mvc.Components.getInstance("lookup-name").val());
+        	this.makeKVStoreLookup(mvc.Components.getInstance("lookup-app").val(), mvc.Components.getInstance("lookup-name").val(), replicate);
 		},
 
         /**
@@ -1525,6 +1536,17 @@ define([
 						}, { tokens: true }).render();
 
 						user_only_checkbox.on("change", function (newValue) {
+							this.validateForm();
+						}.bind(this));
+
+						// Make the replicate lookup checkbox
+						var replicate_checkbox = new CheckboxGroupInput({
+							"id": "lookup-replicate",
+							"choices": [{ label: "Replicate", value: "replicate" }],
+							"el": $('#lookup-replicate')
+						}, { tokens: true }).render();
+
+						replicate_checkbox.on("change", function (newValue) {
 							this.validateForm();
 						}.bind(this));
 
