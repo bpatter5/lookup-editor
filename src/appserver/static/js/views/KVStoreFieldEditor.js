@@ -121,14 +121,11 @@ define([
         	}
         	
         	// Now check the fields and make sure none match any of the lineages
-        	var lineages_error = false;
-        	
         	for(c = 0; c < this.field_views.length; c++){
         		
         		for(var d = 0; d < lineages.length; d++){
         			if(lineages[d] === this.field_views[c].getFieldName()){
         				this.field_views[c].showErrorMessage("This field's name cannot co-exist with another field that has '" + lineages[d] + '" in its name');
-        				lineages_error = true;
         				return 'The field "' + this.field_views[c].getFieldName() + '" cannot be used';
         			}
         		}
@@ -205,7 +202,7 @@ define([
         	var kv_store_field_view = new KVStoreFieldView({
         		'el' : $('#' + kv_store_field_view_selector, this.$el),
         		'unique_identifier' : kv_store_field_view_selector
-        	})
+        	});
         	
         	// Add the view to the list
         	this.field_views.push(kv_store_field_view);
@@ -338,8 +335,8 @@ define([
         		for(var c = 0; c < this.default_field_count; c++){
         			this.addFieldView('', 'string');
         		}
-        	}
-        	
+			}
+
         }
     });
     
