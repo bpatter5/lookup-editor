@@ -122,6 +122,11 @@
     margin-top: 2px;
 }
 
+.help-icon{
+	margin-top: 12px;
+	display: inline-block;
+}
+
 /* Tell the dialogs to use an inline-block so that they fit nicely next to other elements */
 .lookup-edit-view .info-message,
 .lookup-edit-view .warning-message{

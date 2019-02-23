@@ -67,7 +67,8 @@ define([
 	"backups_list_input",
     "clippy",
     "csv",
-    "bootstrap.dropdown",
+	"bootstrap.dropdown",
+	"bootstrap.tooltip",
     "splunk.util",
     "css!../app/lookup_editor/css/LookupEdit.css",
     "css!../app/lookup_editor/css/lib/clippy.css",
@@ -1604,6 +1605,9 @@ define([
 						});
 
 						this.kv_store_fields_editor.render();
+		
+						// Render the tooltip for the replication option
+						$('[data-toggle="tooltip"]').tooltip();
 
 						$('#lookup-kv-store-edit', this.$el).show();
 						$('#save', this.$el).show();
