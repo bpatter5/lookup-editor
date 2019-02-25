@@ -187,4 +187,6 @@ Change History
 | 3.0.5   | Lookup backup files are no longer replicated to the indexers                                                     |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.1.0   | Numerous improvements to the editor (sorting support, bug fixes, etc.)                                           |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.2.0   | Replication of KV store collections is now optional; the editor gives you the option to disable replication      |
 +---------+------------------------------------------------------------------------------------------------------------------+
