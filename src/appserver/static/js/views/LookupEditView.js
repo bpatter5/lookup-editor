@@ -1137,7 +1137,7 @@ define([
         	
         	// Third, we need to do a post to update the row
             var model = new this.kvStoreModel(record_data);
-
+			
             model.save({wait: true})
                 .done(function(data) {
       		  		this.hideWarningMessage();
