@@ -96,7 +96,7 @@ define([
         },
 
         /**
-         * Cell renderer for HandsOnTable
+         * Cell renderer for HandsOnTable. This function converts the values and applies styling so that users see readable data.
 		 * 
 		 * @param instance The instance of the Handsontable
 		 * @param td The TD element
@@ -391,9 +391,9 @@ define([
         		
         		// Use format.js for the time fields
         		else if(field_info === 'time'){
-        			column.type = 'time';
+					column.type = 'time';
         			column.timeFormat = 'YYYY/MM/DD HH:mm:ss';
-        			column.correctFormat = true;
+        			column.correctFormat = false;
         			column.renderer = this.timeRenderer.bind(this); // Convert epoch times to a readable string
         			column.editor = this.getTimeRenderer();
         		}
@@ -508,6 +508,7 @@ define([
          * Format the time into the standard format.
 		 * 
 		 * @param value The value of the time (a number) to convert into a string
+		 * @param includes_microseconds Whether the value is considered as including microseconds (epoch x 1000) 
          */
         formatTime: function(value, includes_microseconds){
 
@@ -518,7 +519,8 @@ define([
         	if(/^\d+$/.test(value)){
 				var epoch = parseInt(value, 10);
 				
-				if(includes_microseconds){
+				if(!includes_microseconds){
+					// Moment expects micro-seconds in the epoch time value, so adjust accordingly
 					epoch = epoch * 1000;
 				}
 
@@ -542,7 +544,6 @@ define([
          */
         timeRenderer: function(instance, td, row, col, prop, value, cellProperties) {
         	value = this.escapeHtml(Handsontable.helper.stringify(value));
-
 			td.innerHTML = this.formatTime(value);
 
             return td;
@@ -736,7 +737,7 @@ define([
         	    data: this.lookup_type === "kv" || this.lookup_type === "csv" ? data.slice(1) : data,
         		startRows: 1,
         		startCols: 1,
-				contextMenu: this.lookup_type === "csv" && self.read_only ? false : contextMenu,
+				contextMenu: this.lookup_type === "csv" && this.read_only ? false : contextMenu,
         		minSpareRows: 0,
         		minSpareCols: 0,
 				colHeaders: this.lookup_type === "kv" || this.lookup_type === "csv" ? this.table_header : false,
@@ -790,13 +791,6 @@ define([
         			}
         		},
         		
-        		// If all rows have been removed, all in some blank ones
-        		afterRemoveRow: function(index, amount){
-        			if(this.countRows() === 0){
-        				//self.loadLookupContents(self.lookup, self.namespace, self.owner, self.lookup_type, false);
-        			}
-        		},
-        		
         		// Update the cached version of the table header
         		afterColumnMove: function(){
         			this.getTableHeader(false);
@@ -836,13 +830,11 @@ define([
 
         		// For row removal
         		this.handsontable.addHook('beforeRemoveRow', function(index, amount) {
-
         			// Iterate and remove each row
         			for(var c = 0; c < amount; c++){
         				var row = index + c;
                         this.trigger("removeRow", row);
         			}
-
         		}.bind(this));
 
         		// For row creation
@@ -932,7 +924,14 @@ define([
         		
         		// If this is a datetime, then convert it to epoch integer
         		if(column_type === "time"){
-        			value = new Date(value).valueOf();
+					
+					// See if the value is a number already and don't bother converting it if so
+					if(/^[-]?\d+(.\d+)?$/.test(value)){
+						// No need to convert it
+					}
+					else {
+						value = new Date(value).valueOf();
+					}
         		}
         		
         		// Don't allow undefined through
@@ -992,7 +991,6 @@ define([
             div.appendChild(document.createTextNode(str));
             return div.innerHTML;
         },
-
     });
 
     return TableEditorView;
