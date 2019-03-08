@@ -124,11 +124,11 @@ define([
         	}
         	
         	// Execute the renderer
-        	if(row !== 0 && this.isCellTypeInvalid(row, col, value)) { // Cell type is incorrect
+        	if(this.isCellTypeInvalid(row, col, value)) { // Cell type is incorrect
         		td.className = 'cellInvalidType';
 			}
-			else if(row !== 0 && this.getFieldForColumn(col) === "_time") { // Cell type is _time
-				td.innerHTML = this.formatTime(value, true);
+			else if(this.getFieldForColumn(col) === "_time") { // Cell type is _time
+				td.innerHTML = this.formatTime(value, false);
 			}
         	else if(!value || value === '') {
         		td.className = 'cellEmpty';
@@ -492,8 +492,8 @@ define([
         	
         	this.default_editor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
 				// Convert the seconds-since-epoch to a nice string if necessary
-				if(row > 0 && table_header[col] === "_time"){
-					Handsontable.editors.TextEditor.prototype.prepare.apply(this, [row, col, prop, td, formatTime(originalValue, true), cellProperties]);
+				if(table_header[col] === "_time"){
+					Handsontable.editors.TextEditor.prototype.prepare.apply(this, [row, col, prop, td, formatTime(originalValue, false), cellProperties]);
 				}
 				else {
 					Handsontable.editors.TextEditor.prototype.prepare.apply(this, [row, col, prop, td, originalValue, cellProperties]);
@@ -524,7 +524,7 @@ define([
 					epoch = epoch * 1000;
 				}
 
-        		return moment(epoch).format('YYYY/MM/DD HH:mm:ss');
+				return moment(epoch).format('YYYY/MM/DD HH:mm:ss');
         	}
         	else{
         		return value;
