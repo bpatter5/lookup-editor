@@ -319,6 +319,11 @@ define([
     		// Check it if it is an boolean
     		else if(field_type === 'boolean' && !/^(true)|(false)$/.test(value)){
     			return true;
+			}
+			
+    		// Check it if it is an CIDR
+    		else if(field_type === 'cidr' && !/^([0-9]{1,3}\.){3}[0-9]{1,3}(\/([0-9]|[1-2][0-9]|3[0-2]))?$/igm.test(value)){
+    			return true;
     		}
         	
         	return false;
