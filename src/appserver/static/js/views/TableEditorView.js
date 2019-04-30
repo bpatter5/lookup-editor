@@ -177,7 +177,23 @@ define([
         	    td.style.opacity = 0.7;
         	}
         },
-        
+		
+		/**
+		 * Convert a value to the format it needs to be in order to be saved.
+		 * @param {*} value 
+		 */
+		convertTimeValue: function(value){
+			// Try to convert the value to the epoch time
+			var converted_value = new Date(value).valueOf() / 1000;
+
+			// If we couldn't convert it, then pass it through (see https://lukemurphey.net/issues/2262)
+			if(!isNaN(converted_value)){
+				return String(converted_value);
+			}
+
+			return value;
+		},
+
         /**
          * Get the data from the table.
          * 
@@ -188,32 +204,45 @@ define([
         getData: function(){
 			var data = this.handsontable.getData();
 
+			var convert_columns = {};
+
 			// Figure out if any columns must be converted from _time
-			var time_columns = [];
 			var row_header = this.getTableHeader();
 
 			for(var c = 0; c < row_header.length; c++){
         		if(row_header[c] === '_time'){
-        			time_columns.push(c);
+					convert_columns[c] = this.convertTimeValue;
+        		}
+			}
+			
+			// Figure out if any columns must be converted into arrays
+			var array_columns = [];
+
+			for(var c = 0; c < row_header.length; c++){
+				var field_type = this.getFieldType(c);
+        		if(field_type === 'array'){
+        			array_columns.push(c);
         		}
         	}
 
-			// Return the current data if there are no times
-			if(time_columns.length === 0){
+			// Return the current data if there are no times or arrays that need to be converted
+			var convert_columns_count = 0;
+			for (var k in convert_columns) {
+				if (convert_columns.hasOwnProperty(k)) {
+				   ++convert_columns_count;
+				}
+			}
+
+			// No columns need conversion, just return the data
+			if(convert_columns_count === 0){
 				return data;
 			}
 
 			// Process each row
-			for(c = 1; c < data.length; c++){
-				for(var d = 0; d < time_columns.length; d++){
-					var column = time_columns[d];
-
-					// Try to convert the value to the epoch time
-					var converted_value = new Date(data[c][column]).valueOf() / 1000;
-
-					// If we couldn't convert it, then pass it through (see https://lukemurphey.net/issues/2262)
-					if(!isNaN(converted_value)){
-						data[c][column] = String(converted_value);
+			for(c = 0; c < data.length; c++){
+				for(column = 0; column < data[c].length; column++){
+					if(column in convert_columns){
+						data[c][column] = convert_columns[column](data[c][column]);
 					}
 				}
 			}
@@ -937,6 +966,11 @@ define([
 					else {
 						value = new Date(value).valueOf();
 					}
+				}
+				
+        		// If this is a array, then convert it to an array
+        		if(column_type === "array"){
+					value = JSON.parse(value);
         		}
         		
         		// Don't allow undefined through
