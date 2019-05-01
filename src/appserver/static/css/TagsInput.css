@@ -19,3 +19,11 @@
 .arrayValue + input {
     min-width: 500px;
 }
+
+.arrayValue.label.label-readonly{
+    color: white;
+    margin-right: 2px;
+    margin-bottom: 2px;
+    padding-left: 8px;
+    padding-right: 8px;
+}

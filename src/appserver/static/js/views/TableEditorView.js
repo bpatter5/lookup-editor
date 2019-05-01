@@ -454,7 +454,7 @@ define([
 				
         		// Use the tags input for the array fields
         		else if(field_info === 'array'){
-        			// column.renderer = this.arrayRenderer.bind(this);
+        			column.renderer = this.arrayRenderer.bind(this);
 					column.editor = ArrayEditor;
         		}
         		
@@ -502,7 +502,42 @@ define([
 			td.innerHTML = formatTime(value);
 
             return td;
-        },
+		},
+		
+        /**
+         * Render array content (as a set of labels)
+		 * 
+		 * @param instance The instance of the Handsontable
+		 * @param td The TD element
+		 * @param row The row number
+		 * @param col The column number
+		 * @param prop
+		 * @param value The value of the cell
+		 * @param cellProperties
+         */
+		arrayRenderer: function(instance, td, row, col, prop, value, cellProperties) {
+			// Stop if the content is empty
+			if(value.length === 0){
+				td.innerHTML = "";
+			}
+
+			// Try to parse the content
+			else {
+				try {
+					var values = JSON.parse(value);
+
+					// Make the HTML
+					var labels_template = _.template('<% for(var c = 0; c < values.length; c++){ %><span class="label label-default label-readonly arrayValue"><%- values[c] %></span><% } %>');
+
+					td.innerHTML = labels_template({ values: values});
+				}
+				catch(err) {
+					
+				}
+			}
+
+            return td;
+		},
 
         /**
          * Escape HTML content
