@@ -15,6 +15,7 @@ require.config({
 		pikaday: "../app/lookup_editor/js/lib/pikaday/pikaday",
 		numbro: "../app/lookup_editor/js/lib/numbro/numbro",
 		moment: '../app/lookup_editor/js/lib/moment/moment',
+		formatTime: '../app/lookup_editor/js/utils/formatTime',
 		console: '../app/lookup_editor/js/lib/console',
 		arrayeditor: '../app/lookup_editor/js/lib/HotEditors/ArrayEditor',
 		forgivingcheckboxeditor: '../app/lookup_editor/js/lib/HotEditors/ForgivingCheckboxEditor',
@@ -39,6 +40,7 @@ define([
 	"Handsontable",
 	"arrayeditor",
 	"forgivingcheckboxeditor",
+	"formatTime",
 	"bootstrap-tags-input",
     "splunk.util",
 	"css!../app/lookup_editor/css/lib/handsontable.full.css",
@@ -52,7 +54,8 @@ define([
 	moment,
 	Handsontable,
 	ArrayEditor,
-	ForgivingCheckboxEditor
+	ForgivingCheckboxEditor,
+	formatTime
 ){
 
     // Define the custom view class
@@ -140,7 +143,7 @@ define([
         		td.className = 'cellInvalidType';
 			}
 			else if(this.getFieldForColumn(col) === "_time") { // Cell type is _time
-				td.innerHTML = this.formatTime(value, false);
+				td.innerHTML = formatTime(value, false);
 			}
         	else if(!value || value === '') {
         		td.className = 'cellEmpty';
@@ -490,8 +493,6 @@ define([
         	
         	this.time_editor = Handsontable.editors.TextEditor.prototype.extend();
         	
-        	var formatTime = this.formatTime;
-        	
         	this.time_editor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
         		// Convert the seconds-since-epoch to a nice string.
         		Handsontable.editors.TextEditor.prototype.prepare.apply(this, [row, col, prop, td, formatTime(originalValue), cellProperties]);
@@ -512,7 +513,6 @@ define([
         	
         	this.default_editor = Handsontable.editors.TextEditor.prototype.extend();
         	
-			var formatTime = this.formatTime;
 			var table_header = this.getTableHeader();
         	
         	this.default_editor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
@@ -526,34 +526,6 @@ define([
         	};
         	
         	return this.default_editor;
-        },
-
-
-        /**
-         * Format the time into the standard format.
-		 * 
-		 * @param value The value of the time (a number) to convert into a string
-		 * @param includes_microseconds Whether the value is considered as including microseconds (epoch x 1000) 
-         */
-        formatTime: function(value, includes_microseconds){
-
-			if(typeof includes_microseconds === "undefined"){
-				includes_microseconds = false;
-			}
-
-        	if(/^\d+$/.test(value)){
-				var epoch = parseInt(value, 10);
-				
-				if(!includes_microseconds){
-					// Moment expects micro-seconds in the epoch time value, so adjust accordingly
-					epoch = epoch * 1000;
-				}
-
-				return moment(epoch).format('YYYY/MM/DD HH:mm:ss');
-        	}
-        	else{
-        		return value;
-        	}
         },
         
         /**
@@ -569,7 +541,7 @@ define([
          */
         timeRenderer: function(instance, td, row, col, prop, value, cellProperties) {
         	value = this.escapeHtml(Handsontable.helper.stringify(value));
-			td.innerHTML = this.formatTime(value);
+			td.innerHTML = formatTime(value);
 
             return td;
         },
