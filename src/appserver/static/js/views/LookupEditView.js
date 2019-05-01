@@ -1128,13 +1128,19 @@ define([
         		return;
         	}
         	
-        	// Second, we need to get all of the data from the given row because we must re-post all of the cell data
-        	var record_data = this.table_editor_view.makeRowJSON(row);
+			// Second, we need to get all of the data from the given row because we must re-post all of the cell data
+			try{
+				var record_data = this.table_editor_view.makeRowJSON(row);
+			}
+			catch(err){
+				alert(err);
+				return;
+			}
 
 			if(_key !== null && _key !== undefined && _key.length > 0){
 				record_data._key = _key;
 			}
-        	
+
         	// Third, we need to do a post to update the row
             var model = new this.kvStoreModel(record_data);
 			
