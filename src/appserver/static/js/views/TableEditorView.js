@@ -17,6 +17,7 @@ require.config({
 		moment: '../app/lookup_editor/js/lib/moment/moment',
 		console: '../app/lookup_editor/js/lib/console',
 		arrayeditor: '../app/lookup_editor/js/lib/HotEditors/ArrayEditor',
+		forgivingcheckboxeditor: '../app/lookup_editor/js/lib/HotEditors/ForgivingCheckboxEditor',
 		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min"
     },
     shim: {
@@ -37,6 +38,7 @@ define([
 	"moment",
 	"Handsontable",
 	"arrayeditor",
+	"forgivingcheckboxeditor",
 	"bootstrap-tags-input",
     "splunk.util",
 	"css!../app/lookup_editor/css/lib/handsontable.full.css",
@@ -49,7 +51,8 @@ define([
     SimpleSplunkView,
 	moment,
 	Handsontable,
-	ArrayEditor
+	ArrayEditor,
+	ForgivingCheckboxEditor
 ){
 
     // Define the custom view class
@@ -74,9 +77,7 @@ define([
             this.table_header = null; // This will store the header of the table so that can recall the relative offset of the fields in the table
 
             // These are copies of editor classes used with the handsontable
-            this.forgiving_checkbox_editor = null;
 			this.time_editor = null;
-			this.array_editor = null;
 			this.default_editor = null;
         },
 
@@ -431,7 +432,7 @@ define([
         		// Use a checkbox for the boolean
         		if(field_info === 'boolean'){
         			column.type = 'checkbox';
-        			column.editor = this.getCheckboxRenderer();
+        			column.editor = ForgivingCheckboxEditor;
         		}
         		
         		// Use format.js for the time fields
@@ -475,33 +476,6 @@ define([
             		this.handsontable.render(); 
             	}
         	}
-        },
-
-
-        /**
-         * Get checkbox cell renderer that doesn't lock users out of fixing values that are invalid booleans.
-         */
-        getCheckboxRenderer: function(){
-        	
-        	// Return the existing checkbox editor
-        	if(this.forgiving_checkbox_editor !== null){
-        		return this.forgiving_checkbox_editor;
-        	}
-        	
-        	this.forgiving_checkbox_editor = Handsontable.editors.CheckboxEditor.prototype.extend();
-        	
-        	this.forgiving_checkbox_editor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
-        		
-        		// If the value is invalid, then set it to false and allow the user to edit it
-        		if(originalValue !== true && originalValue !== false){
-            		console.warn("This cell is not a boolean value, it will be populated with 'false', cell=(" + row + ", " + col + ")");
-            		this.instance.setDataAtCell(row, col, false);
-        		}
-        		
-        		Handsontable.editors.CheckboxEditor.prototype.prepare.apply(this, arguments);
-        	};
-        	
-        	return this.forgiving_checkbox_editor;
         },
         
         /**
