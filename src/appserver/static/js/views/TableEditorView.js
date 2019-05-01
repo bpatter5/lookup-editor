@@ -38,7 +38,8 @@ define([
 	"bootstrap-tags-input",
     "splunk.util",
 	"css!../app/lookup_editor/css/lib/handsontable.full.css",
-	"css!../app/lookup_editor/js/lib/bootstrap-tagsinput.css"
+	"css!../app/lookup_editor/js/lib/bootstrap-tagsinput.css",
+	"css!../app/lookup_editor/css/TagsInput.css"
 ], function(
     _,
     Backbone,
@@ -545,7 +546,8 @@ define([
 				// Create the tags input widget
 				$(this.TEXTAREA).tagsinput({
 					confirmKeys: [44],
-					allowDuplicates: true
+					allowDuplicates: true,
+					tagClass: 'label label-info arrayValue'
 				});
 			};
 
