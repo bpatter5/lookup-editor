@@ -28,6 +28,8 @@ define([
         // Call the original createElements method
         Handsontable.editors.TextEditor.prototype.createElements.apply(this, arguments);
 
+        $(this.TEXTAREA).attr("placeholder", "Enter values separated by commas; click outside the cell to persist the value");
+
         // Create the tags input widget
         $(this.TEXTAREA).tagsinput({
             confirmKeys: [44],

@@ -15,3 +15,7 @@
 .arrayValue .bootstrap-tagsinput>.label-info {
     text-transform: none;
 }
+
+.arrayValue + input {
+    min-width: 500px;
+}
