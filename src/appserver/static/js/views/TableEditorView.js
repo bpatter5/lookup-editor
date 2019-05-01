@@ -18,7 +18,9 @@ require.config({
 		formatTime: '../app/lookup_editor/js/utils/formatTime',
 		console: '../app/lookup_editor/js/lib/console',
 		arrayeditor: '../app/lookup_editor/js/lib/HotEditors/ArrayEditor',
+		defaulteditor: '../app/lookup_editor/js/lib/HotEditors/DefaultEditor',
 		forgivingcheckboxeditor: '../app/lookup_editor/js/lib/HotEditors/ForgivingCheckboxEditor',
+		timeeditor: '../app/lookup_editor/js/lib/HotEditors/TimeEditor',
 		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min"
     },
     shim: {
@@ -40,6 +42,8 @@ define([
 	"Handsontable",
 	"arrayeditor",
 	"forgivingcheckboxeditor",
+	"timeeditor",
+	"defaulteditor",
 	"formatTime",
 	"bootstrap-tags-input",
     "splunk.util",
@@ -55,6 +59,8 @@ define([
 	Handsontable,
 	ArrayEditor,
 	ForgivingCheckboxEditor,
+	TimeEditor,
+	DefaultEditor,
 	formatTime
 ){
 
@@ -80,7 +86,6 @@ define([
             this.table_header = null; // This will store the header of the table so that can recall the relative offset of the fields in the table
 
             // These are copies of editor classes used with the handsontable
-			this.time_editor = null;
 			this.default_editor = null;
         },
 
@@ -444,7 +449,7 @@ define([
         			column.timeFormat = 'YYYY/MM/DD HH:mm:ss';
         			column.correctFormat = false;
         			column.renderer = this.timeRenderer.bind(this); // Convert epoch times to a readable string
-        			column.editor = this.getTimeRenderer();
+        			column.editor = TimeEditor;
 				}
 				
         		// Use the tags input for the array fields
@@ -479,53 +484,6 @@ define([
             		this.handsontable.render(); 
             	}
         	}
-        },
-        
-        /**
-         * Get time renderer that handles conversion from epoch to a string so that the user doesn't have to edit a number.
-         */
-        getTimeRenderer: function(){
-        	
-        	// Return the existing editor
-        	if(this.time_editor !== null){
-        		return this.time_editor;
-        	}
-        	
-        	this.time_editor = Handsontable.editors.TextEditor.prototype.extend();
-        	
-        	this.time_editor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
-        		// Convert the seconds-since-epoch to a nice string.
-        		Handsontable.editors.TextEditor.prototype.prepare.apply(this, [row, col, prop, td, formatTime(originalValue), cellProperties]);
-        	};
-        	
-        	return this.time_editor;
-		},
-		
-        /**
-         * Get the default editor that handles _time values.
-         */
-        getDefaultEditor: function(){
-        	
-        	// Return the existing editor
-        	if(this.default_editor !== null){
-        		return this.default_editor;
-        	}
-        	
-        	this.default_editor = Handsontable.editors.TextEditor.prototype.extend();
-        	
-			var table_header = this.getTableHeader();
-        	
-        	this.default_editor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
-				// Convert the seconds-since-epoch to a nice string if necessary
-				if(table_header[col] === "_time"){
-					Handsontable.editors.TextEditor.prototype.prepare.apply(this, [row, col, prop, td, formatTime(originalValue, false), cellProperties]);
-				}
-				else {
-					Handsontable.editors.TextEditor.prototype.prepare.apply(this, [row, col, prop, td, originalValue, cellProperties]);
-				}
-        	};
-        	
-        	return this.default_editor;
         },
         
         /**
@@ -754,7 +712,7 @@ define([
         		allowRemoveColumn: this.lookup_type === "kv" ? false : true,
         		
 				renderer: this.lookupRenderer.bind(this),
-				editor: this.lookup_type !== 'csv' ? Handsontable.editors.TextEditor : this.getDefaultEditor(),
+				editor: this.lookup_type !== 'csv' ? Handsontable.editors.TextEditor : DefaultEditor,
         		
         		cells: function(row, col, prop) {
         			  
