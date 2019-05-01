@@ -191,4 +191,6 @@ Change History
 | 3.2.0   | Replication of KV store collections is now optional; the editor gives you the option to disable replication      |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.2.1   | Fixed issue where time values in KV lookups were being converted incorrectly                                     |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.3.0   | Added support for CIDR and array KV store field types                                                            |
 +---------+------------------------------------------------------------------------------------------------------------------+
