@@ -16,6 +16,7 @@ require.config({
 		numbro: "../app/lookup_editor/js/lib/numbro/numbro",
 		moment: '../app/lookup_editor/js/lib/moment/moment',
 		console: '../app/lookup_editor/js/lib/console',
+		arrayeditor: '../app/lookup_editor/js/lib/HotEditors/ArrayEditor',
 		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min"
     },
     shim: {
@@ -35,6 +36,7 @@ define([
     "splunkjs/mvc/simplesplunkview",
 	"moment",
 	"Handsontable",
+	"arrayeditor",
 	"bootstrap-tags-input",
     "splunk.util",
 	"css!../app/lookup_editor/css/lib/handsontable.full.css",
@@ -46,7 +48,8 @@ define([
     $,
     SimpleSplunkView,
 	moment,
-	Handsontable
+	Handsontable,
+	ArrayEditor
 ){
 
     // Define the custom view class
@@ -443,7 +446,7 @@ define([
         		// Use the tags input for the array fields
         		else if(field_info === 'array'){
         			// column.renderer = this.arrayRenderer.bind(this);
-        			column.editor = this.getArrayRenderer();
+					column.editor = ArrayEditor;
         		}
         		
         		// Handle number fields
@@ -521,64 +524,6 @@ define([
         	};
         	
         	return this.time_editor;
-		},
-
-        /**
-         * Get renderer that handles conversion to/from a list of tags.
-         */
-        getArrayRenderer: function(){
-        	
-        	// Return the existing editor
-        	if(this.array_editor !== null){
-        		return this.array_editor;
-        	}
-        	
-			this.array_editor = Handsontable.editors.TextEditor.prototype.extend();
-
-			this.array_editor.prototype.createElements = function () {
-				// Call the original createElements method
-				Handsontable.editors.TextEditor.prototype.createElements.apply(this, arguments);
-
-				// Get the array value
-				var value = $(this.TEXTAREA).val();
-				var values = [];
-
-				// Create the tags input widget
-				$(this.TEXTAREA).tagsinput({
-					confirmKeys: [44],
-					allowDuplicates: true,
-					tagClass: 'label label-info arrayValue'
-				});
-			};
-
-			this.array_editor.prototype.getValue = function () {
-				var value = Handsontable.editors.TextEditor.prototype.getValue.apply(this, arguments);
-
-				// Stop if we have no value
-				if(value.length === 0) {
-					return "";
-				}
-
-				return JSON.stringify($(this.TEXTAREA).tagsinput('items'));
-			};
-
-			this.array_editor.prototype.setValue = function (new_value) {
-				Handsontable.editors.TextEditor.prototype.setValue.apply(this, arguments);
-
-				$(this.TEXTAREA).tagsinput('removeAll');
-				try {
-					values = JSON.parse(new_value);
-					for(var c=0; c < values.length;c++){
-						$(this.TEXTAREA).tagsinput('add', values[c]);
-					}
-					
-				}
-				catch(err) {
-					// The value could not be parsed
-				}
-			};
-        	
-        	return this.array_editor;
 		},
 		
         /**
