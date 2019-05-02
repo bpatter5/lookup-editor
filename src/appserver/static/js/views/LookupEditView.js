@@ -1131,9 +1131,10 @@ define([
 			// Second, we need to get all of the data from the given row because we must re-post all of the cell data
 			try{
 				var record_data = this.table_editor_view.makeRowJSON(row);
+				this.hideWarningMessage();
 			}
 			catch(err){
-				alert(err);
+				this.showWarningMessage(err);
 				return;
 			}
 

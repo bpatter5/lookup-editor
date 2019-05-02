@@ -896,7 +896,7 @@ define([
 		 * @param row The number to convert
          */
         makeRowJSON: function(row){
-        	
+
         	// We need to get the row meta-data and the 
         	var row_header = this.getTableHeader();
         	var row_data = this.handsontable.getDataAtRow(row);
