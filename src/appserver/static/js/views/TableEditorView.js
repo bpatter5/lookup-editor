@@ -447,7 +447,8 @@ define([
         		else if(field_info === 'time'){
 					column.type = 'time';
         			column.timeFormat = 'YYYY/MM/DD HH:mm:ss';
-        			column.correctFormat = false;
+					column.correctFormat = false;
+					column.timeIncludesMilliseconds = this.lookup_type === "kv";
         			column.renderer = this.timeRenderer.bind(this); // Convert epoch times to a readable string
         			column.editor = TimeEditor;
 				}
@@ -499,7 +500,7 @@ define([
          */
         timeRenderer: function(instance, td, row, col, prop, value, cellProperties) {
         	value = this.escapeHtml(Handsontable.helper.stringify(value));
-			td.innerHTML = formatTime(value);
+			td.innerHTML = formatTime(value, this.lookup_type === "kv");
 
             return td;
 		},

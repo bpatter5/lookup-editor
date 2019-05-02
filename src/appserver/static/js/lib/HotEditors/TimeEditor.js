@@ -23,10 +23,18 @@ define([
     formatTime
 ){
     TimeEditor = Handsontable.editors.TextEditor.prototype.extend();
-        	
+    TimeEditor.useEpoch = false;
+
     TimeEditor.prototype.prepare = function(row, col, prop, td, originalValue, cellProperties){
+        // Determine if the time is supposed to be considered contains milliseconds
+        var timeIncludesMilliseconds = false;
+
+        if(typeof this.instance.getSettings().columns[col].timeIncludesMilliseconds !== "undefined"){
+            timeIncludesMilliseconds = this.instance.getSettings().columns[col].timeIncludesMilliseconds;
+        }
+
         // Convert the seconds-since-epoch to a nice string.
-        Handsontable.editors.TextEditor.prototype.prepare.apply(this, [row, col, prop, td, formatTime(originalValue), cellProperties]);
+        Handsontable.editors.TextEditor.prototype.prepare.apply(this, [row, col, prop, td, formatTime(originalValue, timeIncludesMilliseconds), cellProperties]);
     };
 
     return TimeEditor;
