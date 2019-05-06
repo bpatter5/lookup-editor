@@ -5,7 +5,7 @@ require.config({
 		numbro: "../app/lookup_editor/js/lib/numbro/numbro",
 		moment: '../app/lookup_editor/js/lib/moment/moment',
         console: '../app/lookup_editor/js/lib/console',
-        formatTime: '../app/lookup_editor/js/utils/formatTime',
+        formatTime: '../app/lookup_editor/js/utils/FormatTime',
 		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min"
     },
     shim: {

@@ -15,7 +15,7 @@ require.config({
 		pikaday: "../app/lookup_editor/js/lib/pikaday/pikaday",
 		numbro: "../app/lookup_editor/js/lib/numbro/numbro",
 		moment: '../app/lookup_editor/js/lib/moment/moment',
-		formatTime: '../app/lookup_editor/js/utils/formatTime',
+		formatTime: '../app/lookup_editor/js/utils/FormatTime',
 		console: '../app/lookup_editor/js/lib/console',
 		arrayeditor: '../app/lookup_editor/js/lib/HotEditors/ArrayEditor',
 		defaulteditor: '../app/lookup_editor/js/lib/HotEditors/DefaultEditor',
@@ -518,7 +518,7 @@ define([
          */
 		arrayRenderer: function(instance, td, row, col, prop, value, cellProperties) {
 			// Stop if the content is empty
-			if(value.length === 0){
+			if(value === null || value.length === 0){
 				td.innerHTML = "";
 			}
 
