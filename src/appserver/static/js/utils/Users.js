@@ -36,25 +36,32 @@ define([
 		 * @param owner The name of the owner of the lookup (so that the list can denote which of the users in the list is the owner)
          */
         getUsers: function(owner, descriptions, other_users){
-        	
-        	// Get a promise ready
-        	var promise = jQuery.Deferred();
-        	
-        	// Make the URL to get the list of users
-        	var uri = Splunk.util.make_url("/splunkd/__raw/services/admin/users?output_mode=json");
 
-        	// Let's do this
-        	jQuery.ajax({
-            	url:     uri,
-                type:    'GET',
-                success: function(result) {
-                	promise.resolve(this.makeUsersList(owner, result.entry, descriptions, other_users));
-                }.bind(this),
-                error: function() {
-                	// This typlically happens when the user doesn't have access to the list of users (a non-admin account)
-                	promise.resolve(this.makeUsersList(owner, null, descriptions, other_users));
-                }.bind(this)
-            });
+        	// Get a promise ready
+            var promise = jQuery.Deferred();
+            
+            // If this is the free license, then just return an empty array
+            if ($C.SPLUNKD_FREE_LICENSE) {
+                promise.resolve([]);
+            }
+            else {        	
+                // Make the URL to get the list of users
+                var uri = Splunk.util.make_url("/splunkd/__raw/services/admin/users?output_mode=json");
+
+                // Let's do this
+                jQuery.ajax({
+                    url:     uri,
+                    type:    'GET',
+                    success: function(result) {
+                        promise.resolve(this.makeUsersList(owner, result.entry, descriptions, other_users));
+                    }.bind(this),
+                    error: function() {
+                        // This typlically happens when the user doesn't have access to the list of users (a non-admin account)
+                        promise.resolve(this.makeUsersList(owner, null, descriptions, other_users));
+                    }.bind(this)
+                });
+
+            }
         	
         	return promise;
         	
