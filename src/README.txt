@@ -196,4 +196,6 @@ Change History
 |         | Fixed issue where time values in KV store lookups were being converted incorrectly                               |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.3.1   | Fixed error when attempting to edit KV store lookup file                                                         |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.3.2   | Fixing issue where filtering on the lookup list didn't work correctly in some cases                              |
 +---------+------------------------------------------------------------------------------------------------------------------+
