@@ -331,7 +331,14 @@ define([
         	var filter = $(ev.target).text();
         	this.setScopeFilter(filter);
         },
-        
+		
+		/**
+		 * Escape a regular expression.
+		 */
+		escapeRegEx: function(string) {
+			return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+		},
+
         /**
          * Set the scope filter
          */
@@ -531,7 +538,7 @@ define([
         	
         	// Get the type filter
         	if( this.filter_type !== null ){
-        		this.data_table.columns(1).search( "^" + this.filter_type + "$", true );
+        		this.data_table.columns(1).search( "^" + this.escapeRegEx(this.filter_type) + "$", true );
         	}
         	else{
         		this.data_table.columns(1).search( "" );
@@ -539,7 +546,7 @@ define([
         	
         	// Get the app filter
         	if( this.filter_app !== null ){
-        		this.data_table.columns(2).search( "^" + this.filter_app + "$", true );
+        		this.data_table.columns(2).search( "^" + this.escapeRegEx(this.filter_app) + "$", true );
         	}
         	else{
         		this.data_table.columns(2).search( "" );
@@ -547,7 +554,7 @@ define([
         	
         	// Get the scope filter
         	if( this.filter_scope !== null ){
-        		this.data_table.columns(3).search( "^" + this.filter_scope + "$", true );
+        		this.data_table.columns(3).search( "^" + this.escapeRegEx(this.filter_scope) + "$", true );
         	}
         	else{
         		this.data_table.columns(3).search( "" );
