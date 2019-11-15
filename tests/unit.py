@@ -208,19 +208,19 @@ class TestLookupShortcuts(LookupEditorTestCase):
         """
 
         # Global lookup
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", namespace="some_app")), "/etc/apps/some_app/lookups/test.csv")
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv")), "/etc/apps/lookup_editor/lookups/test.csv")
+        self.assertEqual(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", namespace="some_app")), "/etc/apps/some_app/lookups/test.csv")
+        self.assertEqual(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv")), "/etc/apps/lookup_editor/lookups/test.csv")
 
         # User lookup
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner='some_user')), "/etc/users/some_user/lookup_editor/lookups/test.csv")
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", namespace="some_app", owner='some_user')), "/etc/users/some_user/some_app/lookups/test.csv")
+        self.assertEqual(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner='some_user')), "/etc/users/some_user/lookup_editor/lookups/test.csv")
+        self.assertEqual(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", namespace="some_app", owner='some_user')), "/etc/users/some_user/some_app/lookups/test.csv")
 
         # A user of nobody
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner='nobody')), "/etc/apps/lookup_editor/lookups/test.csv")
+        self.assertEqual(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner='nobody')), "/etc/apps/lookup_editor/lookups/test.csv")
 
         # A user of blank
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner='')), "/etc/apps/lookup_editor/lookups/test.csv")
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner=' ')), "/etc/apps/lookup_editor/lookups/test.csv")
+        self.assertEqual(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner='')), "/etc/apps/lookup_editor/lookups/test.csv")
+        self.assertEqual(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner=' ')), "/etc/apps/lookup_editor/lookups/test.csv")
 
     def test_make_lookup_filename_invalid(self):
         """
@@ -229,13 +229,13 @@ class TestLookupShortcuts(LookupEditorTestCase):
         """
 
         # Invalid characters
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("../test.csv")),
+        self.assertEqual(self.strip_splunk_path(shortcuts.make_lookup_filename("../test.csv")),
                           "/etc/apps/lookup_editor/lookups/test.csv")
 
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", namespace="../some_app")),
+        self.assertEqual(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", namespace="../some_app")),
                           "/etc/apps/some_app/lookups/test.csv")
     
-        self.assertEquals(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner="../some_user")),
+        self.assertEqual(self.strip_splunk_path(shortcuts.make_lookup_filename("test.csv", owner="../some_user")),
                           "/etc/users/some_user/lookup_editor/lookups/test.csv")
 
     def test_flatten_dict(self):
@@ -245,9 +245,9 @@ class TestLookupShortcuts(LookupEditorTestCase):
 
         d = '{ "name" : "Test", "configuration" : { "views" : [ { "name" : "some_view", "app" : "some_app" } ], "delay" : 300, "delay_readable" : "5m", "hide_chrome" : true, "invert_colors" : true }, "_user" : "nobody", "_key" : "123456789" }'
         flattened_d = shortcuts.flatten_dict(json.loads(d))
-        self.assertEquals(flattened_d['configuration.delay'], 300)
-        self.assertEquals(flattened_d['configuration.views'][0]['app'], 'some_app')
-        self.assertEquals(flattened_d['name'], "Test")
+        self.assertEqual(flattened_d['configuration.delay'], 300)
+        self.assertEqual(flattened_d['configuration.views'][0]['app'], 'some_app')
+        self.assertEqual(flattened_d['name'], "Test")
 
     def test_flatten_dict_specified_fields(self):
         """
@@ -257,12 +257,12 @@ class TestLookupShortcuts(LookupEditorTestCase):
         d = '{ "name" : "Test", "configuration" : { "views" : [ { "name" : "some_view", "app" : "some_app" } ], "delay" : 300, "delay_readable" : "5m", "hide_chrome" : true, "invert_colors" : true }, "_user" : "nobody", "_key" : "123456789" }'
         flattened_d = shortcuts.flatten_dict(json.loads(d), fields=['name', 'configuration', '_user', '_key'])
 
-        self.assertEquals(flattened_d['name'], 'Test')
+        self.assertEqual(flattened_d['name'], 'Test')
 
         # Now parse the text within the configuration element and make sure it is the expected JSON
         c = json.loads(flattened_d['configuration'])
 
-        self.assertEquals(c['views'][0]["name"], 'some_view')
+        self.assertEqual(c['views'][0]["name"], 'some_view')
 
 class TestLookupEditor(LookupEditorTestCase):
     """
@@ -282,7 +282,7 @@ class TestLookupEditor(LookupEditorTestCase):
                                                                False, None,
                                                                session_key=self.get_session_key())
 
-        self.assertEquals(self.strip_splunk_path(file_path),
+        self.assertEqual(self.strip_splunk_path(file_path),
                           '/etc/apps/' + TEST_CSV_APP + '/lookups/test.csv')
 
     @skipIfCantAuthenticate
@@ -295,7 +295,7 @@ class TestLookupEditor(LookupEditorTestCase):
                                                                False, '1234',
                                                                session_key=self.get_session_key())
 
-        self.assertEquals(self.strip_splunk_path(file_path),
+        self.assertEqual(self.strip_splunk_path(file_path),
                           '/etc/apps/' + TEST_CSV_APP + '/lookups/lookup_file_backups/search/nobody/test.csv/1234')
         
     @skipIfCantAuthenticate
@@ -308,7 +308,7 @@ class TestLookupEditor(LookupEditorTestCase):
         file_path = self.lookup_editor.resolve_lookup_filename('test.csv', 'search', None, False,
                                                  '1234', session_key=self.get_session_key())
 
-        self.assertEquals(self.strip_splunk_path(file_path),
+        self.assertEqual(self.strip_splunk_path(file_path),
                           '/etc/apps/' + TEST_CSV_APP + '/lookups/lookup_file_backups/search/nobody/test.csv/1234')
 
     @skipIfLookupTestNotInstalled
@@ -319,7 +319,7 @@ class TestLookupEditor(LookupEditorTestCase):
 
         fields = self.lookup_editor.get_kv_fields_from_transform(self.get_session_key(), 'test_kv_store_transform_fields', 'lookup_test', None)
 
-        self.assertEquals(len(fields), 4)
+        self.assertEqual(len(fields), 4)
 
 class TestLookupBackups(LookupEditorTestCase):
     """
@@ -339,7 +339,7 @@ class TestLookupBackups(LookupEditorTestCase):
                                                        "test.csv", namespace="search",
                                                        owner="nobody")
 
-        self.assertEquals(self.strip_splunk_path(dir),
+        self.assertEqual(self.strip_splunk_path(dir),
                           '/etc/apps/' + TEST_CSV_APP + '/lookups/lookup_file_backups/search/nobody/test.csv')
 
     @skipIfCantAuthenticate
@@ -359,7 +359,7 @@ class TestLookupBackups(LookupEditorTestCase):
                                                        namespace="search", owner="nobody",
                                                        resolved_lookup_path=resolved_lookup_path)
 
-        self.assertEquals(self.strip_splunk_path(dir),
+        self.assertEqual(self.strip_splunk_path(dir),
                           '/etc/apps/' + TEST_CSV_APP + '/lookups/lookup_file_backups/search/nobody/test.csv')
 
 if __name__ == "__main__":
