@@ -6,9 +6,11 @@ import re
 import os
 import csv
 import json
-import StringIO # For converting KV store array data to CSV for export
 import collections
 import logging
+
+from six import StringIO # For converting KV store array data to CSV for export
+from six import string_types
 
 from splunk.clilib.bundle_paths import make_splunkhome_path
 
@@ -48,7 +50,7 @@ def flatten_dict(dict_source, output=None, prefix='', fields=None):
         if treat_as_text_blob and (isinstance(value, dict)
                                    or isinstance(value, collections.OrderedDict)
                                    or (isinstance(value, collections.Sequence)
-                                       and not isinstance(value, basestring))):
+                                       and not isinstance(value, string_types))):
 
             output[append_if_not_none(prefix, key)] = json.dumps(value)
 
@@ -76,7 +78,7 @@ def convert_array_to_csv(array):
     Convert an array to CSV format.
     """
 
-    output = StringIO.StringIO()
+    output = StringIO()
 
     writer = csv.writer(output)
 

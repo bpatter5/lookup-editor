@@ -162,6 +162,7 @@ def get_temporary_lookup_file(prefix=None, basedir=None):
     if os.path.isdir(basedir):
         return tempfile.NamedTemporaryFile(prefix=prefix,
             suffix='.txt',
+            mode='w+',
             dir=basedir,
             delete=False)
     else:

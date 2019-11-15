@@ -6,11 +6,14 @@ This class tests the lookup editor related classes including:
     lookup_editor.shortcuts
     lookup_backups_rest_handler.LookupBackupsHandler
     lookup_backups_rest_handler.LookupEditorHandler
+
+These tests assume your local instance has a lookup file of test.csv available.
 """
 
 import unittest
 import sys
 import os
+import re
 import json
 import hashlib
 import logging
@@ -27,6 +30,9 @@ from lookup_backups_rest_handler import LookupBackupsHandler
 from lookup_editor_rest_handler import LookupEditorHandler
 
 logger = logging.getLogger('splunk.appserver.lookup_editor.unit_test')
+
+# This declares which app the lookup_test.csv file is
+TEST_CSV_APP = 'lookup_test'
 
 def skipIfCantAuthenticate(func):
     """
@@ -89,7 +95,8 @@ class LookupEditorTestCase(unittest.TestCase):
         if self.session_key is not None:
             return self.session_key
         else:
-            return getSessionKey(username='admin', password='changeme')
+            self.session_key = getSessionKey(username='admin', password='changeme')
+            return self.session_key
 
     def strip_splunk_path(self, file_path):
         """
@@ -109,8 +116,8 @@ class TestLookupEditRESTHandler(LookupEditorTestCase):
         """
         Make sure the handler is onlne.
         """
-        response, content = simpleRequest("/services/data/lookup_edit/ping",
-                                                      sessionKey=self.get_session_key())
+        response, _ = simpleRequest("/services/data/lookup_edit/ping",
+                                    sessionKey=self.get_session_key())
         self.assertEqual(response.status, 200)
 
     def test_function_signature(self):
@@ -163,9 +170,10 @@ class TestLookupEditRESTHandler(LookupEditorTestCase):
 
         self.assertEqual(response.status, 200)
 
-        first_line = content.split('\n')[0]
+        # first_line = re.split("\n", content)[0]
+        first_line = content.split(b'\n')[0]
 
-        self.assertEqual(first_line.count(","), 7)
+        self.assertEqual(first_line.count(b","), 7)
 
 class TestLookupBackupRESTHandler(LookupEditorTestCase):
     """
@@ -177,8 +185,8 @@ class TestLookupBackupRESTHandler(LookupEditorTestCase):
         """
         Make sure the handler is onlne.
         """
-        response, content = simpleRequest("/services/data/lookup_backup/ping",
-                                          sessionKey=self.get_session_key())
+        response, _ = simpleRequest("/services/data/lookup_backup/ping",
+                                    sessionKey=self.get_session_key())
         self.assertEqual(response.status, 200)
 
     def test_function_signature(self):
@@ -275,7 +283,7 @@ class TestLookupEditor(LookupEditorTestCase):
                                                                session_key=self.get_session_key())
 
         self.assertEquals(self.strip_splunk_path(file_path),
-                          '/etc/apps/lookup_editor/lookups/test.csv')
+                          '/etc/apps/' + TEST_CSV_APP + '/lookups/test.csv')
 
     @skipIfCantAuthenticate
     def test_resolve_lookup_filename_version(self):
@@ -288,7 +296,7 @@ class TestLookupEditor(LookupEditorTestCase):
                                                                session_key=self.get_session_key())
 
         self.assertEquals(self.strip_splunk_path(file_path),
-                          '/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv/1234')
+                          '/etc/apps/' + TEST_CSV_APP + '/lookups/lookup_file_backups/search/nobody/test.csv/1234')
         
     @skipIfCantAuthenticate
     def test_resolve_lookup_filename_version_no_user(self):
@@ -301,7 +309,7 @@ class TestLookupEditor(LookupEditorTestCase):
                                                  '1234', session_key=self.get_session_key())
 
         self.assertEquals(self.strip_splunk_path(file_path),
-                          '/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv/1234')
+                          '/etc/apps/' + TEST_CSV_APP + '/lookups/lookup_file_backups/search/nobody/test.csv/1234')
 
     @skipIfLookupTestNotInstalled
     def test_get_kv_fields_from_transform(self):
@@ -332,7 +340,7 @@ class TestLookupBackups(LookupEditorTestCase):
                                                        owner="nobody")
 
         self.assertEquals(self.strip_splunk_path(dir),
-                          "/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv")
+                          '/etc/apps/' + TEST_CSV_APP + '/lookups/lookup_file_backups/search/nobody/test.csv')
 
     @skipIfCantAuthenticate
     def test_get_backup_directory_with_resolved(self):
@@ -352,7 +360,7 @@ class TestLookupBackups(LookupEditorTestCase):
                                                        resolved_lookup_path=resolved_lookup_path)
 
         self.assertEquals(self.strip_splunk_path(dir),
-                          "/etc/apps/lookup_editor/lookups/lookup_file_backups/search/nobody/test.csv")
+                          '/etc/apps/' + TEST_CSV_APP + '/lookups/lookup_file_backups/search/nobody/test.csv')
 
 if __name__ == "__main__":
     unittest.main()
