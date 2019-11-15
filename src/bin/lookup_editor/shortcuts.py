@@ -6,7 +6,7 @@ import re
 import os
 import csv
 import json
-import collections
+from collections import OrderedDict, Sequence
 import logging
 
 from six import StringIO # For converting KV store array data to CSV for export
@@ -31,7 +31,7 @@ def flatten_dict(dict_source, output=None, prefix='', fields=None):
 
     # Define the resulting output if it does not exist yet
     if output is None:
-        output = collections.OrderedDict()
+        output = OrderedDict()
 
     # Convert each entry in the dictionary
     for key in dict_source:
@@ -48,14 +48,14 @@ def flatten_dict(dict_source, output=None, prefix='', fields=None):
         # This is necessary when a KV store has recognition for many of the fields but some
         # are expected to be JSON within a field, _not_ separate fields.
         if treat_as_text_blob and (isinstance(value, dict)
-                                   or isinstance(value, collections.OrderedDict)
-                                   or (isinstance(value, collections.Sequence)
+                                   or isinstance(value, OrderedDict)
+                                   or (isinstance(value, Sequence)
                                        and not isinstance(value, string_types))):
 
             output[append_if_not_none(prefix, key)] = json.dumps(value)
 
         # Flatten out this dictionary or array entry
-        elif isinstance(value, dict) or isinstance(value, collections.OrderedDict):
+        elif isinstance(value, dict) or isinstance(value, OrderedDict):
 
             flatten_dict(value, output, append_if_not_none(prefix, key),
                          fields=fields)
