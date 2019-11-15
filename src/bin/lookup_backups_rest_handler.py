@@ -6,7 +6,7 @@ import logging
 import csv
 import time
 
-from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
+from splunk.clilib.bundle_paths import make_splunkhome_path
 from splunk import AuthorizationFailed, ResourceNotFound
 
 # The default of the csv module is 128KB; upping to 10MB. See SPL-12117 for

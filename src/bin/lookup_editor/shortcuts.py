@@ -10,7 +10,7 @@ import StringIO # For converting KV store array data to CSV for export
 import collections
 import logging
 
-from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
+from splunk.clilib.bundle_paths import make_splunkhome_path
 
 def append_if_not_none(prefix, key, separator="."):
     """

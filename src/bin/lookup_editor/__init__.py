@@ -11,9 +11,9 @@ import shutil
 import csv
 from collections import OrderedDict
 
-import splunk
+from splunk.rest import simpleRequest
 from splunk import AuthorizationFailed, ResourceNotFound
-from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
+from splunk.clilib.bundle_paths import make_splunkhome_path
 
 from lookup_editor.lookup_backups import LookupBackups
 from lookup_editor.exceptions import LookupFileTooBigException, PermissionDeniedException, LookupNameInvalidException
@@ -37,13 +37,13 @@ class LookupEditor(LookupBackups):
         Get the list of fields for the given lookup from the transform.
         """
 
-        response, content = splunk.rest.simpleRequest('/servicesNS/nobody/' + namespace +
-                                                      '/data/transforms/lookups',
-                                                      sessionKey=session_key,
-                                                      getargs={
-                                                          'output_mode': 'json',
-                                                          'search': 'collection=' + collection_name
-                                                        })
+        response, content = simpleRequest('/servicesNS/nobody/' + namespace +
+                                          '/data/transforms/lookups',
+                                          sessionKey=session_key,
+                                          getargs={
+                                              'output_mode': 'json',
+                                              'search': 'collection=' + collection_name
+                                          })
 
         # Make sure we found something
         if response.status < 200 or response.status > 300:
@@ -77,11 +77,11 @@ class LookupEditor(LookupBackups):
 
         # Get the fields so that we can compose the header
         # Note: this call must be done with the user context of "nobody".
-        response, content = splunk.rest.simpleRequest('/servicesNS/nobody/' + namespace +
-                                                      '/storage/collections/config/' +
-                                                      lookup_file,
-                                                      sessionKey=session_key,
-                                                      getargs={'output_mode': 'json'})
+        response, content = simpleRequest('/servicesNS/nobody/' + namespace +
+                                          '/storage/collections/config/' +
+                                          lookup_file,
+                                          sessionKey=session_key,
+                                          getargs={'output_mode': 'json'})
 
         if response.status == 403:
             raise PermissionDeniedException("You do not have permission to view this lookup")
@@ -109,10 +109,10 @@ class LookupEditor(LookupBackups):
         lookup_contents.append(fields)
 
         # Get the contents
-        response, content = splunk.rest.simpleRequest('/servicesNS/' + owner + '/' + namespace +
-                                                      '/storage/collections/data/' + lookup_file,
-                                                      sessionKey=session_key,
-                                                      getargs={'output_mode': 'json'})
+        response, content = simpleRequest('/servicesNS/' + owner + '/' + namespace +
+                                          '/storage/collections/data/' + lookup_file,
+                                          sessionKey=session_key,
+                                          getargs={'output_mode': 'json'})
 
         if response.status == 403:
             raise PermissionDeniedException("You do not have permission to view this lookup")
@@ -281,11 +281,11 @@ class LookupEditor(LookupBackups):
         }
 
         # Perform the request
-        response, content = splunk.rest.simpleRequest(repl_uri,
-                                                      method='POST',
-                                                      postargs=payload,
-                                                      sessionKey=session_key,
-                                                      raiseAllErrors=False)
+        response, content = simpleRequest(repl_uri,
+                                          method='POST',
+                                          postargs=payload,
+                                          sessionKey=session_key,
+                                          raiseAllErrors=False)
 
         # Analyze the response
         if response.status == 400:
@@ -358,8 +358,8 @@ class LookupEditor(LookupBackups):
         destination_lookup_path_only, _ = os.path.split(destination_lookup_full_path)
 
         try:
-            os.makedirs(destination_lookup_path_only, 0755)
-            os.chmod(destination_lookup_path_only, 0755)
+            os.makedirs(destination_lookup_path_only, 0o755)
+            os.chmod(destination_lookup_path_only, 0o755)
         except OSError:
             # The directory already existed, no need to create it
             self.logger.debug("Destination path of lookup already existed, no need to create it; destination_lookup_path=%s", destination_lookup_path_only)

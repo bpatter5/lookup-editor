@@ -16,7 +16,8 @@ import hashlib
 import logging
 import errno
 
-import splunk
+from splunk import AuthenticationFailed, SplunkdConnectionException
+from splunk.auth import getSessionKey
 from splunk.rest import simpleRequest
 
 sys.path.append( os.path.join("..", "src", "bin") )
@@ -35,10 +36,10 @@ def skipIfCantAuthenticate(func):
 
         try:
             self.get_session_key()
-        except splunk.AuthenticationFailed:
+        except AuthenticationFailed:
             self.skipTest("Could not authenticate with Splunk")
             return
-        except splunk.SplunkdConnectionException:
+        except SplunkdConnectionException:
             self.skipTest("Splunkd not accessible")
             return
 
@@ -63,10 +64,10 @@ def skipIfLookupTestNotInstalled(func):
             if response.status == 404:
                 self.skipTest("lookup_test app is not installed")
                 return
-        except splunk.AuthenticationFailed:
+        except AuthenticationFailed:
             self.skipTest("Could not authenticate with Splunk")
             return
-        except splunk.SplunkdConnectionException:
+        except SplunkdConnectionException:
             self.skipTest("Splunkd not accessible")
             return
 
@@ -88,7 +89,7 @@ class LookupEditorTestCase(unittest.TestCase):
         if self.session_key is not None:
             return self.session_key
         else:
-            return splunk.auth.getSessionKey(username='admin', password='changeme')
+            return getSessionKey(username='admin', password='changeme')
 
     def strip_splunk_path(self, file_path):
         """

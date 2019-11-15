@@ -8,7 +8,7 @@ import json
 import time
 import datetime
 
-from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
+from splunk.clilib.bundle_paths import make_splunkhome_path
 from splunk import AuthorizationFailed, ResourceNotFound
 from splunk.rest import simpleRequest
 

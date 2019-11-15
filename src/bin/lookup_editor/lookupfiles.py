@@ -6,7 +6,7 @@ from splunk.models.base import SplunkAppObjModel
 from splunk.models.field import Field
 import splunk 
 import splunk.rest as rest
-from splunk.appserver.mrsparkle.lib.util import make_splunkhome_path
+from splunk.clilib.bundle_paths import make_splunkhome_path
 
 import os
 import sys
@@ -30,7 +30,7 @@ class SplunkLookupTableFile(SplunkAppObjModel):
     def reload( session_key=None ):
         path = SplunkLookupTableFile.resource + "/" + '_reload'
         
-        response, content = rest.simpleRequest(path, method='GET', sessionKey=session_key)
+        response, _ = rest.simpleRequest(path, method='GET', sessionKey=session_key)
         if response.status == 200:
             return True
         
