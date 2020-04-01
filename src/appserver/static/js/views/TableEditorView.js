@@ -11,8 +11,8 @@
  */
 require.config({
     paths: {
-		jexcel: 'https://bossanova.uk/jexcel/v3/jexcel',
-		jsuites: 'https://bossanova.uk/jsuites/v2/jsuites',
+		jexcel: '../app/lookup_editor/js/lib/jexcel/jexcel',
+		jsuites: '../app/lookup_editor/js/lib/jsuites/jsuites',
 		"jsuites/dist/jsuites.css": 'css!https://bossanova.uk/jsuites/v2/jsuites.css',
 		"console": '../app/lookup_editor/js/lib/console',
 		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min"
@@ -31,13 +31,14 @@ define([
     "underscore",
     "backbone",
 	"jquery",
+	"splunkjs/mvc/simplesplunkview",
 	"jexcel",
 	"jsuites",
-	"splunkjs/mvc/simplesplunkview",
 	"bootstrap-tags-input",
     "splunk.util",
 	"css!../app/lookup_editor/js/lib/bootstrap-tagsinput.css",
 	"css!../app/lookup_editor/css/TagsInput.css",
+	"css!../app/lookup_editor/js/lib/jexcel/jexcel.css",
 ], function(
     _,
     Backbone,
