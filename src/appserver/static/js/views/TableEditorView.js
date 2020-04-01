@@ -11,59 +11,40 @@
  */
 require.config({
     paths: {
-		Handsontable: "../app/lookup_editor/js/lib/handsontable/handsontable",
-		pikaday: "../app/lookup_editor/js/lib/pikaday/pikaday",
-		numbro: "../app/lookup_editor/js/lib/numbro/numbro",
-		moment: '../app/lookup_editor/js/lib/moment/moment',
-		formatTime: '../app/lookup_editor/js/utils/FormatTime',
-		console: '../app/lookup_editor/js/lib/console',
-		arrayeditor: '../app/lookup_editor/js/lib/HotEditors/ArrayEditor',
-		defaulteditor: '../app/lookup_editor/js/lib/HotEditors/DefaultEditor',
-		forgivingcheckboxeditor: '../app/lookup_editor/js/lib/HotEditors/ForgivingCheckboxEditor',
-		timeeditor: '../app/lookup_editor/js/lib/HotEditors/TimeEditor',
+		jexcel: 'https://bossanova.uk/jexcel/v3/jexcel',
+		jsuites: 'https://bossanova.uk/jsuites/v2/jsuites',
+		"jsuites/dist/jsuites.css": 'css!https://bossanova.uk/jsuites/v2/jsuites.css',
+		"console": '../app/lookup_editor/js/lib/console',
 		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min"
     },
     shim: {
-        'Handsontable': {
-        	deps: ['jquery', 'pikaday', 'numbro', 'moment']
-		},
         'bootstrap-tags-input': {
         	deps: ['jquery']
-        }
+		},
+        'jexcel': {
+        	deps: ['jquery', 'jsuites']
+		},
     }
 });
 
 define([
     "underscore",
     "backbone",
-    "jquery",
-    "splunkjs/mvc/simplesplunkview",
-	"moment",
-	"Handsontable",
-	"arrayeditor",
-	"forgivingcheckboxeditor",
-	"timeeditor",
-	"defaulteditor",
-	"formatTime",
+	"jquery",
+	"jexcel",
+	"jsuites",
+	"splunkjs/mvc/simplesplunkview",
 	"bootstrap-tags-input",
     "splunk.util",
-	"css!../app/lookup_editor/css/lib/handsontable.full.css",
 	"css!../app/lookup_editor/js/lib/bootstrap-tagsinput.css",
-	"css!../app/lookup_editor/css/TagsInput.css"
+	"css!../app/lookup_editor/css/TagsInput.css",
 ], function(
     _,
     Backbone,
     $,
-    SimpleSplunkView,
-	moment,
-	Handsontable,
-	ArrayEditor,
-	ForgivingCheckboxEditor,
-	TimeEditor,
-	DefaultEditor,
-	formatTime
+    SimpleSplunkView
 ){
-
+	console.log('TableEditorView loading...');
     // Define the custom view class
     var TableEditorView = SimpleSplunkView.extend({
         className: "TableEditorView",
@@ -87,6 +68,8 @@ define([
 
             // These are copies of editor classes used with the handsontable
 			this.default_editor = null;
+
+			console.log('TableEditorView initialize()');
         },
 
         /**
@@ -583,7 +566,7 @@ define([
 		 * @param data The array of arrays that represents the data to render
          */
         renderLookup: function(data){
-            
+            console.log('renderLookup');
         	if(data === null){
         		console.warn("Lookup could not be loaded");
         		return false;
@@ -592,251 +575,28 @@ define([
         	// Store the table header so that we can determine the relative offsets of the fields
         	this.table_header = data[0];
         	
-        	// If the handsontable has already rendered, then re-render the existing one.
-        	if(this.handsontable !== null){
-        		this.handsontable.destroy();
-        		this.handsontable = null;
-        	}
-    		
-    		// If we are editing a KV store lookup, use these menu options
-        	var contextMenu = null;
-        
-        	var read_only = this.read_only;
-        		
-        	if(this.lookup_type === "kv"){
-	    		contextMenu = {
-	    				items: {
-	    					'row_above': {
-	    						disabled: function () {
-	    				            // If read-only or the first row, disable this option
-	    				            return this.read_only || (this.handsontable.getSelected() === undefined);
-	    				        }.bind(this)
-	    					},
-	    					'row_below': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					"hsep1": "---------",
-	    					'remove_row': {
-	    						disabled: function () {
-	    							// If read-only or the first row, disable this option
-	    				            return this.read_only || (this.handsontable.getSelected() === undefined);
-	    				        }.bind(this)
-	    					},
-	    					'hsep2': "---------",
-	    					'undo': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					'redo': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					}
-	    				}
-	    		};
-        	}
-        	else{
-	    		contextMenu = {
-	    				items: {
-							'edit': {
-								name: "Edit",
-			  
-								callback: function() { // Callback for specific option
-								  var instance = this.handsontable;
-			  
-								  setTimeout(function() {
-									var input = document.createElement('input'),
-										th = document.getElementsByClassName('ht_master handsontable')[0].getElementsByClassName('ht__highlight')[0],
-										coords = th.cellIndex -1,
-										rect = th.getBoundingClientRect(),
-										addListeners = (events, headers, index) => {
-										  events.split(' ').forEach(e => {
-											input.addEventListener(e, () => {
-											  headers[index] = input.value;
-											  if (input.value.length > 0){
-												  instance.updateSettings({colHeaders: headers});
-											  }
-											  setTimeout(() => {
-												if (input.parentNode) input.parentNode.removeChild(input)
-											  });
-											})
-										  })
-										},
-										appendInput = () => {
-										  input.setAttribute('type', 'text');
-										  input.style.cssText = '' +
-											'position:absolute;' +
-											'left:' + rect.left + 'px;' +
-											'top:' + rect.top + 'px;' +
-											'width:' + (rect.width - 4) + 'px;' +
-											'height:' + (rect.height - 4) + 'px;' +
-											'z-index:1000;' +
-											'text-align:center';
-										  document.body.appendChild(input);
-										};
-			  
-									// Start doing something
-									input.value = th.querySelector('.colHeader').innerText;
-									appendInput();
-									setTimeout(() => {
-										input.select();
-										addListeners('change blur', instance['getColHeader'](), coords);
-									});
-								  }, 0);
-								}.bind(this),
-			  
-								disabled: function(){
-									var range = this.handsontable.getSelectedRangeLast(),
-										len = this.handsontable.getData().length-1;
-									if (range.from.row === 0 && range.to.row === len){
-										return false;
-									}
-									return true;
-								}.bind(this)
-							},
-							'hsep1': "---------",
-	    					'row_above': {},
-	    					'row_below': {},
-	    					"hsep2": "---------",
-	    					'col_left': {},
-	    					'col_right': {},
-	    					'hsep3': "---------",
-	    					'remove_row': {},
-	    					'remove_col': {},
-	    					'hsep4': "---------",
-	    					'undo': {},
-	    					'redo': {}
-	    				}
-	    		};
-        	}
-        	
         	// Put in a class name so that the styling can be done by the type of the lookup
         	if(this.lookup_type === "kv"){
         		this.$el.addClass('kv-lookup');
         	}
-        	
-        	// Make a variable that defines the this point so that it can be used in the scope of the handsontable handlers
-        	self = this;
-        	
-        	// Make the handsontable instance
-        	this.handsontable = new Handsontable(this.$el[0], {
-				// Make sure some empty rows exist if it is empty
-				minRows: 1,
-        	    data: this.lookup_type === "kv" || this.lookup_type === "csv" ? data.slice(1) : data,
-        		startRows: 1,
-        		startCols: 1,
-				contextMenu: this.lookup_type === "csv" && this.read_only ? false : contextMenu,
-        		minSpareRows: 0,
-        		minSpareCols: 0,
-				colHeaders: this.lookup_type === "kv" || this.lookup_type === "csv" ? this.table_header : false,
-				columnSorting: true,
-				columns: this.lookup_type === 'csv' ? null : this.getColumnsMetadata(),
-				
-        		rowHeaders: true,
-        		fixedRowsTop: this.lookup_type === "kv" || this.lookup_type === "csv" ? 0 : 1,
-        		height: function(){ return $(window).height() - 320; }, // Set the window height so that the user doesn't have to scroll to the bottom to set the save button
-        		
-        		stretchH: 'all',
-        		manualColumnResize: true,
-        		manualColumnMove: true,
-        		onBeforeChange: this.validate.bind(this),
-        		
-        		allowInsertColumn: this.lookup_type === "kv" ? false : true,
-        		allowRemoveColumn: this.lookup_type === "kv" ? false : true,
-        		
-				renderer: this.lookupRenderer.bind(this),
-				editor: this.lookup_type !== 'csv' ? Handsontable.editors.TextEditor : DefaultEditor,
-        		
-        		cells: function(row, col, prop) {
-        			  
-        			var cellProperties = {};
-        			  
-        			// Don't allow the _key row to be editable on KV store lookups since the keys are auto-assigned
-        		    if (this.read_only || (this.lookup_type === "kv" && col === 0)) {
-        		        cellProperties.readOnly = true;
-        		    }
+			
+			/*
+			$(this.$el[0]).jexcel({
+				data: data,
+				colWidths: [300, 80, 100]
+			});
+			*/
 
-        		    return cellProperties;
-        		}.bind(this),
-        		
-        		beforeRemoveRow: function(index, amount){
-					// Nothing to do
-        		},
-        		
-        		beforeRemoveCol: function(index, amount){
-        			  
-        			// Don't allow deletion of all cells
-        			if( (this.countCols() - amount) <= 0){
-        				alert("A valid lookup file requires at least one column.");
-        				return false;
-        			}
-        		},
-        		
-        		// Don't allow removal of all columns
-        		afterRemoveCol: function(index, amount){
-        			if(this.countCols() === 0){
-        				alert("You must have at least one cell to have a valid lookup");
-        			}
-        		},
-        		
-        		// Update the cached version of the table header
-        		afterColumnMove: function(){
-        			this.getTableHeader(false);
-                }.bind(this)
-            });
-        	
-        	// Wire-up handlers for doing KV store dynamic updates
-        	if(this.lookup_type === "kv"){
-
-        		// For cell edits
-        		this.handsontable.addHook('afterChange', function(changes, source) {
-
-        			// Ignore changes caused by the script updating the _key for newly added rows
-        			if(source === "key_update"){
-        				return;
-        			}
-
-        			// If there are no changes, then stop
-        			if(!changes){
-        				return;
-        			}
-
-        			// Iterate and change each cell
-        			for(var c = 0; c < changes.length; c++){
-        				var row = changes[c][0];
-        				var col = changes[c][1];
-        				var new_value = changes[c][3];
-
-                        this.trigger("editCell", {
-                            'row' : row,
-                            'col' : col,
-                            'new_value' : new_value
-                        });
-        			}
-
-        		}.bind(this));
-
-        		// For row removal
-        		this.handsontable.addHook('beforeRemoveRow', function(index, amount) {
-        			// Iterate and remove each row
-        			for(var c = 0; c < amount; c++){
-        				var row = index + c;
-                        this.trigger("removeRow", row);
-        			}
-        		}.bind(this));
-
-        		// For row creation
-        		this.handsontable.addHook('afterCreateRow', function(row, count){
-                    this.trigger("createRows", {
-                        'row' : row,
-                        'count' : count
-                    });
-                }.bind(this));
-
-            }
+			data = [
+				['jExcel', 'Jquery spreadsheet, javascript spreadsheet, jquery', 181],
+				['Handsontable', 'Another nice javascript spreadsheet plugin', 9284],
+				['Datatables', 'DataTables is a table enhancing plug-in for the jQuery library.', 5164],
+			  ];
+			 
+			  $('#lookup-table').jexcel({
+				data: data,
+				colWidths: [300, 80, 100]
+			  });
             
             // Return true indicating that the load worked
             return true;
