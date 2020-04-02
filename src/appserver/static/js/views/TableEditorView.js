@@ -39,6 +39,7 @@ define([
 	"css!../app/lookup_editor/js/lib/bootstrap-tagsinput.css",
 	"css!../app/lookup_editor/css/TagsInput.css",
 	"css!../app/lookup_editor/js/lib/jexcel/jexcel.css",
+	"css!../app/lookup_editor/js/lib/jsuites/jsuites.css",
 ], function(
     _,
     Backbone,
@@ -580,24 +581,21 @@ define([
         	if(this.lookup_type === "kv"){
         		this.$el.addClass('kv-lookup');
         	}
-			
-			/*
-			$(this.$el[0]).jexcel({
-				data: data,
-				colWidths: [300, 80, 100]
-			});
-			*/
 
-			data = [
-				['jExcel', 'Jquery spreadsheet, javascript spreadsheet, jquery', 181],
-				['Handsontable', 'Another nice javascript spreadsheet plugin', 9284],
-				['Datatables', 'DataTables is a table enhancing plug-in for the jQuery library.', 5164],
-			  ];
-			 
-			  $('#lookup-table').jexcel({
-				data: data,
-				colWidths: [300, 80, 100]
-			  });
+			// I need to set the column width 
+			var width = $(this.$el[0]).width() - 70;
+			var column_count = data[0].length;
+			var column_width = width / column_count;
+
+			if(column_width < 100){
+				column_width = 100;
+			}
+
+			$(this.$el[0]).jexcel({
+				data: data,defaultColWidth: column_width,
+				tableOverflow: true,
+				loadingSpin: true,
+			});
             
             // Return true indicating that the load worked
             return true;
