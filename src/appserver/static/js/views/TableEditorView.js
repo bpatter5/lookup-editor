@@ -13,7 +13,6 @@ require.config({
     paths: {
 		jexcel: '../app/lookup_editor/js/lib/jexcel/jexcel',
 		jsuites: '../app/lookup_editor/js/lib/jsuites/jsuites',
-		"jsuites/dist/jsuites.css": 'css!https://bossanova.uk/jsuites/v2/jsuites.css',
 		"console": '../app/lookup_editor/js/lib/console',
 		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min"
     },
@@ -40,6 +39,7 @@ define([
 	"css!../app/lookup_editor/css/TagsInput.css",
 	"css!../app/lookup_editor/js/lib/jexcel/jexcel.css",
 	"css!../app/lookup_editor/js/lib/jsuites/jsuites.css",
+	"css!../app/lookup_editor/css/TableEditorView.css",
 ], function(
     _,
     Backbone,
@@ -584,9 +584,11 @@ define([
 			var width = $(this.$el[0]).width() - 70;
 			var column_count = data[0].length;
 			var column_width = width / column_count;
+			var overflow = false;
 
 			if(column_width < 100){
 				column_width = 100;
+				overflow = true;
 			}
 
 			// Make the columns
@@ -619,14 +621,6 @@ define([
 					lazyLoading: true,
 				});
 			}
-
-			/*
-			jexcel(document.getElementById('my-spreadsheet'),{
-				data: data,defaultColWidth: column_width,
-				tableOverflow: true,
-				loadingSpin: true,
-			});
-			*/
             
             // Return true indicating that the load worked
             return true;
