@@ -44,7 +44,8 @@ define([
     _,
     Backbone,
     $,
-    SimpleSplunkView
+	SimpleSplunkView,
+	jexcel
 ){
 	console.log('TableEditorView loading...');
     // Define the custom view class
@@ -70,8 +71,6 @@ define([
 
             // These are copies of editor classes used with the handsontable
 			this.default_editor = null;
-
-			console.log('TableEditorView initialize()');
         },
 
         /**
@@ -209,6 +208,7 @@ define([
         getData: function(){
 			var data = this.handsontable.getData();
 
+			/*
 			var convert_columns = {};
 
 			// Figure out if any columns must be converted from _time
@@ -251,6 +251,7 @@ define([
 					}
 				}
 			}
+			*/
 
 			return data;
         },
@@ -304,7 +305,7 @@ define([
         		return this.table_header;
         	}
 			
-			this.table_header = this.handsontable.getColHeader();
+			this.table_header = this.handsontable.getHeaders(true);
         	
         	return this.table_header;
         },
@@ -591,11 +592,33 @@ define([
 				column_width = 100;
 			}
 
-			$(this.$el[0]).jexcel({
+			// Make the columns
+			var columns = [];
+			var index = 0;
+			while (index < this.table_header.length) { 
+				columns.push({ 'title': this.table_header[index] });
+				index = index + 1;
+			}
+			
+			// Remove the header
+			data.splice(0, 1);
+
+			// Load the editor
+			this.handsontable = $(this.$el[0]).jexcel({
+				data: data,
+				defaultColWidth: column_width,
+				tableOverflow: true,
+				loadingSpin: true,
+				columns: columns,
+			});
+
+			/*
+			jexcel(document.getElementById('my-spreadsheet'),{
 				data: data,defaultColWidth: column_width,
 				tableOverflow: true,
 				loadingSpin: true,
 			});
+			*/
             
             // Return true indicating that the load worked
             return true;
