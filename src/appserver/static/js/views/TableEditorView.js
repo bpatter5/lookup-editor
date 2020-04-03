@@ -595,7 +595,10 @@ define([
 			var columns = [];
 			var index = 0;
 			while (index < this.table_header.length) { 
-				columns.push({ 'title': this.table_header[index] });
+				columns.push({
+					'title': this.table_header[index],
+					readOnly: this.read_only,
+				});
 				index = index + 1;
 			}
 			
