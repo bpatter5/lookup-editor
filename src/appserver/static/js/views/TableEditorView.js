@@ -208,7 +208,6 @@ define([
         getData: function(){
 			var data = this.handsontable.getData();
 
-			/*
 			var convert_columns = {};
 
 			// Figure out if any columns must be converted from _time
@@ -251,7 +250,6 @@ define([
 					}
 				}
 			}
-			*/
 
 			return data;
         },
@@ -264,7 +262,7 @@ define([
          * @param row An integer designating the row
          */
         getDataAtRow: function(row){
-            return this.handsontable.getDataAtRow(row);
+            return this.handsontable.getDataAtRow(row); // TODO check
         },
 
         /**
@@ -285,7 +283,7 @@ define([
                 column = this.getColumnForField(column);
             }
 
-            return this.handsontable.setDataAtCell(row, column, value, operation);
+            return this.handsontable.setDataAtCell(row, column, value, operation); // TODO check
         },
 
         /**
@@ -468,7 +466,7 @@ define([
         	// Re-render the view
         	if(this.$el.length > 0 && this.handsontable){
             	if(this.handsontable){
-            		this.handsontable.render(); 
+            		this.handsontable.render(); // TODO check
             	}
         	}
         },
@@ -568,13 +566,12 @@ define([
 		 * 
 		 * @param data The array of arrays that represents the data to render
          */
-        renderLookup: function(data){
-            console.log('renderLookup');
+        renderLookup: function(data){			
         	if(data === null){
         		console.warn("Lookup could not be loaded");
         		return false;
         	}
-        	
+
         	// Store the table header so that we can determine the relative offsets of the fields
         	this.table_header = data[0];
         	
@@ -604,13 +601,24 @@ define([
 			data.splice(0, 1);
 
 			// Load the editor
-			this.handsontable = $(this.$el[0]).jexcel({
-				data: data,
-				defaultColWidth: column_width,
-				tableOverflow: true,
-				loadingSpin: true,
-				columns: columns,
-			});
+			if(this.handsontable){
+				this.handsontable.setData(data);
+				var editor = this.handsontable;
+				this.table_header.forEach(function(header_column, index) {
+					editor.setHeader(index, header_column);
+				});
+				
+			}
+			else {
+				this.handsontable = $(this.$el[0]).jexcel({
+					data: data,
+					defaultColWidth: column_width,
+					tableOverflow: true,
+					loadingSpin: true,
+					columns: columns,
+					lazyLoading: true,
+				});
+			}
 
 			/*
 			jexcel(document.getElementById('my-spreadsheet'),{
