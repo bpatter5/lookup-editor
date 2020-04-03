@@ -615,6 +615,7 @@ define([
 				
 			}
 			else {
+				var computed_height = ($(window).height() - $(this.$el[0]).offset().top - 100);
 				this.handsontable = $(this.$el[0]).jexcel({
 					data: data,
 					defaultColWidth: column_width,
@@ -622,6 +623,11 @@ define([
 					loadingSpin: true,
 					columns: columns,
 					lazyLoading: true,
+					allowExport: false,
+					editable: !this.read_only,
+					defaultColAlign: 'left',
+					tableWidth: width,
+					tableHeight: computed_height + 'px'
 				});
 			}
             
