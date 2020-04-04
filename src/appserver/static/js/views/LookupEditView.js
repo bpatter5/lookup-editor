@@ -1514,7 +1514,8 @@ define([
 						}.bind(this));
 
 						this.table_editor_view.on("createRows", function(data) {
-							this.doCreateRows(data.row, data.count);
+							// Don't create empty rows in the KV store, wait until values are provided
+							// this.doCreateRows(data.row, data.count);
 						}.bind(this));
 						
 					}

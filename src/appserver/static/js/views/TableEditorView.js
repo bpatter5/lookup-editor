@@ -644,14 +644,11 @@ define([
 					return true;
 				}.bind(this);
 				
-				options.oninsertrow = function(instance) {
-					// TODO Fix
-					/*
+				options.oninsertrow = function(instance, row, count, rowRecords, insertBefore) {
                     this.trigger("createRows", {
                         'row' : row,
                         'count' : count
 					});
-					*/
 				}.bind(this);
 			}
 
