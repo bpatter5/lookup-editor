@@ -596,6 +596,7 @@ define([
          * @param version The version to get from the archived history
          */
         loadLookupContents: function(lookup_file, namespace, user, lookup_type, header_only, version){
+
         	// Set a default value for header_only
         	if( typeof header_only === 'undefined' ){
         		header_only = false;
@@ -1118,11 +1119,18 @@ define([
         	if(this.table_editor_view.isReadOnly()){
         		return;
         	}
-        	
+
         	// First, we need to get the _key of the edited row
-        	var row_data = this.table_editor_view.getDataAtRow(row);
-        	var _key = row_data[this.table_editor_view.getColumnForField('_key')];
-        	
+			var row_data = this.table_editor_view.getDataAtRow(row);
+
+			if(!row_data){
+				this.showWarningMessage("Unable to find the row data for editing");
+				return;
+			}
+
+			var col = this.table_editor_view.getColumnForField('_key');
+        	var _key = row_data[col];
+
         	if(_key === undefined){
         		console.error("Unable to get the _key for editing the cell at (" + row + ", " + col + ")");
         		return;
@@ -1589,8 +1597,9 @@ define([
 						$.when(KVLookupInfo.getInfo(this.namespace, this.lookup))
 						.done(function(field_types, field_types_enforced, read_only){
 							// Configure the table editor
-							this.table_editor_view.setFieldTypes(field_types);
-							this.table_editor_view.setFieldTypeEnforcement(field_types_enforced);
+							// TODO
+							//this.table_editor_view.setFieldTypes(field_types);
+							//this.table_editor_view.setFieldTypeEnforcement(field_types_enforced);
 							this.table_editor_view.setReadOnly(read_only);
 
 							if(read_only){

@@ -3,10 +3,10 @@
  * contents of lookup files.
  * 
  * This class exposes a series of Backbone events that can be used to listen for actions. Below is
- * a list:
+ * the list:
  * 
  *    1) editCell: when a cell gets edited
- *    2) removeRow: when a row ges removed
+ *    2) removeRow: when a row gets removed
  *    3) createRows: when a series of new rows are to be created
  */
 require.config({
@@ -262,7 +262,9 @@ define([
          * @param row An integer designating the row
          */
         getDataAtRow: function(row){
-            return this.handsontable.getDataAtRow(row); // TODO check
+			// jexcel works using cells that are off by one from the way that HandsOnTable worked
+			var rowUpdated = parseInt(row) - 1;
+            return this.handsontable.getRowData(rowUpdated);
         },
 
         /**
@@ -276,14 +278,15 @@ define([
          * @param operation A string describing the value
          */
         setDataAtCell: function(row, column, value, operation){
-
             // If the column is a string, then this is a column name. Resolve the actual column
-            // name.
+			// name.
             if(typeof column === "string"){
                 column = this.getColumnForField(column);
-            }
-
-            return this.handsontable.setDataAtCell(row, column, value, operation); // TODO check
+			}
+			
+			// jexcel works using cells that are off by one from the way that HandsOnTable worked
+			var row = parseInt(row) - 1;
+			return this.handsontable.setValueFromCoords(row, column, value, true);
         },
 
         /**
@@ -316,7 +319,7 @@ define([
         getColumnForField: function(field_name){
         	
         	var row_header = this.getTableHeader();
-        	
+
         	for(var c = 0; c < row_header.length; c++){
         		if(row_header[c] === field_name){
         			return c;
@@ -452,7 +455,6 @@ define([
         		}
         		
         		columns.push(column);
-        		
     		}
     		
         	return columns;
@@ -593,17 +595,63 @@ define([
 
 			// Make the columns
 			var columns = [];
-			var index = 0;
-			while (index < this.table_header.length) { 
+			this.table_header.forEach(function(header_column, index) {
 				columns.push({
-					'title': this.table_header[index],
-					readOnly: this.read_only,
+					'title': header_column,
+					readOnly: this.read_only || (this.lookup_type === 'kv' && header_column === '_key'),
 				});
-				index = index + 1;
-			}
+			}.bind(this));
 			
 			// Remove the header
 			data.splice(0, 1);
+
+			// Make the base options list
+			var options = {
+				data: data,
+				defaultColWidth: column_width,
+				tableOverflow: true,
+				loadingSpin: true,
+				columns: columns,
+				lazyLoading: true,
+				allowExport: false,
+				editable: !this.read_only,
+				defaultColAlign: 'left',
+				tableWidth: width,
+				tableHeight: computed_height + 'px',
+				minSpareRows: 1,
+			}
+
+            // Wire-up handlers for doing KV store dynamic updates
+            if(this.lookup_type === "kv"){
+				options.onchange = function(instance, cell, x, y, value) {
+					this.trigger("editCell", {
+						'row' : parseInt(y) + 1,
+						'col' : parseInt(x) + 1,
+						'new_value' : value
+					});
+				}.bind(this);
+				
+				options.onbeforedeleterow = function(instance) {
+					debugger;
+					/*
+                    // Iterate and remove each row
+                    for(var c = 0; c < amount; c++){
+                        var row = index + c;
+                        this.trigger("removeRow", row);
+					}
+					*/
+				}.bind(this);
+				
+				options.oninsertrow = function(instance) {
+					// TODO Fix
+					/*
+                    this.trigger("createRows", {
+                        'row' : row,
+                        'count' : count
+					});
+					*/
+				}.bind(this);
+			}
 
 			// Load the editor
 			if(this.handsontable){
@@ -616,19 +664,7 @@ define([
 			}
 			else {
 				var computed_height = ($(window).height() - $(this.$el[0]).offset().top - 100);
-				this.handsontable = $(this.$el[0]).jexcel({
-					data: data,
-					defaultColWidth: column_width,
-					tableOverflow: true,
-					loadingSpin: true,
-					columns: columns,
-					lazyLoading: true,
-					allowExport: false,
-					editable: !this.read_only,
-					defaultColAlign: 'left',
-					tableWidth: width,
-					tableHeight: computed_height + 'px'
-				});
+				this.handsontable = $(this.$el[0]).jexcel(options);
 			}
             
             // Return true indicating that the load worked
@@ -689,10 +725,9 @@ define([
 		 * @param row The number to convert
          */
         makeRowJSON: function(row){
-
         	// We need to get the row meta-data and the 
         	var row_header = this.getTableHeader();
-        	var row_data = this.handsontable.getDataAtRow(row);
+        	var row_data = this.getDataAtRow(row);
         	
         	// This is going to hold the data for the row
         	var json_data = {};
