@@ -1197,15 +1197,19 @@ define([
          * Do the removal of a row (for KV store lookups since edits are dynamic).
 		 * 
 		 * @param row The row number
+		 * @param row_data The row data
          */
-        doRemoveRow: function(row){
+        doRemoveRow: function(row, row_data){
         	// Stop if we are in read-only mode
         	if(this.table_editor_view.isReadOnly()){
         		return;
         	}
         	
-        	// First, we need to get the _key of the edited row
-        	var row_data = this.table_editor_view.getDataAtRow(row);
+			// First, we need to get the _key of the edited row
+			if(!row_data) {
+				row_data = this.table_editor_view.getDataAtRow(row);
+			}
+
         	var _key = row_data[0];
         	
         	// Second, make sure the _key is valid
@@ -1236,6 +1240,8 @@ define([
 						this.showWarningMessage("An entry could not be removed from the KV store lookup", true);
 					}
 				}.bind(this));
+
+			return true;
         },
         
         /**

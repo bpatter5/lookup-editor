@@ -631,15 +631,17 @@ define([
 					});
 				}.bind(this);
 				
-				options.onbeforedeleterow = function(instance) {
-					debugger;
-					/*
-                    // Iterate and remove each row
+				options.onbeforedeleterow = function(instance, rowNumber, amount) {
+
+					// Iterate and remove each row
                     for(var c = 0; c < amount; c++){
-                        var row = index + c;
-                        this.trigger("removeRow", row);
+						var row = rowNumber + c + 1;
+                        if(!this.trigger("removeRow", row)){
+							return false;
+						}
 					}
-					*/
+
+					return true;
 				}.bind(this);
 				
 				options.oninsertrow = function(instance) {
