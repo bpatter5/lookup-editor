@@ -286,7 +286,7 @@ define([
 			
 			// jexcel works using cells that are off by one from the way that HandsOnTable worked
 			var row = parseInt(row) - 1;
-			return this.handsontable.setValueFromCoords(row, column, value, true);
+			this.handsontable.setValueFromCoords(column, row, value, true);
         },
 
         /**
