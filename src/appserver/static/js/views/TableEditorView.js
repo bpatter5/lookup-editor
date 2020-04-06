@@ -583,7 +583,7 @@ define([
         	}
 
 			// I need to set the column width 
-			var width = $(this.$el[0]).width() - 70;
+			var width = $(this.$el[0]).width() - 80;
 			var column_count = data[0].length;
 			var column_width = width / column_count;
 			var overflow = false;
@@ -592,6 +592,9 @@ define([
 				column_width = 100;
 				overflow = true;
 			}
+
+			// Figure out the height
+			var computed_height = $(window).height() - $(this.$el[0]).offset().top - 100;
 
 			// Make the columns
 			var columns = [];
@@ -618,7 +621,7 @@ define([
 				defaultColAlign: 'left',
 				tableWidth: width,
 				tableHeight: computed_height + 'px',
-				minSpareRows: 1,
+				minSpareRows: data.length === 0 ? 1 : 0,
 			}
 
             // Wire-up handlers for doing KV store dynamic updates
