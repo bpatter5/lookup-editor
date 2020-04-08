@@ -1604,9 +1604,8 @@ define([
 						$.when(KVLookupInfo.getInfo(this.namespace, this.lookup))
 						.done(function(field_types, field_types_enforced, read_only){
 							// Configure the table editor
-							// TODO
-							//this.table_editor_view.setFieldTypes(field_types);
-							//this.table_editor_view.setFieldTypeEnforcement(field_types_enforced);
+							this.table_editor_view.setFieldTypes(field_types);
+							this.table_editor_view.setFieldTypeEnforcement(field_types_enforced);
 							this.table_editor_view.setReadOnly(read_only);
 
 							if(read_only){

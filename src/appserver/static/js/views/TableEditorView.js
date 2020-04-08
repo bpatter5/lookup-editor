@@ -45,9 +45,8 @@ define([
     Backbone,
     $,
 	SimpleSplunkView,
-	jexcel
 ){
-	console.log('TableEditorView loading...');
+
     // Define the custom view class
     var TableEditorView = SimpleSplunkView.extend({
         className: "TableEditorView",
@@ -62,7 +61,7 @@ define([
             this.lookup_type = this.options.lookup_type; // The type of lookup (csv or kv)
 
             // Below is the list of internal variables
-            this.handsontable = null; // A reference to the handsontable
+            this.jexcel = null; // A reference to the handsontable
 
             this.field_types = {}; // This will store the expected types for each field
             this.field_types_enforced = false; // This will store whether this lookup enforces types
@@ -206,7 +205,7 @@ define([
 		 * integer.
          */
         getData: function(){
-			var data = this.handsontable.getData();
+			var data = this.jexcel.getData();
 
 			var convert_columns = {};
 
@@ -264,7 +263,7 @@ define([
         getDataAtRow: function(row){
 			// jexcel works using cells that are off by one from the way that HandsOnTable worked
 			var rowUpdated = parseInt(row) - 1;
-            return this.handsontable.getRowData(rowUpdated);
+            return this.jexcel.getRowData(rowUpdated);
         },
 
         /**
@@ -286,7 +285,7 @@ define([
 			
 			// jexcel works using cells that are off by one from the way that HandsOnTable worked
 			var row = parseInt(row) - 1;
-			this.handsontable.setValueFromCoords(column, row, value, true);
+			this.jexcel.setValueFromCoords(column, row, value, true);
         },
 
         /**
@@ -306,7 +305,7 @@ define([
         		return this.table_header;
         	}
 			
-			this.table_header = this.handsontable.getHeaders(true);
+			this.table_header = this.jexcel.getHeaders(true);
         	
         	return this.table_header;
         },
@@ -420,38 +419,48 @@ define([
         	var field_info = null;
         	
         	for(var c = 0; c < table_header.length; c++){
-        		field_info = this.field_types[table_header[c]];
+				var header_column = table_header[c];
+				field_info = this.field_types[header_column];
+				
         		
-        		column = {};
+        		column = {
+					'title': header_column,
+					'readOnly': this.read_only || (this.lookup_type === 'kv' && header_column === '_key'),
+				};
         		
         		// Use a checkbox for the boolean
         		if(field_info === 'boolean'){
         			column.type = 'checkbox';
-        			column.editor = ForgivingCheckboxEditor;
+        			// column.editor = ForgivingCheckboxEditor;
         		}
         		
         		// Use format.js for the time fields
         		else if(field_info === 'time'){
+					// TODO: handle time
+					/*
 					column.type = 'time';
         			column.timeFormat = 'YYYY/MM/DD HH:mm:ss';
 					column.correctFormat = false;
 					column.timeIncludesMilliseconds = this.lookup_type === "kv";
         			column.renderer = this.timeRenderer.bind(this); // Convert epoch times to a readable string
-        			column.editor = TimeEditor;
+					column.editor = TimeEditor;
+					*/
 				}
 				
         		// Use the tags input for the array fields
         		else if(field_info === 'array'){
+					// TODO: handle time
+					/*
         			column.renderer = this.arrayRenderer.bind(this);
 					column.editor = ArrayEditor;
+					*/
         		}
         		
         		// Handle number fields
         		else if(field_info === 'number'){
 					column.type = 'numeric';
-					column.numericFormat = {
-						pattern: '0.[00000]',
-					};
+					column.decimal = '.',
+					column.mask = '[-]#,##.0000000000000000'
         		}
         		
         		columns.push(column);
@@ -466,9 +475,9 @@ define([
         reRenderHandsOnTable: function(){
         	
         	// Re-render the view
-        	if(this.$el.length > 0 && this.handsontable){
-            	if(this.handsontable){
-            		this.handsontable.render(); // TODO check
+        	if(this.$el.length > 0 && this.jexcel){
+            	if(this.jexcel){
+            		this.jexcel.render(); // TODO check
             	}
         	}
         },
@@ -597,7 +606,7 @@ define([
 			var computed_height = $(window).height() - $(this.$el[0]).offset().top - 100;
 
 			// Make the columns
-			var columns = [];
+			var columns = this.getColumnsMetadata();
 			this.table_header.forEach(function(header_column, index) {
 				columns.push({
 					'title': header_column,
@@ -656,9 +665,9 @@ define([
 			}
 
 			// Load the editor
-			if(this.handsontable){
-				this.handsontable.setData(data);
-				var editor = this.handsontable;
+			if(this.jexcel){
+				this.jexcel.setData(data);
+				var editor = this.jexcel;
 				this.table_header.forEach(function(header_column, index) {
 					editor.setHeader(index, header_column);
 				});
@@ -666,7 +675,7 @@ define([
 			}
 			else {
 				var computed_height = ($(window).height() - $(this.$el[0]).offset().top - 100);
-				this.handsontable = $(this.$el[0]).jexcel(options);
+				this.jexcel = $(this.$el[0]).jexcel(options);
 			}
             
             // Return true indicating that the load worked
