@@ -13,6 +13,7 @@ require.config({
     paths: {
 		jexcel: '../app/lookup_editor/js/lib/jexcel/jexcel',
 		jsuites: '../app/lookup_editor/js/lib/jsuites/jsuites',
+		formatTime: '../app/lookup_editor/js/utils/FormatTime',
 		"console": '../app/lookup_editor/js/lib/console',
 		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min"
     },
@@ -31,6 +32,7 @@ define([
     "backbone",
 	"jquery",
 	"splunkjs/mvc/simplesplunkview",
+	"formatTime",
 	"jexcel",
 	"jsuites",
 	"bootstrap-tags-input",
@@ -45,6 +47,7 @@ define([
     Backbone,
     $,
 	SimpleSplunkView,
+	formatTime,
 ){
 
     // Define the custom view class
@@ -422,7 +425,6 @@ define([
 				var header_column = table_header[c];
 				field_info = this.field_types[header_column];
 				
-        		
         		column = {
 					'title': header_column,
 					'readOnly': this.read_only || (this.lookup_type === 'kv' && header_column === '_key'),
@@ -431,12 +433,19 @@ define([
         		// Use a checkbox for the boolean
         		if(field_info === 'boolean'){
         			column.type = 'checkbox';
-        			// column.editor = ForgivingCheckboxEditor;
         		}
         		
         		// Use format.js for the time fields
         		else if(field_info === 'time'){
-					// TODO: handle time
+					/*
+					column.type = 'calendar';
+					column.options = {
+						format:'YYYY/MM/DD HH:MM:SS',
+						time: 1,
+						placeholder:'YYYY/MM/DD HH:mm:ss',
+					};
+					*/
+					column.editor = this.getTimeColumn();
 					/*
 					column.type = 'time';
         			column.timeFormat = 'YYYY/MM/DD HH:mm:ss';
@@ -461,7 +470,12 @@ define([
 					column.type = 'numeric';
 					column.decimal = '.',
 					column.mask = '[-]#,##.0000000000000000'
-        		}
+				}
+				
+				// Put in a default column editor if necessary
+				else {
+					column.editor = this.getEscapedHtmlColumn();
+				}
         		
         		columns.push(column);
     		}
@@ -481,24 +495,6 @@ define([
             	}
         	}
         },
-        
-        /**
-         * Render time content (converts the epochs to times)
-		 * 
-		 * @param instance The instance of the Handsontable
-		 * @param td The TD element
-		 * @param row The row number
-		 * @param col The column number
-		 * @param prop
-		 * @param value The value of the cell
-		 * @param cellProperties
-         */
-        timeRenderer: function(instance, td, row, col, prop, value, cellProperties) {
-        	value = this.escapeHtml(Handsontable.helper.stringify(value));
-			td.innerHTML = formatTime(value, this.lookup_type === "kv");
-
-            return td;
-		},
 		
         /**
          * Render array content (as a set of labels)
@@ -550,7 +546,67 @@ define([
         	td.innerHTML = this.escapeHtml(Handsontable.helper.stringify(value));
 
             return td;
-        },
+		},
+		
+		/**
+		 * Below is the list of column renderers
+		 */
+		getDefaultColumn: function() {
+			return {
+				closeEditor : function(cell, save) {
+					var value = cell.children[0].value;
+					cell.innerHTML = value;
+					return value;
+				},
+				openEditor : function(cell) {
+					// Create input
+					var element = document.createElement('input');
+					element.value = cell.innerHTML;
+					// Update cell
+					cell.classList.add('editor');
+					cell.innerHTML = '';
+					cell.appendChild(element);
+					// Focus on the element
+					element.focus();
+				},
+				getValue : function(cell) {
+					return cell.innerHTML;
+				},
+				setValue : function(cell, value) {
+					cell.innerHTML = value;
+				}
+			};
+		},
+
+		getEscapedHtmlColumn: function() {
+			var defaultColumn = this.getDefaultColumn();
+
+			defaultColumn.setValue = function(cell, value) {
+				cell.innerHTML = this.escapeHtml(value);
+			}.bind(this);
+
+			defaultColumn.getValue = function(cell) {
+				return this.escapeHtml(cell.innerHTML);
+			}.bind(this);
+
+			return defaultColumn;
+		},
+
+		getTimeColumn: function() {
+			var defaultColumn = this.getDefaultColumn();
+
+			defaultColumn.setValue = function(cell, value) {
+				console.error(value);
+				cell.innerHTML = formatTime(value, this.lookup_type === "kv");
+			}.bind(this);
+
+			defaultColumn.getValue = function(cell) {
+				console.error("getting");
+				cell.innerHTML = "Got it!";
+			}.bind(this);
+
+			return defaultColumn;
+		},
 
         /**
          * Add some empty rows to the lookup data.
