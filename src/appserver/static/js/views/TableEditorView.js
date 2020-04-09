@@ -113,7 +113,11 @@ define([
 		 * @param cellProperties
          */
         lookupRenderer: function(instance, td, row, col, prop, value, cellProperties) {
-        	
+			
+			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) !== "text") {
+				return;
+			}
+
         	// Don't render a null value
         	if(value === null){
         		td.innerHTML = this.escapeHtml("");
@@ -133,8 +137,13 @@ define([
         	if(this.isCellTypeInvalid(row, col, value)) { // Cell type is incorrect
         		td.className = 'cellInvalidType';
 			}
+			// Convert CSV _time fields
 			else if(this.getFieldForColumn(col) === "_time") { // Cell type is _time
 				td.innerHTML = formatTime(value, false);
+			}
+			// Convert KV store time fields
+			else if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "time") { // Cell type is time
+				td.innerHTML = formatTime(value, true);
 			}
         	else if(!value || value === '') {
         		td.className = 'cellEmpty';
@@ -179,7 +188,7 @@ define([
         		td.className = '';
         	}
         	
-        	if(cellProperties.readOnly) {
+        	if(cellProperties && cellProperties.readOnly) {
         	    td.style.opacity = 0.7;
         	}
         },
@@ -446,14 +455,6 @@ define([
 					};
 					*/
 					column.editor = this.getTimeColumn();
-					/*
-					column.type = 'time';
-        			column.timeFormat = 'YYYY/MM/DD HH:mm:ss';
-					column.correctFormat = false;
-					column.timeIncludesMilliseconds = this.lookup_type === "kv";
-        			column.renderer = this.timeRenderer.bind(this); // Convert epoch times to a readable string
-					column.editor = TimeEditor;
-					*/
 				}
 				
         		// Use the tags input for the array fields
@@ -469,7 +470,7 @@ define([
         		else if(field_info === 'number'){
 					column.type = 'numeric';
 					column.decimal = '.',
-					column.mask = '[-]#,##.0000000000000000'
+					column.mask = '[-]#.0000000000000000'
 				}
 				
 				// Put in a default column editor if necessary
@@ -663,12 +664,6 @@ define([
 
 			// Make the columns
 			var columns = this.getColumnsMetadata();
-			this.table_header.forEach(function(header_column, index) {
-				columns.push({
-					'title': header_column,
-					readOnly: this.read_only || (this.lookup_type === 'kv' && header_column === '_key'),
-				});
-			}.bind(this));
 			
 			// Remove the header
 			data.splice(0, 1);
@@ -687,6 +682,10 @@ define([
 				tableWidth: width,
 				tableHeight: computed_height + 'px',
 				minSpareRows: data.length === 0 ? 1 : 0,
+				updateTable: function(el, cell, col, row, data, text, column_name) {
+					// Handle the case 
+					this.lookupRenderer(el, cell, row, col, data, text);
+				}.bind(this)
 			}
 
             // Wire-up handlers for doing KV store dynamic updates
@@ -727,7 +726,6 @@ define([
 				this.table_header.forEach(function(header_column, index) {
 					editor.setHeader(index, header_column);
 				});
-				
 			}
 			else {
 				var computed_height = ($(window).height() - $(this.$el[0]).offset().top - 100);
@@ -768,6 +766,20 @@ define([
 		 */
 		getFieldTypes: function(){
 			return this.field_types;
+		},
+
+		/**
+		 * Get the field type for the name.
+		 */
+		getFieldType: function(name){
+			return this.field_types[name];
+		},
+
+		/**
+		 * Get the field type for the column.
+		 */
+		getFieldTypeByColumn: function(col){
+			return this.field_types[this.getFieldForColumn(col)];
 		},
 
 		/**

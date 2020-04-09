@@ -206,11 +206,11 @@
 /**
  * Cell renderers
  */
- .lookup-edit-view .handsontable td.cellEmpty{
+ .lookup-edit-view .jexcel_content td.cellEmpty{
 	background: #F8F8F8;
 }
 
-.lookup-edit-view .handsontable td.cellEmptyHeader{
+.lookup-edit-view .jexcel_content td.cellEmptyHeader{
 	/* Pattern from http://www.patternify.com/ */
 	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAT0lEQVQYV2P8v3nmfwYc4HdPOlyGEZdCZEWsJTMZsCpEVwQyFkMhNkUYCnEpQlGITxFcISFFYIW/7BngwQPyHS4AV4hPEchGsEJCikC2AAAsFDi53F9I+QAAAABJRU5ErkJggg==);
 }
@@ -242,32 +242,32 @@
 	color: red;
 }
 
-.lookup-edit-view .handsontable td.cellUrgencyUnknown{
+.lookup-edit-view .jexcel_content td.cellUrgencyUnknown{
 	color: black;
 	background-color: #c1d7f0;
 }
 
-.lookup-edit-view .handsontable td.cellUrgencyInformational{
+.lookup-edit-view .jexcel_content td.cellUrgencyInformational{
 	color: black;
 	background-color: #c1d7f0;
 }
 
-.lookup-edit-view .handsontable td.cellUrgencyLow{
+.lookup-edit-view .jexcel_content td.cellUrgencyLow{
 	color: black;
 	background-color: #b5e25d;
 }
 
-.lookup-edit-view .handsontable td.cellUrgencyMedium{
+.lookup-edit-view .jexcel_content td.cellUrgencyMedium{
 	color: black;
 	background-color: #ffd70d;
 }
 
-.lookup-edit-view .handsontable td.cellUrgencyHigh{
+.lookup-edit-view .jexcel_content td.cellUrgencyHigh{
 	color: black;
 	background-color: #ff8700;
 }
 
-.lookup-edit-view .handsontable td.cellUrgencyCritical{
+.lookup-edit-view .jexcel_content td.cellUrgencyCritical{
 	color: white;
 	background-color: #bf1900;
 }
