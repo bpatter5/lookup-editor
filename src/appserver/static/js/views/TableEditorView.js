@@ -112,10 +112,16 @@ define([
         lookupRenderer: function(instance, td, row, col, prop, value, cellProperties) {
 			
 			// Convert KV store time fields
-			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "time") { // Cell type is time
+			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "time") {
 				td.innerHTML = formatTime(value, true);
 				return;
 			}
+			/*
+			// Convert KV store array fields
+			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "array") {
+				return this.arrayRenderer(instance, td, row, col, prop, value, cellProperties);
+			}
+			*/
 
 			// Otherwise don't mess with the other KV store fields, it tends to break things
 			else if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) !== "text") {
@@ -198,8 +204,9 @@ define([
 		 * @param {*} value 
 		 */
 		convertTimeValue: function(value){
+
 			// Try to convert the value to the epoch time
-			var converted_value = new Date(value).valueOf() / 1000;
+			var converted_value = new Date(value).valueOf();
 
 			// If we couldn't convert it, then pass it through (see https://lukemurphey.net/issues/2262)
 			if(!isNaN(converted_value)){
