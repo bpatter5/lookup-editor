@@ -21,8 +21,8 @@ define([
             includes_microseconds = false;
         }
 
-        if(/^\d+$/.test(value)){
-            var epoch = parseInt(value, 10);
+        if(/^\d+([.]\d+)?$/.test(value)){
+            var epoch = parseFloat(value, 10);
             
             if(!includes_microseconds){
                 // Moment expects micro-seconds in the epoch time value, so adjust accordingly
