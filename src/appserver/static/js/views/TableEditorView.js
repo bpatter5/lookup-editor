@@ -81,9 +81,7 @@ define([
 		 * @param col The column to get the table header information from.
          */
         getFieldForColumn: function(col){
-        	
         	var row_header = this.getTableHeader();
-        	
         	return row_header[col];
         },
 
@@ -94,7 +92,6 @@ define([
          * @returns {Boolean}
          */
         validate: function(data) {
-        	
         	// If the cell is the first row, then ensure that the new value is not blank
         	if( data[0][0] === 0 && data[0][3].length === 0 ){
         		return false;
@@ -114,7 +111,14 @@ define([
          */
         lookupRenderer: function(instance, td, row, col, prop, value, cellProperties) {
 			
-			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) !== "text") {
+			// Convert KV store time fields
+			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "time") { // Cell type is time
+				td.innerHTML = formatTime(value, true);
+				return;
+			}
+
+			// Otherwise don't mess with the other KV store fields, it tends to break things
+			else if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) !== "text") {
 				return;
 			}
 
@@ -140,10 +144,6 @@ define([
 			// Convert CSV _time fields
 			else if(this.getFieldForColumn(col) === "_time") { // Cell type is _time
 				td.innerHTML = formatTime(value, false);
-			}
-			// Convert KV store time fields
-			else if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "time") { // Cell type is time
-				td.innerHTML = formatTime(value, true);
 			}
         	else if(!value || value === '') {
         		td.className = 'cellEmpty';
@@ -459,11 +459,12 @@ define([
 				
         		// Use the tags input for the array fields
         		else if(field_info === 'array'){
-					// TODO: handle time
+					// TODO: handle array
 					/*
         			column.renderer = this.arrayRenderer.bind(this);
 					column.editor = ArrayEditor;
 					*/
+					column.editor = this.getArrayColumn();
         		}
         		
         		// Handle number fields
@@ -563,10 +564,12 @@ define([
 					// Create input
 					var element = document.createElement('input');
 					element.value = cell.innerHTML;
+
 					// Update cell
 					cell.classList.add('editor');
 					cell.innerHTML = '';
 					cell.appendChild(element);
+
 					// Focus on the element
 					element.focus();
 				},
@@ -601,12 +604,59 @@ define([
 				cell.innerHTML = formatTime(value, this.lookup_type === "kv");
 			}.bind(this);
 
-			defaultColumn.getValue = function(cell) {
-				console.error("getting");
-				cell.innerHTML = "Got it!";
-			}.bind(this);
-
 			return defaultColumn;
+		},
+
+		getArrayColumn: function() {
+			return {
+				closeEditor : function(cell, save) {
+					// var value = $(cell.children[1]).tagsinput('items').join(',');
+					var value = JSON.stringify($(cell.children[1]).tagsinput('items'));
+					cell.innerHTML = value;
+					return value;
+				},
+				openEditor : function(cell) {
+					// Create textarea
+					var element = document.createElement('textarea');
+					var originalValue = cell.innerHTML;
+					element.value = originalValue;
+
+					// Hide the existing value
+					cell.innerHTML = '';
+
+					cell.appendChild(element);
+					$(element).attr("placeholder", "Enter values separated by commas; click outside the cell to persist the value");
+
+					// Create the tags input widget
+					$(element).tagsinput({
+						confirmKeys: [44],
+						allowDuplicates: true,
+						tagClass: 'label label-info arrayValue'
+					});
+
+					$(element).tagsinput('removeAll');
+	
+					try {
+						values = JSON.parse(originalValue);
+						for(var c=0; c < values.length;c++){
+							$(element).tagsinput('add', values[c]);
+						}
+					}
+					catch(err) {
+						// The value could not be parsed
+						console.warn("Unable to parse the values: ", originalValue);
+					}
+
+					// Focus on the element
+					element.focus();
+				},
+				getValue : function(cell) {
+					return cell.innerHTML;
+				},
+				setValue : function(cell, value) {
+					cell.innerHTML = value;
+				}
+			};
 		},
 
         /**
