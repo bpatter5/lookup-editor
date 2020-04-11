@@ -761,6 +761,9 @@ define([
 				tableHeight: computed_height + 'px',
 				minSpareRows: data.length === 0 ? 1 : 0,
 				about: false,
+				allowRenameColumn: this.lookup_type !== "kv",
+				allowDeleteColumn: this.lookup_type !== "kv",
+				allowInsertColumn: this.lookup_type !== "kv",
 				updateTable: function(el, cell, col, row, data, text, column_name) {
 					this.lookupRenderer(el, cell, row, col, data, text);
 				}.bind(this)
