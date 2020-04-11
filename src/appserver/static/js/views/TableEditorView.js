@@ -110,18 +110,16 @@ define([
 		 * @param cellProperties
          */
         lookupRenderer: function(instance, td, row, col, prop, value, cellProperties) {
-			
 			// Convert KV store time fields
 			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "time") {
 				td.innerHTML = formatTime(value, true);
 				return;
 			}
-			/*
+
 			// Convert KV store array fields
 			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "array") {
 				return this.arrayRenderer(instance, td, row, col, prop, value, cellProperties);
 			}
-			*/
 
 			// Otherwise don't mess with the other KV store fields, it tends to break things
 			else if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) !== "text") {
@@ -466,11 +464,6 @@ define([
 				
         		// Use the tags input for the array fields
         		else if(field_info === 'array'){
-					// TODO: handle array
-					/*
-        			column.renderer = this.arrayRenderer.bind(this);
-					column.editor = ArrayEditor;
-					*/
 					column.editor = this.getArrayColumn();
         		}
         		
@@ -525,7 +518,13 @@ define([
 			// Try to parse the content
 			else {
 				try {
-					var values = JSON.parse(value);
+					// By default assume the incoming value is a list
+					var values = value;
+
+					// If this is a string, then parse it
+					if(typeof value === "string"){
+						values = JSON.parse(value);
+					}
 
 					// Make the HTML
 					var labels_template = _.template('<% for(var c = 0; c < values.length; c++){ %><span class="label label-default label-readonly arrayValue"><%- values[c] %></span><% } %>');
@@ -533,7 +532,8 @@ define([
 					td.innerHTML = labels_template({ values: values});
 				}
 				catch(err) {
-					
+					console.warn("Unable to parse the cell values:" + value);
+					td.innerHTML = value;
 				}
 			}
 
@@ -605,9 +605,24 @@ define([
 
 		getTimeColumn: function() {
 			var defaultColumn = this.getDefaultColumn();
+			placeholder:'YYYY/MM/DD HH:mm:ss',
+
+			defaultColumn.openEditor = function(cell) {
+				// Create input
+				var element = document.createElement('input');
+				element.value = cell.innerHTML;
+				element.setAttribute('placeholder', 'YYYY/MM/DD HH:mm:ss');
+
+				// Update cell
+				cell.classList.add('editor');
+				cell.innerHTML = '';
+				cell.appendChild(element);
+
+				// Focus on the element
+				element.focus();
+			},
 
 			defaultColumn.setValue = function(cell, value) {
-				console.error(value);
 				cell.innerHTML = formatTime(value, this.lookup_type === "kv");
 			}.bind(this);
 
@@ -618,15 +633,16 @@ define([
 			return {
 				closeEditor : function(cell, save) {
 					// var value = $(cell.children[1]).tagsinput('items').join(',');
-					var value = JSON.stringify($(cell.children[1]).tagsinput('items'));
-					cell.innerHTML = value;
-					return value;
-				},
+					var values = $(cell.children[1]).tagsinput('items');
+					cell.innerHTML = values;
+					return values;
+				}.bind(this),
 				openEditor : function(cell) {
+					// Get the value of the cell in array format
+					var values = this.getValue(cell);
+
 					// Create textarea
 					var element = document.createElement('textarea');
-					var originalValue = cell.innerHTML;
-					element.value = originalValue;
 
 					// Hide the existing value
 					cell.innerHTML = '';
@@ -644,25 +660,30 @@ define([
 					$(element).tagsinput('removeAll');
 	
 					try {
-						values = JSON.parse(originalValue);
 						for(var c=0; c < values.length;c++){
 							$(element).tagsinput('add', values[c]);
 						}
 					}
 					catch(err) {
 						// The value could not be parsed
-						console.warn("Unable to parse the values: ", originalValue);
+						console.warn("Unable to parse the values: ", values);
 					}
 
 					// Focus on the element
 					element.focus();
 				},
 				getValue : function(cell) {
-					return cell.innerHTML;
+					var values = $('.arrayValue', cell);
+					var parsed = [];
+
+					for(var c=0; c < values.length;c++){
+						parsed.push(values[c].innerHTML);
+					}
+					return parsed;
 				},
 				setValue : function(cell, value) {
-					cell.innerHTML = value;
-				}
+					cell.innerHTML = JSON.stringify(value);
+				}.bind(this)
 			};
 		},
 
@@ -739,8 +760,8 @@ define([
 				tableWidth: width,
 				tableHeight: computed_height + 'px',
 				minSpareRows: data.length === 0 ? 1 : 0,
+				about: false,
 				updateTable: function(el, cell, col, row, data, text, column_name) {
-					// Handle the case 
 					this.lookupRenderer(el, cell, row, col, data, text);
 				}.bind(this)
 			}
