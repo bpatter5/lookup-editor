@@ -514,7 +514,7 @@ define([
          */
 		arrayRenderer: function(instance, td, row, col, prop, value, cellProperties) {
 			// Stop if the content is empty
-			if(value === null || value.length === 0){
+			if(prop === null || prop.length === 0){
 				td.innerHTML = "";
 			}
 
@@ -522,11 +522,11 @@ define([
 			else {
 				try {
 					// By default assume the incoming value is a list
-					var values = value;
+					var values = prop;
 
 					// If this is a string, then parse it
-					if(typeof value === "string"){
-						values = JSON.parse(value);
+					if(typeof prop === "string"){
+						values = JSON.parse(prop);
 					}
 
 					// Make the HTML
@@ -535,8 +535,8 @@ define([
 					td.innerHTML = labels_template({ values: values});
 				}
 				catch(err) {
-					console.warn("Unable to parse the cell values:" + value);
-					td.innerHTML = value;
+					console.warn("Unable to parse the cell values:" + prop);
+					td.innerHTML = prop;
 				}
 			}
 
