@@ -9,7 +9,7 @@ define([], function () {
       // Insert a new column
       if (this.lookup_type === "csv") {
         items.push({
-          title: "Insert a new column before",
+          title: jexcel.options.text.insertANewColumnBefore,
           onclick: function () {
             jexcel.insertColumn(1, parseInt(x), 1);
           },
@@ -18,7 +18,7 @@ define([], function () {
 
       if (this.lookup_type === "csv") {
         items.push({
-          title: "Insert a new column after",
+          title: jexcel.options.text.insertANewColumnAfter,
           onclick: function () {
             jexcel.insertColumn(1, parseInt(x), 0);
           },
@@ -28,7 +28,7 @@ define([], function () {
       // Delete a column
       if (this.lookup_type === "csv") {
         items.push({
-          title: "Delete selected rows",
+          title: jexcel.options.text.deleteSelectedColumns,
           onclick: function () {
             jexcel.deleteColumn(
               jexcel.getSelectedColumns().length ? undefined : parseInt(x)
@@ -61,13 +61,13 @@ define([], function () {
 
       // Sorting
       items.push({
-        title: "Order ascending",
+        title: jexcel.options.text.orderAscending,
         onclick: function () {
           jexcel.orderBy(x, 0);
         },
       });
       items.push({
-        title: "Order descending",
+        title: jexcel.options.text.orderDescending,
         onclick: function () {
           jexcel.orderBy(x, 1);
         },
@@ -75,21 +75,21 @@ define([], function () {
     } else {
       // Insert new row
       items.push({
-        title: "Insert a new row before",
+        title: jexcel.options.text.insertANewRowBefore,
         onclick: function () {
           jexcel.insertRow(1, parseInt(y), 1);
         },
       });
 
       items.push({
-        title: "Insert a new row after",
+        title: jexcel.options.text.insertANewRowAfter,
         onclick: function () {
           jexcel.insertRow(1, parseInt(y));
         },
       });
 
       items.push({
-        title: "Delete selected rows",
+        title: jexcel.options.text.deleteSelectedRows,
         onclick: function () {
           jexcel.deleteRow(jexcel.getSelectedRows().length ? undefined : parseInt(y));
         },
