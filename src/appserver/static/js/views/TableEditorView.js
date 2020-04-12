@@ -15,7 +15,8 @@ require.config({
 		jsuites: '../app/lookup_editor/js/lib/jsuites/jsuites',
 		formatTime: '../app/lookup_editor/js/utils/FormatTime',
 		"console": '../app/lookup_editor/js/lib/console',
-		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min"
+		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min",
+		contextMenu: '../app/lookup_editor/js/utils/ContextMenu'
     },
     shim: {
         'bootstrap-tags-input': {
@@ -33,6 +34,7 @@ define([
 	"jquery",
 	"splunkjs/mvc/simplesplunkview",
 	"formatTime",
+	"contextMenu",
 	"jexcel",
 	"jsuites",
 	"bootstrap-tags-input",
@@ -48,6 +50,7 @@ define([
     $,
 	SimpleSplunkView,
 	formatTime,
+	contextMenu,
 ){
 
     // Define the custom view class
@@ -755,15 +758,12 @@ define([
 				columns: columns,
 				lazyLoading: true,
 				allowExport: false,
+				contextMenu: contextMenu.bind(this),
 				editable: !this.read_only,
 				defaultColAlign: 'left',
 				tableWidth: width,
 				tableHeight: computed_height + 'px',
 				minSpareRows: data.length === 0 ? 1 : 0,
-				about: false,
-				allowRenameColumn: this.lookup_type !== "kv",
-				allowDeleteColumn: this.lookup_type !== "kv",
-				allowInsertColumn: this.lookup_type !== "kv",
 				updateTable: function(el, cell, col, row, data, text, column_name) {
 					this.lookupRenderer(el, cell, row, col, data, text);
 				}.bind(this)
