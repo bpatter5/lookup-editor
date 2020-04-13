@@ -157,7 +157,8 @@ define([
         	"click #import-file"    : "openFileImportModal",
 			"click #refresh"        : "refreshLookup",
 			"click #edit-acl"       : "editACLs",
-			"click #open-in-search" : "openInSearch"
+			"click #open-in-search" : "openInSearch",
+			"keyup .search-lookup"  : "updateSearch"
         },
         
         /**
@@ -1420,6 +1421,13 @@ define([
 				this.lookup_transform_create_view.openInSearchOrCreateTransform(this.owner, this.namespace, this.lookup);
 			}
 			
+		},
+
+		/**
+		 * Perform a search.
+		 */
+		updateSearch: function(){
+			this.table_editor_view.search($('.search-lookup').val());
 		},
 
 		/**

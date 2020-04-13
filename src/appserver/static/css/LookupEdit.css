@@ -180,6 +180,15 @@
 	left: 44%;
 }
 
+.lookup-edit-view .search-lookup {
+	margin-bottom: 0;
+}
+
+/* Hide the jexcel filter, we are going to use our own */
+.lookup-edit-view .jexcel_filter {
+	display: none;
+}
+
 /*
  * Fix highlight color on the dropdown button (for reverting to previous versions)
  */
@@ -233,12 +242,12 @@
 }
 
 .lookup-edit-view .cellTrue{
-	fontstyle: italic;
+	font-style: italic;
 	color: green;
 }
 
 .lookup-edit-view .cellFalse{
-	fontstyle: italic;
+	font-style: italic;
 	color: red;
 }
 

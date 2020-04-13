@@ -708,7 +708,16 @@ define([
         		data.push($.extend(true, [], row));
         	}
         	
-        },
+		},
+		
+		/**
+		 * Search the lookup for the given data
+		 *
+		 * @param text the text to search for 
+		 */
+		search: function(text){
+			this.jexcel.search(text);
+		},
 
         /**
          * Render the lookup.
