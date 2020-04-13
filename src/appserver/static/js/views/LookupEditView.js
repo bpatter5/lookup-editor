@@ -157,7 +157,8 @@ define([
         	"click #import-file"    : "openFileImportModal",
 			"click #refresh"        : "refreshLookup",
 			"click #edit-acl"       : "editACLs",
-			"click #open-in-search" : "openInSearch"
+			"click #open-in-search" : "openInSearch",
+			"keyup .search-lookup"  : "updateSearch"
         },
         
         /**
@@ -596,6 +597,7 @@ define([
          * @param version The version to get from the archived history
          */
         loadLookupContents: function(lookup_file, namespace, user, lookup_type, header_only, version){
+
         	// Set a default value for header_only
         	if( typeof header_only === 'undefined' ){
         		header_only = false;
@@ -1118,11 +1120,18 @@ define([
         	if(this.table_editor_view.isReadOnly()){
         		return;
         	}
-        	
+
         	// First, we need to get the _key of the edited row
-        	var row_data = this.table_editor_view.getDataAtRow(row);
-        	var _key = row_data[this.table_editor_view.getColumnForField('_key')];
-        	
+			var row_data = this.table_editor_view.getDataAtRow(row);
+
+			if(!row_data){
+				this.showWarningMessage("Unable to find the row data for editing");
+				return;
+			}
+
+			var col = this.table_editor_view.getColumnForField('_key');
+        	var _key = row_data[col];
+
         	if(_key === undefined){
         		console.error("Unable to get the _key for editing the cell at (" + row + ", " + col + ")");
         		return;
@@ -1189,15 +1198,19 @@ define([
          * Do the removal of a row (for KV store lookups since edits are dynamic).
 		 * 
 		 * @param row The row number
+		 * @param row_data The row data
          */
-        doRemoveRow: function(row){
+        doRemoveRow: function(row, row_data){
         	// Stop if we are in read-only mode
         	if(this.table_editor_view.isReadOnly()){
         		return;
         	}
         	
-        	// First, we need to get the _key of the edited row
-        	var row_data = this.table_editor_view.getDataAtRow(row);
+			// First, we need to get the _key of the edited row
+			if(!row_data) {
+				row_data = this.table_editor_view.getDataAtRow(row);
+			}
+
         	var _key = row_data[0];
         	
         	// Second, make sure the _key is valid
@@ -1228,6 +1241,8 @@ define([
 						this.showWarningMessage("An entry could not be removed from the KV store lookup", true);
 					}
 				}.bind(this));
+
+			return true;
         },
         
         /**
@@ -1409,6 +1424,13 @@ define([
 		},
 
 		/**
+		 * Perform a search.
+		 */
+		updateSearch: function(){
+			this.table_editor_view.search($('.search-lookup').val());
+		},
+
+		/**
 		 * Refresh the lookup.
 		 */
 		refreshLookup: function(){
@@ -1500,7 +1522,8 @@ define([
 						}.bind(this));
 
 						this.table_editor_view.on("createRows", function(data) {
-							this.doCreateRows(data.row, data.count);
+							// Don't create empty rows in the KV store, wait until values are provided
+							// this.doCreateRows(data.row, data.count);
 						}.bind(this));
 						
 					}

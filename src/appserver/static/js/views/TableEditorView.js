@@ -3,65 +3,54 @@
  * contents of lookup files.
  * 
  * This class exposes a series of Backbone events that can be used to listen for actions. Below is
- * a list:
+ * the list:
  * 
  *    1) editCell: when a cell gets edited
- *    2) removeRow: when a row ges removed
+ *    2) removeRow: when a row gets removed
  *    3) createRows: when a series of new rows are to be created
  */
 require.config({
     paths: {
-		Handsontable: "../app/lookup_editor/js/lib/handsontable/handsontable",
-		pikaday: "../app/lookup_editor/js/lib/pikaday/pikaday",
-		numbro: "../app/lookup_editor/js/lib/numbro/numbro",
-		moment: '../app/lookup_editor/js/lib/moment/moment',
+		jexcel: '../app/lookup_editor/js/lib/jexcel/jexcel',
+		jsuites: '../app/lookup_editor/js/lib/jsuites/jsuites',
 		formatTime: '../app/lookup_editor/js/utils/FormatTime',
-		console: '../app/lookup_editor/js/lib/console',
-		arrayeditor: '../app/lookup_editor/js/lib/HotEditors/ArrayEditor',
-		defaulteditor: '../app/lookup_editor/js/lib/HotEditors/DefaultEditor',
-		forgivingcheckboxeditor: '../app/lookup_editor/js/lib/HotEditors/ForgivingCheckboxEditor',
-		timeeditor: '../app/lookup_editor/js/lib/HotEditors/TimeEditor',
-		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min"
+		"console": '../app/lookup_editor/js/lib/console',
+		"bootstrap-tags-input": "../app/lookup_editor/js/lib/bootstrap-tagsinput.min",
+		contextMenu: '../app/lookup_editor/js/utils/ContextMenu'
     },
     shim: {
-        'Handsontable': {
-        	deps: ['jquery', 'pikaday', 'numbro', 'moment']
-		},
         'bootstrap-tags-input': {
         	deps: ['jquery']
-        }
+		},
+        'jexcel': {
+        	deps: ['jquery', 'jsuites']
+		},
     }
 });
 
 define([
     "underscore",
     "backbone",
-    "jquery",
-    "splunkjs/mvc/simplesplunkview",
-	"moment",
-	"Handsontable",
-	"arrayeditor",
-	"forgivingcheckboxeditor",
-	"timeeditor",
-	"defaulteditor",
+	"jquery",
+	"splunkjs/mvc/simplesplunkview",
 	"formatTime",
+	"contextMenu",
+	"jexcel",
+	"jsuites",
 	"bootstrap-tags-input",
     "splunk.util",
-	"css!../app/lookup_editor/css/lib/handsontable.full.css",
 	"css!../app/lookup_editor/js/lib/bootstrap-tagsinput.css",
-	"css!../app/lookup_editor/css/TagsInput.css"
+	"css!../app/lookup_editor/css/TagsInput.css",
+	"css!../app/lookup_editor/js/lib/jexcel/jexcel.css",
+	"css!../app/lookup_editor/js/lib/jsuites/jsuites.css",
+	"css!../app/lookup_editor/css/TableEditorView.css",
 ], function(
     _,
     Backbone,
     $,
-    SimpleSplunkView,
-	moment,
-	Handsontable,
-	ArrayEditor,
-	ForgivingCheckboxEditor,
-	TimeEditor,
-	DefaultEditor,
-	formatTime
+	SimpleSplunkView,
+	formatTime,
+	contextMenu,
 ){
 
     // Define the custom view class
@@ -78,7 +67,7 @@ define([
             this.lookup_type = this.options.lookup_type; // The type of lookup (csv or kv)
 
             // Below is the list of internal variables
-            this.handsontable = null; // A reference to the handsontable
+            this.jexcel = null; // A reference to the handsontable
 
             this.field_types = {}; // This will store the expected types for each field
             this.field_types_enforced = false; // This will store whether this lookup enforces types
@@ -95,9 +84,7 @@ define([
 		 * @param col The column to get the table header information from.
          */
         getFieldForColumn: function(col){
-        	
         	var row_header = this.getTableHeader();
-        	
         	return row_header[col];
         },
 
@@ -108,7 +95,6 @@ define([
          * @returns {Boolean}
          */
         validate: function(data) {
-        	
         	// If the cell is the first row, then ensure that the new value is not blank
         	if( data[0][0] === 0 && data[0][3].length === 0 ){
         		return false;
@@ -127,7 +113,22 @@ define([
 		 * @param cellProperties
          */
         lookupRenderer: function(instance, td, row, col, prop, value, cellProperties) {
-        	
+			// Convert KV store time fields
+			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "time") {
+				td.innerHTML = formatTime(value, true);
+				return;
+			}
+
+			// Convert KV store array fields
+			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "array") {
+				return this.arrayRenderer(instance, td, row, col, prop, value, cellProperties);
+			}
+
+			// Otherwise don't mess with the other KV store fields, it tends to break things
+			else if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) !== "text") {
+				return;
+			}
+
         	// Don't render a null value
         	if(value === null){
         		td.innerHTML = this.escapeHtml("");
@@ -147,6 +148,7 @@ define([
         	if(this.isCellTypeInvalid(row, col, value)) { // Cell type is incorrect
         		td.className = 'cellInvalidType';
 			}
+			// Convert CSV _time fields
 			else if(this.getFieldForColumn(col) === "_time") { // Cell type is _time
 				td.innerHTML = formatTime(value, false);
 			}
@@ -193,7 +195,7 @@ define([
         		td.className = '';
         	}
         	
-        	if(cellProperties.readOnly) {
+        	if(cellProperties && cellProperties.readOnly) {
         	    td.style.opacity = 0.7;
         	}
         },
@@ -203,8 +205,9 @@ define([
 		 * @param {*} value 
 		 */
 		convertTimeValue: function(value){
+
 			// Try to convert the value to the epoch time
-			var converted_value = new Date(value).valueOf() / 1000;
+			var converted_value = new Date(value).valueOf();
 
 			// If we couldn't convert it, then pass it through (see https://lukemurphey.net/issues/2262)
 			if(!isNaN(converted_value)){
@@ -222,7 +225,7 @@ define([
 		 * integer.
          */
         getData: function(){
-			var data = this.handsontable.getData();
+			var data = this.jexcel.getData();
 
 			var convert_columns = {};
 
@@ -278,7 +281,9 @@ define([
          * @param row An integer designating the row
          */
         getDataAtRow: function(row){
-            return this.handsontable.getDataAtRow(row);
+			// jexcel works using cells that are off by one from the way that HandsOnTable worked
+			var rowUpdated = parseInt(row) - 1;
+            return this.jexcel.getRowData(rowUpdated);
         },
 
         /**
@@ -292,14 +297,15 @@ define([
          * @param operation A string describing the value
          */
         setDataAtCell: function(row, column, value, operation){
-
             // If the column is a string, then this is a column name. Resolve the actual column
-            // name.
+			// name.
             if(typeof column === "string"){
                 column = this.getColumnForField(column);
-            }
-
-            return this.handsontable.setDataAtCell(row, column, value, operation);
+			}
+			
+			// jexcel works using cells that are off by one from the way that HandsOnTable worked
+			var row = parseInt(row) - 1;
+			this.jexcel.setValueFromCoords(column, row, value, true);
         },
 
         /**
@@ -319,7 +325,7 @@ define([
         		return this.table_header;
         	}
 			
-			this.table_header = this.handsontable.getColHeader();
+			this.table_header = this.jexcel.getHeaders(true);
         	
         	return this.table_header;
         },
@@ -332,7 +338,7 @@ define([
         getColumnForField: function(field_name){
         	
         	var row_header = this.getTableHeader();
-        	
+
         	for(var c = 0; c < row_header.length; c++){
         		if(row_header[c] === field_name){
         			return c;
@@ -433,42 +439,50 @@ define([
         	var field_info = null;
         	
         	for(var c = 0; c < table_header.length; c++){
-        		field_info = this.field_types[table_header[c]];
-        		
-        		column = {};
+				var header_column = table_header[c];
+				field_info = this.field_types[header_column];
+				
+        		column = {
+					'title': header_column,
+					'readOnly': this.read_only || (this.lookup_type === 'kv' && header_column === '_key'),
+				};
         		
         		// Use a checkbox for the boolean
         		if(field_info === 'boolean'){
         			column.type = 'checkbox';
-        			column.editor = ForgivingCheckboxEditor;
         		}
         		
         		// Use format.js for the time fields
         		else if(field_info === 'time'){
-					column.type = 'time';
-        			column.timeFormat = 'YYYY/MM/DD HH:mm:ss';
-					column.correctFormat = false;
-					column.timeIncludesMilliseconds = this.lookup_type === "kv";
-        			column.renderer = this.timeRenderer.bind(this); // Convert epoch times to a readable string
-        			column.editor = TimeEditor;
+					/*
+					column.type = 'calendar';
+					column.options = {
+						format:'YYYY/MM/DD HH:MM:SS',
+						time: 1,
+						placeholder:'YYYY/MM/DD HH:mm:ss',
+					};
+					*/
+					column.editor = this.getTimeColumn();
 				}
 				
         		// Use the tags input for the array fields
         		else if(field_info === 'array'){
-        			column.renderer = this.arrayRenderer.bind(this);
-					column.editor = ArrayEditor;
+					column.editor = this.getArrayColumn();
         		}
         		
         		// Handle number fields
         		else if(field_info === 'number'){
 					column.type = 'numeric';
-					column.numericFormat = {
-						pattern: '0.[00000]',
-					};
-        		}
+					column.decimal = '.',
+					column.mask = '[-]#.0000000000000000'
+				}
+				
+				// Put in a default column editor if necessary
+				else {
+					column.editor = this.getEscapedHtmlColumn();
+				}
         		
         		columns.push(column);
-        		
     		}
     		
         	return columns;
@@ -480,30 +494,12 @@ define([
         reRenderHandsOnTable: function(){
         	
         	// Re-render the view
-        	if(this.$el.length > 0 && this.handsontable){
-            	if(this.handsontable){
-            		this.handsontable.render(); 
+        	if(this.$el.length > 0 && this.jexcel){
+            	if(this.jexcel){
+            		this.jexcel.render(); // TODO check
             	}
         	}
         },
-        
-        /**
-         * Render time content (converts the epochs to times)
-		 * 
-		 * @param instance The instance of the Handsontable
-		 * @param td The TD element
-		 * @param row The row number
-		 * @param col The column number
-		 * @param prop
-		 * @param value The value of the cell
-		 * @param cellProperties
-         */
-        timeRenderer: function(instance, td, row, col, prop, value, cellProperties) {
-        	value = this.escapeHtml(Handsontable.helper.stringify(value));
-			td.innerHTML = formatTime(value, this.lookup_type === "kv");
-
-            return td;
-		},
 		
         /**
          * Render array content (as a set of labels)
@@ -518,14 +514,20 @@ define([
          */
 		arrayRenderer: function(instance, td, row, col, prop, value, cellProperties) {
 			// Stop if the content is empty
-			if(value === null || value.length === 0){
+			if(prop === null || prop.length === 0){
 				td.innerHTML = "";
 			}
 
 			// Try to parse the content
 			else {
 				try {
-					var values = JSON.parse(value);
+					// By default assume the incoming value is a list
+					var values = prop;
+
+					// If this is a string, then parse it
+					if(typeof prop === "string"){
+						values = JSON.parse(prop);
+					}
 
 					// Make the HTML
 					var labels_template = _.template('<% for(var c = 0; c < values.length; c++){ %><span class="label label-default label-readonly arrayValue"><%- values[c] %></span><% } %>');
@@ -533,7 +535,8 @@ define([
 					td.innerHTML = labels_template({ values: values});
 				}
 				catch(err) {
-					
+					console.warn("Unable to parse the cell values:" + prop);
+					td.innerHTML = prop;
 				}
 			}
 
@@ -555,7 +558,137 @@ define([
         	td.innerHTML = this.escapeHtml(Handsontable.helper.stringify(value));
 
             return td;
-        },
+		},
+		
+		/**
+		 * Below is the list of column renderers
+		 */
+		getDefaultColumn: function() {
+			return {
+				closeEditor : function(cell, save) {
+					var value = cell.children[0].value;
+					cell.innerHTML = value;
+					return value;
+				},
+				openEditor : function(cell) {
+					// Create input
+					var element = document.createElement('input');
+					element.value = cell.innerHTML;
+
+					// Update cell
+					cell.classList.add('editor');
+					cell.innerHTML = '';
+					cell.appendChild(element);
+
+					// Focus on the element
+					element.focus();
+				},
+				getValue : function(cell) {
+					return cell.innerHTML;
+				},
+				setValue : function(cell, value) {
+					cell.innerHTML = value;
+				}
+			};
+		},
+
+		getEscapedHtmlColumn: function() {
+			var defaultColumn = this.getDefaultColumn();
+
+			defaultColumn.setValue = function(cell, value) {
+				cell.innerHTML = this.escapeHtml(value);
+			}.bind(this);
+
+			defaultColumn.getValue = function(cell) {
+				return this.escapeHtml(cell.innerHTML);
+			}.bind(this);
+
+			return defaultColumn;
+		},
+
+		getTimeColumn: function() {
+			var defaultColumn = this.getDefaultColumn();
+			placeholder:'YYYY/MM/DD HH:mm:ss',
+
+			defaultColumn.openEditor = function(cell) {
+				// Create input
+				var element = document.createElement('input');
+				element.value = cell.innerHTML;
+				element.setAttribute('placeholder', 'YYYY/MM/DD HH:mm:ss');
+
+				// Update cell
+				cell.classList.add('editor');
+				cell.innerHTML = '';
+				cell.appendChild(element);
+
+				// Focus on the element
+				element.focus();
+			},
+
+			defaultColumn.setValue = function(cell, value) {
+				cell.innerHTML = formatTime(value, this.lookup_type === "kv");
+			}.bind(this);
+
+			return defaultColumn;
+		},
+
+		getArrayColumn: function() {
+			return {
+				closeEditor : function(cell, save) {
+					// var value = $(cell.children[1]).tagsinput('items').join(',');
+					var values = $(cell.children[1]).tagsinput('items');
+					cell.innerHTML = values;
+					return values;
+				}.bind(this),
+				openEditor : function(cell) {
+					// Get the value of the cell in array format
+					var values = this.getValue(cell);
+
+					// Create textarea
+					var element = document.createElement('textarea');
+
+					// Hide the existing value
+					cell.innerHTML = '';
+
+					cell.appendChild(element);
+					$(element).attr("placeholder", "Enter values separated by commas; click outside the cell to persist the value");
+
+					// Create the tags input widget
+					$(element).tagsinput({
+						confirmKeys: [44],
+						allowDuplicates: true,
+						tagClass: 'label label-info arrayValue'
+					});
+
+					$(element).tagsinput('removeAll');
+	
+					try {
+						for(var c=0; c < values.length;c++){
+							$(element).tagsinput('add', values[c]);
+						}
+					}
+					catch(err) {
+						// The value could not be parsed
+						console.warn("Unable to parse the values: ", values);
+					}
+
+					// Focus on the element
+					element.focus();
+				},
+				getValue : function(cell) {
+					var values = $('.arrayValue', cell);
+					var parsed = [];
+
+					for(var c=0; c < values.length;c++){
+						parsed.push(values[c].innerHTML);
+					}
+					return parsed;
+				},
+				setValue : function(cell, value) {
+					cell.innerHTML = JSON.stringify(value);
+				}.bind(this)
+			};
+		},
 
         /**
          * Add some empty rows to the lookup data.
@@ -575,268 +708,119 @@ define([
         		data.push($.extend(true, [], row));
         	}
         	
-        },
+		},
+		
+		/**
+		 * Search the lookup for the given data
+		 *
+		 * @param text the text to search for 
+		 */
+		search: function(text){
+			this.jexcel.search(text);
+		},
 
         /**
          * Render the lookup.
 		 * 
 		 * @param data The array of arrays that represents the data to render
          */
-        renderLookup: function(data){
-            
+        renderLookup: function(data){			
         	if(data === null){
         		console.warn("Lookup could not be loaded");
         		return false;
         	}
-        	
+
         	// Store the table header so that we can determine the relative offsets of the fields
         	this.table_header = data[0];
-        	
-        	// If the handsontable has already rendered, then re-render the existing one.
-        	if(this.handsontable !== null){
-        		this.handsontable.destroy();
-        		this.handsontable = null;
-        	}
-    		
-    		// If we are editing a KV store lookup, use these menu options
-        	var contextMenu = null;
-        
-        	var read_only = this.read_only;
-        		
-        	if(this.lookup_type === "kv"){
-	    		contextMenu = {
-	    				items: {
-	    					'row_above': {
-	    						disabled: function () {
-	    				            // If read-only or the first row, disable this option
-	    				            return this.read_only || (this.handsontable.getSelected() === undefined);
-	    				        }.bind(this)
-	    					},
-	    					'row_below': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					"hsep1": "---------",
-	    					'remove_row': {
-	    						disabled: function () {
-	    							// If read-only or the first row, disable this option
-	    				            return this.read_only || (this.handsontable.getSelected() === undefined);
-	    				        }.bind(this)
-	    					},
-	    					'hsep2': "---------",
-	    					'undo': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					},
-	    					'redo': {
-	    						disabled: function () {
-	    				            return this.read_only;
-	    				        }.bind(this)
-	    					}
-	    				}
-	    		};
-        	}
-        	else{
-	    		contextMenu = {
-	    				items: {
-							'edit': {
-								name: "Edit",
-			  
-								callback: function() { // Callback for specific option
-								  var instance = this.handsontable;
-			  
-								  setTimeout(function() {
-									var input = document.createElement('input'),
-										th = document.getElementsByClassName('ht_master handsontable')[0].getElementsByClassName('ht__highlight')[0],
-										coords = th.cellIndex -1,
-										rect = th.getBoundingClientRect(),
-										addListeners = (events, headers, index) => {
-										  events.split(' ').forEach(e => {
-											input.addEventListener(e, () => {
-											  headers[index] = input.value;
-											  if (input.value.length > 0){
-												  instance.updateSettings({colHeaders: headers});
-											  }
-											  setTimeout(() => {
-												if (input.parentNode) input.parentNode.removeChild(input)
-											  });
-											})
-										  })
-										},
-										appendInput = () => {
-										  input.setAttribute('type', 'text');
-										  input.style.cssText = '' +
-											'position:absolute;' +
-											'left:' + rect.left + 'px;' +
-											'top:' + rect.top + 'px;' +
-											'width:' + (rect.width - 4) + 'px;' +
-											'height:' + (rect.height - 4) + 'px;' +
-											'z-index:1000;' +
-											'text-align:center';
-										  document.body.appendChild(input);
-										};
-			  
-									// Start doing something
-									input.value = th.querySelector('.colHeader').innerText;
-									appendInput();
-									setTimeout(() => {
-										input.select();
-										addListeners('change blur', instance['getColHeader'](), coords);
-									});
-								  }, 0);
-								}.bind(this),
-			  
-								disabled: function(){
-									var range = this.handsontable.getSelectedRangeLast(),
-										len = this.handsontable.getData().length-1;
-									if (range.from.row === 0 && range.to.row === len){
-										return false;
-									}
-									return true;
-								}.bind(this)
-							},
-							'hsep1': "---------",
-	    					'row_above': {},
-	    					'row_below': {},
-	    					"hsep2": "---------",
-	    					'col_left': {},
-	    					'col_right': {},
-	    					'hsep3': "---------",
-	    					'remove_row': {},
-	    					'remove_col': {},
-	    					'hsep4': "---------",
-	    					'undo': {},
-	    					'redo': {}
-	    				}
-	    		};
-        	}
         	
         	// Put in a class name so that the styling can be done by the type of the lookup
         	if(this.lookup_type === "kv"){
         		this.$el.addClass('kv-lookup');
         	}
-        	
-        	// Make a variable that defines the this point so that it can be used in the scope of the handsontable handlers
-        	self = this;
-        	
-        	// Make the handsontable instance
-        	this.handsontable = new Handsontable(this.$el[0], {
-				// Make sure some empty rows exist if it is empty
-				minRows: 1,
-        	    data: this.lookup_type === "kv" || this.lookup_type === "csv" ? data.slice(1) : data,
-        		startRows: 1,
-        		startCols: 1,
-				contextMenu: this.lookup_type === "csv" && this.read_only ? false : contextMenu,
-        		minSpareRows: 0,
-        		minSpareCols: 0,
-				colHeaders: this.lookup_type === "kv" || this.lookup_type === "csv" ? this.table_header : false,
-				columnSorting: true,
-				columns: this.lookup_type === 'csv' ? null : this.getColumnsMetadata(),
+
+			// I need to set the column width 
+			var width = $(this.$el[0]).width() - 80;
+			var column_count = data[0].length;
+			var column_width = width / column_count;
+			var overflow = false;
+
+			if(column_width < 100){
+				column_width = 100;
+				overflow = true;
+			}
+
+			// Figure out the height
+			var computed_height = $(window).height() - $(this.$el[0]).offset().top - 100;
+
+			// Make the columns
+			var columns = this.getColumnsMetadata();
+			
+			// Remove the header
+			data.splice(0, 1);
+
+			// Make the base options list
+			var options = {
+				data: data,
+				defaultColWidth: column_width,
+				tableOverflow: true,
+				loadingSpin: true,
+				columns: columns,
+				lazyLoading: true,
+				allowExport: false,
+				contextMenu: contextMenu.bind(this),
+				editable: !this.read_only,
+				defaultColAlign: 'left',
+				tableWidth: width,
+				tableHeight: computed_height + 'px',
+				minSpareRows: data.length === 0 ? 1 : 0,
+				updateTable: function(el, cell, col, row, data, text, column_name) {
+					this.lookupRenderer(el, cell, row, col, data, text);
+				}.bind(this)
+			}
+
+            // Wire-up handlers for doing KV store dynamic updates
+            if(this.lookup_type === "kv"){
+				options.onchange = function(instance, cell, x, y, value) {
+					this.trigger("editCell", {
+						'row' : parseInt(y) + 1,
+						'col' : parseInt(x) + 1,
+						'new_value' : value
+					});
+				}.bind(this);
 				
-        		rowHeaders: true,
-        		fixedRowsTop: this.lookup_type === "kv" || this.lookup_type === "csv" ? 0 : 1,
-        		height: function(){ return $(window).height() - 320; }, // Set the window height so that the user doesn't have to scroll to the bottom to set the save button
-        		
-        		stretchH: 'all',
-        		manualColumnResize: true,
-        		manualColumnMove: true,
-        		onBeforeChange: this.validate.bind(this),
-        		
-        		allowInsertColumn: this.lookup_type === "kv" ? false : true,
-        		allowRemoveColumn: this.lookup_type === "kv" ? false : true,
-        		
-				renderer: this.lookupRenderer.bind(this),
-				editor: this.lookup_type !== 'csv' ? Handsontable.editors.TextEditor : DefaultEditor,
-        		
-        		cells: function(row, col, prop) {
-        			  
-        			var cellProperties = {};
-        			  
-        			// Don't allow the _key row to be editable on KV store lookups since the keys are auto-assigned
-        		    if (this.read_only || (this.lookup_type === "kv" && col === 0)) {
-        		        cellProperties.readOnly = true;
-        		    }
+				options.onbeforedeleterow = function(instance, rowNumber, amount) {
 
-        		    return cellProperties;
-        		}.bind(this),
-        		
-        		beforeRemoveRow: function(index, amount){
-					// Nothing to do
-        		},
-        		
-        		beforeRemoveCol: function(index, amount){
-        			  
-        			// Don't allow deletion of all cells
-        			if( (this.countCols() - amount) <= 0){
-        				alert("A valid lookup file requires at least one column.");
-        				return false;
-        			}
-        		},
-        		
-        		// Don't allow removal of all columns
-        		afterRemoveCol: function(index, amount){
-        			if(this.countCols() === 0){
-        				alert("You must have at least one cell to have a valid lookup");
-        			}
-        		},
-        		
-        		// Update the cached version of the table header
-        		afterColumnMove: function(){
-        			this.getTableHeader(false);
-                }.bind(this)
-            });
-        	
-        	// Wire-up handlers for doing KV store dynamic updates
-        	if(this.lookup_type === "kv"){
+					// Iterate and remove each row
+                    for(var c = 0; c < amount; c++){
+						var row = rowNumber + c + 1;
+                        if(!this.trigger("removeRow", row)){
+							return false;
+						}
+					}
 
-        		// For cell edits
-        		this.handsontable.addHook('afterChange', function(changes, source) {
-
-        			// Ignore changes caused by the script updating the _key for newly added rows
-        			if(source === "key_update"){
-        				return;
-        			}
-
-        			// If there are no changes, then stop
-        			if(!changes){
-        				return;
-        			}
-
-        			// Iterate and change each cell
-        			for(var c = 0; c < changes.length; c++){
-        				var row = changes[c][0];
-        				var col = changes[c][1];
-        				var new_value = changes[c][3];
-
-                        this.trigger("editCell", {
-                            'row' : row,
-                            'col' : col,
-                            'new_value' : new_value
-                        });
-        			}
-
-        		}.bind(this));
-
-        		// For row removal
-        		this.handsontable.addHook('beforeRemoveRow', function(index, amount) {
-        			// Iterate and remove each row
-        			for(var c = 0; c < amount; c++){
-        				var row = index + c;
-                        this.trigger("removeRow", row);
-        			}
-        		}.bind(this));
-
-        		// For row creation
-        		this.handsontable.addHook('afterCreateRow', function(row, count){
+					return true;
+				}.bind(this);
+				
+				options.oninsertrow = function(instance, row, count, rowRecords, insertBefore) {
                     this.trigger("createRows", {
                         'row' : row,
                         'count' : count
-                    });
-                }.bind(this));
+					});
+				}.bind(this);
+			}
 
-            }
+			// Load the editor
+			if(this.jexcel){
+				this.jexcel.setData(data);
+				var editor = this.jexcel;
+				this.table_header.forEach(function(header_column, index) {
+					editor.setHeader(index, header_column);
+				});
+			}
+			else {
+				var computed_height = ($(window).height() - $(this.$el[0]).offset().top - 100);
+				this.jexcel = $(this.$el[0]).jexcel(options);
+			}
             
             // Return true indicating that the load worked
             return true;
@@ -875,6 +859,20 @@ define([
 		},
 
 		/**
+		 * Get the field type for the name.
+		 */
+		getFieldType: function(name){
+			return this.field_types[name];
+		},
+
+		/**
+		 * Get the field type for the column.
+		 */
+		getFieldTypeByColumn: function(col){
+			return this.field_types[this.getFieldForColumn(col)];
+		},
+
+		/**
 		 * Set the field type enforcement to on.
 		 * 
 		 * @param field_types_enforced A boolean indicating whether the types should be enforced
@@ -896,10 +894,9 @@ define([
 		 * @param row The number to convert
          */
         makeRowJSON: function(row){
-
         	// We need to get the row meta-data and the 
         	var row_header = this.getTableHeader();
-        	var row_data = this.handsontable.getDataAtRow(row);
+        	var row_data = this.getDataAtRow(row);
         	
         	// This is going to hold the data for the row
         	var json_data = {};
