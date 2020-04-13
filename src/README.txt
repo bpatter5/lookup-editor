@@ -201,4 +201,9 @@ Change History
 |         | Lookups can now be created when using the free license                                                           |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.3.3   | Adding Python 3 support                                                                                          |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.4.0   | Added ability to search entries in the editor                                                                    |
+|         | New KV store rows are no longer saved until the user sets a field                                                |
+|         | Column name changes are done through a context menu which should make column renaming easier                     |
+|         | Replaced the handsontable library with jexcel                                                                    |
 +---------+------------------------------------------------------------------------------------------------------------------+
