@@ -108,11 +108,11 @@ define([
 		 * @param td The TD element
 		 * @param row The row number
 		 * @param col The column number
-		 * @param prop
 		 * @param value The value of the cell
+		 * @param value2 The value of the cell
 		 * @param cellProperties
          */
-        lookupRenderer: function(instance, td, row, col, prop, value, cellProperties) {
+        lookupRenderer: function(instance, td, row, col, value, value2, cellProperties) {
 			// Convert KV store time fields
 			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "time") {
 				td.innerHTML = formatTime(value, true);
@@ -121,7 +121,7 @@ define([
 
 			// Convert KV store array fields
 			if(this.lookup_type === 'kv' && this.getFieldTypeByColumn(col) === "array") {
-				return this.arrayRenderer(instance, td, row, col, prop, value, cellProperties);
+				return this.arrayRenderer(instance, td, row, col, value, value2, cellProperties);
 			}
 
 			// Otherwise don't mess with the other KV store fields, it tends to break things

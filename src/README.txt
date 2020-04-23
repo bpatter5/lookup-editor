@@ -206,4 +206,6 @@ Change History
 |         | New KV store rows are no longer saved until the user sets a field                                                |
 |         | Column name changes are done through a context menu which should make column renaming easier                     |
 |         | Replaced the handsontable library with jexcel                                                                    |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.4.1   | Fixed issue where values with some characters (such as "<" and ">") failed to appear                             |
 +---------+------------------------------------------------------------------------------------------------------------------+
