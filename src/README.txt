@@ -208,4 +208,7 @@ Change History
 |         | Replaced the handsontable library with jexcel                                                                    |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.4.1   | Fixed issue where values with some characters (such as "<" and ">") failed to appear                             |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.4.2   | Fixed issue where the last value was excluded from saving when the user didn't press enter to set the value      |
+|         | Made replication blacklist more specific                                                                         |
 +---------+------------------------------------------------------------------------------------------------------------------+

@@ -259,6 +259,16 @@ define([
     },
 
     /**
+     * Prepare the editor for saving. THis is necessary because jexcel doesn't persist the value of
+     * a cell that is in the process of being edited otherwise.
+     */
+    prepareForSaving: function () {
+      // If the editor is open, close the editor so that the value is persisted
+      // See https://lukemurphey.net/issues/2777
+      this.jexcel.closeEditor(this.jexcel.edition[0], true);
+    },
+
+    /**
      * Get the data from the table.
      *
      * This is largely just a pass-through to the table editor with the exception of for lookups
@@ -266,8 +276,9 @@ define([
      * integer.
      */
     getData: function () {
+      this.prepareForSaving();
+
       var data = this.jexcel.getData();
-      debugger;
 
       var convert_columns = {};
 
@@ -300,7 +311,6 @@ define([
 
       // No columns need conversion, just return the data
       if (convert_columns_count === 0) {
-        debugger;
         return data;
       }
 
@@ -312,7 +322,7 @@ define([
           }
         }
       }
-      debugger;
+
       return data;
     },
 
@@ -694,7 +704,6 @@ define([
     getArrayColumn: function () {
       return {
         closeEditor: function (cell, save) {
-          // var value = $(cell.children[1]).tagsinput('items').join(',');
           var values = $(cell.children[1]).tagsinput("items");
           cell.innerHTML = values;
           return values;
