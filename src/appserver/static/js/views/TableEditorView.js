@@ -259,7 +259,7 @@ define([
     },
 
     /**
-     * Prepare the editor for saving. THis is necessary because jexcel doesn't persist the value of
+     * Prepare the editor for saving. This is necessary because jexcel doesn't persist the value of
      * a cell that is in the process of being edited otherwise.
      */
     prepareForSaving: function () {
