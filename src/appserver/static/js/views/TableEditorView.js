@@ -265,7 +265,9 @@ define([
     prepareForSaving: function () {
       // If the editor is open, close the editor so that the value is persisted
       // See https://lukemurphey.net/issues/2777
-      this.jexcel.closeEditor(this.jexcel.edition[0], true);
+      if (this.jexcel.edition && this.jexcel.edition[0]) {
+        this.jexcel.closeEditor(this.jexcel.edition[0], true);
+      }
     },
 
     /**
