@@ -211,4 +211,5 @@ Change History
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.4.2   | Fixed issue where the last value was excluded from saving when the user didn't press enter to set the value      |
 |         | Made replication blacklist more specific                                                                         |
+|         | Added app manifest to indicate that the app only needs to be installed on the search head                        |
 +---------+------------------------------------------------------------------------------------------------------------------+
