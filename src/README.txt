@@ -213,4 +213,6 @@ Change History
 |         | Made replication blacklist more specific                                                                         |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.4.3   | Added app manifest to indicate that the app only needs to be installed on the search head                        |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.4.4   | Specifying Python 3 for the REST endpoints to address appinspect errors                                          |
 +---------+------------------------------------------------------------------------------------------------------------------+
