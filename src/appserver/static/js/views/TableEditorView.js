@@ -639,9 +639,11 @@ define([
     getDefaultColumn: function () {
       return {
         closeEditor: function (cell, save) {
-          var value = cell.children[0].value;
-          cell.innerHTML = value;
-          return value;
+          if(cell && cell.children && cell.children.length > 0) {
+            var value = cell.children[0].value;
+            cell.innerHTML = value;
+            return value;
+          }
         },
         openEditor: function (cell) {
           // Create input
