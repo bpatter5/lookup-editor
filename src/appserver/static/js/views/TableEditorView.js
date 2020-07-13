@@ -809,10 +809,11 @@ define([
         this.$el.addClass("kv-lookup");
       }
 
-      // I need to set the column width
-      var width = $(this.$el[0]).width() - 80;
+      // Set the column width
+      // ($(window).width() - 20) + "px",
+      var totalWidth = $(this.$el[0]).width() - 100;
       var column_count = data[0].length;
-      var column_width = width / column_count;
+      var column_width = totalWidth / column_count;
       var overflow = false;
 
       if (column_width < 100) {
