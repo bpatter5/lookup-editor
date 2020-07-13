@@ -842,7 +842,7 @@ define([
         contextMenu: contextMenu.bind(this),
         editable: !this.read_only,
         defaultColAlign: "left",
-        tableWidth: width,
+        tableWidth: ($(window).width() - 20) + "px",
         tableHeight: computed_height + "px",
         minSpareRows: data.length === 0 ? 1 : 0,
         updateTable: function (el, cell, col, row, data, text, column_name) {
