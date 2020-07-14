@@ -215,4 +215,7 @@ Change History
 | 3.4.3   | Added app manifest to indicate that the app only needs to be installed on the search head                        |
 |---------|------------------------------------------------------------------------------------------------------------------|
 | 3.4.4   | Specifying Python 3 for the REST endpoints to address appinspect errors                                          |
+|---------|------------------------------------------------------------------------------------------------------------------|
+| 3.4.5   | Fixed issue where you imports only worked for the few columns                                                    |
+|         | Added a horizontal scrollbar                                                                                     |
 +---------+------------------------------------------------------------------------------------------------------------------+
