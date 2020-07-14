@@ -803,6 +803,12 @@ define([
         return false;
       }
 
+      // Drop the existing editor
+      if (this.jexcel) {
+        jexcel.destroy(this.$el[0]);
+        this.jexcel = null;
+      }
+
       // Store the table header so that we can determine the relative offsets of the fields
       this.table_header = data[0];
 
@@ -812,7 +818,6 @@ define([
       }
 
       // Set the column width
-      // ($(window).width() - 20) + "px",
       var totalWidth = $(this.$el[0]).width() - 100;
       var column_count = data[0].length;
       var column_width = totalWidth / column_count;
@@ -890,17 +895,7 @@ define([
       }
 
       // Load the editor
-      if (this.jexcel) {
-        this.jexcel.setData(data);
-        var editor = this.jexcel;
-        this.table_header.forEach(function (header_column, index) {
-          editor.setHeader(index, header_column);
-        });
-      } else {
-        var computed_height =
-          $(window).height() - $(this.$el[0]).offset().top - 100;
-        this.jexcel = $(this.$el[0]).jexcel(options);
-      }
+      this.jexcel = $(this.$el[0]).jexcel(options);
 
       // Return true indicating that the load worked
       return true;
