@@ -70,6 +70,7 @@ define([
       // These are copies of editor classes used with the handsontable
       this.default_editor = null;
 
+      // Store the width of element so that we can calculate the sizes of the columns
       this.totalWidth = $(this.$el[0]).width();
     },
 
