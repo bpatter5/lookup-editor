@@ -249,15 +249,24 @@ define([
      * Convert a value to the format it needs to be in order to be saved.
      * @param {*} value
      */
-    convertTimeValue: function (value) {
+    convertTimeValue: function (value, include_milliseconds) {
+      // Assign a default argument to include_milliseconds
+      if (typeof include_milliseconds === "undefined") {
+        include_milliseconds = false;
+      }
+
       // Try to convert the value to the epoch time
       var converted_value = new Date(value).valueOf();
+
+      if(!isNaN(converted_value) && !include_milliseconds) {
+        converted_value = (converted_value / 1000);
+      }
 
       // If we couldn't convert it, then pass it through (see https://lukemurphey.net/issues/2262)
       if (!isNaN(converted_value)) {
         return String(converted_value);
       }
-
+      
       return value;
     },
 
@@ -275,10 +284,6 @@ define([
 
     /**
      * Get the data from the table.
-     *
-     * This is largely just a pass-through to the table editor with the exception of for lookups
-     * with a _time field. In that case, the time value will be converted from a string to an
-     * integer.
      */
     getData: function () {
       this.prepareForSaving();
@@ -286,15 +291,7 @@ define([
       var data = this.jexcel.getData();
 
       var convert_columns = {};
-
-      // Figure out if any columns must be converted from _time
       var row_header = this.getTableHeader();
-
-      for (var c = 0; c < row_header.length; c++) {
-        if (row_header[c] === "_time") {
-          convert_columns[c] = this.convertTimeValue;
-        }
-      }
 
       // Figure out if any columns must be converted into arrays
       var array_columns = [];
@@ -514,15 +511,7 @@ define([
         }
 
         // Use format.js for the time fields
-        else if (field_info === "time") {
-          /*
-					column.type = 'calendar';
-					column.options = {
-						format:'YYYY/MM/DD HH:MM:SS',
-						time: 1,
-						placeholder:'YYYY/MM/DD HH:mm:ss',
-					};
-					*/
+        else if (field_info === "time" || (this.lookup_type === "csv" && header_column === "_time")) {
           column.editor = this.getTimeColumn();
         }
 
@@ -686,11 +675,12 @@ define([
 
     getTimeColumn: function () {
       var defaultColumn = this.getDefaultColumn();
-      placeholder: "YYYY/MM/DD HH:mm:ss",
-        (defaultColumn.openEditor = function (cell) {
+
+      defaultColumn.openEditor = function (cell) {
           // Create input
           var element = document.createElement("input");
           element.value = cell.innerHTML;
+          // e.g. 2020/07/20 06:54:32
           element.setAttribute("placeholder", "YYYY/MM/DD HH:mm:ss");
 
           // Update cell
@@ -700,10 +690,16 @@ define([
 
           // Focus on the element
           element.focus();
-        }),
-        (defaultColumn.setValue = function (cell, value) {
-          cell.innerHTML = formatTime(value, this.lookup_type === "kv");
-        }.bind(this));
+      };
+
+      defaultColumn.closeEditor = function (cell, save) {
+        // Convert the time value back to epoch
+        return this.convertTimeValue(cell.children[0].value, this.lookup_type === "kv");
+      }.bind(this);
+
+      defaultColumn.setValue = function (cell, value) {
+        cell.innerHTML = formatTime(value, this.lookup_type === "kv");
+      }.bind(this);
 
       return defaultColumn;
     },
