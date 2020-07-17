@@ -805,7 +805,7 @@ define([
 
       // Drop the existing editor
       if (this.jexcel) {
-        jexcel.destroy(this.$el[0]);
+        this.jexcel.destroy(this.$el[0]);
         this.jexcel = null;
       }
 
@@ -897,6 +897,11 @@ define([
       // Load the editor
       this.jexcel = $(this.$el[0]).jexcel(options);
 
+      // Get the table to re-render
+      // This is necessary because the table doesn't render unless I do this for some reason
+      // https://lukemurphey.net/issues/2840
+      this.jexcel.search();
+      
       // Return true indicating that the load worked
       return true;
     },
