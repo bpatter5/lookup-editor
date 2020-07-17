@@ -28,3 +28,10 @@ td:first-child{
 	margin-left: 16px;
 	margin-right: 16px;
 }
+
+/*
+ * Set outline color so that it doesn't turn blue (which looks kinda weird)
+ */
+#lookup-table:focus{
+	outline-color: #f2f4f5;
+}

@@ -853,8 +853,8 @@ define([
         tableWidth: ($(window).width() - 20) + "px",
         tableHeight: computed_height + "px",
         minSpareRows: data.length === 0 ? 1 : 0,
-        updateTable: function (el, cell, col, row, data, text, column_name) {
-          this.lookupRenderer(el, cell, row, col, data, text);
+        updateTable: function (el, cell, col, row, data, label, cellName) {
+          this.lookupRenderer(el, cell, row, col, data, label);
         }.bind(this),
       };
 
