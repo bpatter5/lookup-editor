@@ -69,6 +69,8 @@ define([
 
       // These are copies of editor classes used with the handsontable
       this.default_editor = null;
+
+      this.totalWidth = $(this.$el[0]).width();
     },
 
     /**
@@ -820,7 +822,7 @@ define([
       // Set the column width
       var totalWidth = $(this.$el[0]).width() - 100;
       var column_count = data[0].length;
-      var column_width = totalWidth / column_count;
+      var column_width = (this.totalWidth - 100) / column_count;
       var overflow = false;
 
       if (column_width < 100) {
