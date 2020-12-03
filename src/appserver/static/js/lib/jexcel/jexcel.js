@@ -10,7 +10,8 @@
 
  if (! jSuites && typeof(require) === 'function') {
     var jSuites = require('jsuites');
-    require('jsuites/dist/jsuites.css');
+    // I get an error with the following (https://lukemurphey.net/issues/2839)
+    // require('jsuites/dist/jsuites.css');
 }
 
 ;(function (global, factory) {
