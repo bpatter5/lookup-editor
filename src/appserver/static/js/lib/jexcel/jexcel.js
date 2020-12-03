@@ -1,5 +1,5 @@
 /**
- * jExcel v4.3.0
+ * jExcel v4.4.1
  *
  * Author: Paul Hodel <paul.hodel@gmail.com>
  * Website: https://bossanova.uk/jexcel/
@@ -10,8 +10,7 @@
 
  if (! jSuites && typeof(require) === 'function') {
     var jSuites = require('jsuites');
-    // I get an error with the following (https://lukemurphey.net/issues/2839)
-    // require('jsuites/dist/jsuites.css');
+    require('jsuites/dist/jsuites.css');
 }
 
 ;(function (global, factory) {
@@ -151,6 +150,7 @@
             // Security
             secureFormulas:true,
             stripHTML:true,
+            stripHTMLOnCopy:false,
             // Filters
             filters:false,
             footers:null,
@@ -182,6 +182,7 @@
             onfocus:null,
             onblur:null,
             onchangeheader:null,
+            oncreateeditor:null,
             oneditionstart:null,
             oneditionend:null,
             onchangestyle:null,
@@ -233,7 +234,7 @@
                 noCellsSelected: 'No cells selected',
             },
             // About message
-            about:"jExcel CE Spreadsheet\nVersion 4.3.0\nAuthor: Paul Hodel <paul.hodel@gmail.com>\nWebsite: https://bossanova.uk/jexcel/v3",
+            about:"jExcel CE Spreadsheet\nVersion 4.4.1\nAuthor: Paul Hodel <paul.hodel@gmail.com>\nWebsite: https://bossanova.uk/jexcel/v3",
         };
     
         // Loading initial configuration from user
@@ -451,7 +452,7 @@
                     }
                 }
             }
-    
+
             // Create the table when is ready
             if (! multiple.length) {
                 obj.createTable();
@@ -515,6 +516,9 @@
                     obj.paginationDropdown.appendChild(temp);
                 }
     
+                // Set initial pagination value
+                obj.paginationDropdown.value = obj.options.pagination;
+
                 paginationUpdateContainer.appendChild(document.createTextNode(obj.options.text.show));
                 paginationUpdateContainer.appendChild(obj.paginationDropdown);
                 paginationUpdateContainer.appendChild(document.createTextNode(obj.options.text.entries));
@@ -571,6 +575,9 @@
                     td.innerHTML = '&nbsp;';
                     td.setAttribute('data-x', i);
                     td.className = 'jexcel_column_filter';
+                    if (obj.options.columns[i].type == 'hidden') {
+                        td.style.display = 'none';
+                    }
                     obj.filter.appendChild(td);
                 }
 
@@ -1083,10 +1090,14 @@ console.log(ret);
                 if (obj.options.rows[j].height) {
                     obj.rows[j].style.height = obj.options.rows[j].height;
                 }
+                
+                var index = obj.options.rows[j].title;
+            } else {
+                var index = parseInt(j + 1);
             }
             // Row number label
             var td = document.createElement('td');
-            td.innerHTML = parseInt(j + 1);
+            td.innerHTML = index;
             td.setAttribute('data-y', j);
             td.className = 'jexcel_row';
             obj.rows[j].appendChild(td);
@@ -1136,7 +1147,7 @@ console.log(ret);
             // Custom column
             if (obj.options.columns[i].editor) {
                 if (obj.options.stripHTML === false || obj.options.columns[i].stripHTML === false) {
-                    td.innerHTML =  value;
+                    td.innerHTML = value;
                 } else {
                     td.innerText = value;
                 }
@@ -1228,7 +1239,7 @@ console.log(ret);
                     }
                 }
             }
-    
+
             return td;
         }
     
@@ -1239,7 +1250,11 @@ console.log(ret);
     
             // Create header cell
             obj.headers[colNumber] = document.createElement('td');
-            obj.headers[colNumber].innerText = obj.options.columns[colNumber].title ? obj.options.columns[colNumber].title : jexcel.getColumnName(colNumber);
+            if (obj.options.stripHTML) {
+                obj.headers[colNumber].innerText = obj.options.columns[colNumber].title ? obj.options.columns[colNumber].title : jexcel.getColumnName(colNumber);
+            } else {
+                obj.headers[colNumber].innerHTML = obj.options.columns[colNumber].title ? obj.options.columns[colNumber].title : jexcel.getColumnName(colNumber);
+            }
             obj.headers[colNumber].setAttribute('data-x', colNumber);
             obj.headers[colNumber].style.textAlign = colAlign;
             if (obj.options.columns[colNumber].title) {
@@ -1326,7 +1341,7 @@ console.log(ret);
             } else {
                 var toolbar = obj.options.toolbar;
             }
-    
+
             for (var i = 0; i < toolbar.length; i++) {
                 if (toolbar[i].type == 'i') {
                     var toolbarItem = document.createElement('i');
@@ -1793,6 +1808,9 @@ console.log(ret);
                 cell.innerHTML = '';
                 cell.appendChild(editor);
     
+                // On edition start
+                obj.dispatch('oncreateeditor', el, cell, x, y, editor);
+
                 return editor;
             }
     
@@ -1821,6 +1839,9 @@ console.log(ret);
                     } else if (obj.options.columns[x].type == 'dropdown' || obj.options.columns[x].type == 'autocomplete') {
                         // Get current value
                         var value = obj.options.data[y][x];
+                        if (obj.options.columns[x].multiple && !Array.isArray(value)) {
+                            value = value.split(';');
+                        }
     
                         // Create dropdown
                         if (typeof(obj.options.columns[x].filter) == 'function') {
@@ -1842,7 +1863,7 @@ console.log(ret);
                             multiple: obj.options.columns[x].multiple ? true : false,
                             autocomplete: obj.options.columns[x].autocomplete || obj.options.columns[x].type == 'autocomplete' ? true : false,
                             opened:true,
-                            value: obj.options.columns[x].multiple ? value.split(';') : value,
+                            value: value,
                             width:'100%',
                             height:editor.style.minHeight,
                             position: (obj.options.tableOverflow == true || obj.options.fullscreen == true) ? true : false,
@@ -1930,7 +1951,7 @@ console.log(ret);
                                 editor.setAttribute('data-mask', obj.options.columns[x].mask);
                             }
                         }
-
+    
                         editor.onblur = function() {
                             obj.closeEditor(cell, true);
                         };
@@ -2268,7 +2289,7 @@ console.log(ret);
                 obj.onafterchanges(el, records);
             }
         }
-    
+
         /**
          * Strip tags
          */
@@ -2365,7 +2386,7 @@ console.log(ret);
                             obj.records[y][x].innerText = '';
                             obj.records[y][x].appendChild(color);
                         } else {
-                        obj.records[y][x].style.color = value;
+                            obj.records[y][x].style.color = value;
                             obj.records[y][x].innerText = value;
                         }
                     } else if (obj.options.columns[x].type == 'image') {
@@ -3608,7 +3629,7 @@ console.log(ret);
                     return this.slice(0).sort(function(a, b) {
                         var valueA = a[p];
                         var valueB = b[p];
-    
+
                         if (! o) {
                             return (valueA == '' && valueB != '') ? 1 : (valueA != '' && valueB == '') ? -1 : (valueA > valueB) ? 1 : (valueA < valueB) ? -1 :  0;
                         } else {
@@ -3616,7 +3637,7 @@ console.log(ret);
                         }
                     });
                 }
-    
+
                 // Test order
                 var temp = [];
                 if (obj.options.columns[column].type == 'number' || obj.options.columns[column].type == 'percentage' || obj.options.columns[column].type == 'autonumber' || obj.options.columns[column].type == 'color') {
@@ -4697,6 +4718,28 @@ console.log(ret);
         }
 
         /**
+         * Readonly
+         */
+        obj.isReadOnly = function(cell) {
+            if (cell = obj.getCell(cell)) {
+                return cell.classList.contains('readonly') ? true : false;
+            }
+        }
+
+        /**
+         * Readonly
+         */
+        obj.setReadOnly = function(cell, state) {
+            if (cell = obj.getCell(cell)) {
+                if (state) {
+                    cell.classList.add('readonly');
+                } else {
+                    cell.classList.remove('readonly');
+                }
+            }
+        }
+
+        /**
          * Show row
          */
         obj.showRow = function(rowNumber) {
@@ -5473,7 +5516,7 @@ console.log(ret);
             // pageNumber
             if (pageNumber == null || pageNumber == -1) {
                 // Last page
-                pageNumber = Math.ceil(results.length / quantityPerPage); 
+                pageNumber = Math.ceil(results.length / quantityPerPage) - 1; 
             }
     
             var startRow = (pageNumber * quantityPerPage);
@@ -5739,7 +5782,7 @@ console.log(ret);
             // pageNumber
             if (pageNumber == null || pageNumber == -1) {
                 // Last page
-                pageNumber = Math.ceil(results.length / quantityPerPage); 
+                pageNumber = Math.ceil(results.length / quantityPerPage) - 1;
             }
     
             // Page number
@@ -5932,6 +5975,7 @@ console.log(ret);
             }
     
             // Controls
+            var header = [];
             var col = [];
             var colLabel = [];
             var row = [];
@@ -5939,15 +5983,7 @@ console.log(ret);
             var x = obj.options.data[0].length
             var y = obj.options.data.length
             var tmp = '';
-
-            // Headers
-            if (obj.options.includeHeadersOnCopy == true) {
-                if (obj.options.copyCompatibility == true) {
-                    strLabel.push(obj.getHeaders(true).join(delimiter));
-                } else {
-                    str.push(obj.getHeaders(true).join(delimiter));
-                }
-            }
+            var copyHeader = obj.options.includeHeadersOnCopy;
 
             // Reset container
             obj.style = [];
@@ -5960,6 +5996,9 @@ console.log(ret);
                 for (var i = 0; i < x; i++) {
                     // If cell is highlighted
                     if (! highlighted || obj.records[j][i].classList.contains('highlight')) {
+                        if (copyHeader == true) {
+                            header.push(obj.headers[i].innerText);
+                        }
                         // Values
                         var value = obj.options.data[j][i];
                         if (value.match && (value.match(/,/g) || value.match(/\n/) || value.match(/\"/))) {
@@ -5972,7 +6011,11 @@ console.log(ret);
                         if (obj.options.columns[i].type == 'checkbox' || obj.options.columns[i].type == 'radio') {
                             var label = value;
                         } else {
-                            var label = obj.records[j][i].innerHTML;
+                            if (obj.options.stripHTMLOnCopy == true) {
+                                var label = obj.records[j][i].innerText;
+                            } else {
+                                var label = obj.records[j][i].innerHTML;
+                            }
                             if (label.match && (label.match(/,/g) || label.match(/\n/) || label.match(/\"/))) {
                                 // Scape double quotes
                                 label = label.replace(new RegExp('"', 'g'), '""');
@@ -5989,11 +6032,18 @@ console.log(ret);
                 }
     
                 if (col.length) {
+                    if (copyHeader) {
+                        row.push(header.join(delimiter));
+                    }
                     row.push(col.join(delimiter));
                 }
                 if (colLabel.length) {
+                    if (copyHeader) {
+                        rowLabel.push(header.join(delimiter));
+                    }
                     rowLabel.push(colLabel.join(delimiter));
                 }
+                copyHeader = false;
             }
 
             // Final string
@@ -6465,12 +6515,16 @@ console.log(ret);
                     }
                 }
     
-                // Garante single multiple compatibily
-                var keys = ('' + key).split(';')
+                // Guarantee single multiple compatibility
+                var keys = Array.isArray(key) ? key : ('' + key).split(';');
     
                 for (var i = 0; i < keys.length; i++) {
-                    if (combo[keys[i]]) {
-                        value.push(combo[keys[i]]);
+                    if (typeof(keys[i]) === 'object') {
+                        value.push(combo[keys[i].id]);
+                    } else {
+                        if (combo[keys[i]]) {
+                            value.push(combo[keys[i]]);
+                        }
                     }
                 }
             } else {
@@ -7144,8 +7198,7 @@ console.log(ret);
                                     } else if ((e.keyCode == 8) ||
                                                (e.keyCode >= 48 && e.keyCode <= 57) ||
                                                (e.keyCode >= 96 && e.keyCode <= 111) ||
-                                               (e.keyCode == 187) ||
-                                               (e.keyCode == 189) ||
+                                               (e.keyCode >= 187 && e.keyCode <= 190) ||
                                                ((String.fromCharCode(e.keyCode) == e.key || String.fromCharCode(e.keyCode).toLowerCase() == e.key.toLowerCase()) && jexcel.validLetter(String.fromCharCode(e.keyCode)))) {
                                         // Start edition
                                         jexcel.current.openEditor(jexcel.current.records[rowId][columnId], true);
@@ -8254,7 +8307,7 @@ console.log(ret);
                     options.columns[i].type = 'text';
                 }
                 options.columns[i].width = width + 'px';
-                options.columns[i].title = header.innerText;
+                options.columns[i].title = header.innerHTML;
                 options.columns[i].align = header.style.textAlign || 'center';
             }
 
@@ -8291,7 +8344,7 @@ console.log(ret);
                                 value = '=' + value;
                             }
                         } else {
-                            var value = content[j].children[i].innerText;
+                            var value = content[j].children[i].innerHTML;
                         }
                         options.data[rowNumber].push(value);
 
