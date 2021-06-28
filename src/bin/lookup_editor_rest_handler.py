@@ -257,9 +257,11 @@ class LookupEditorHandler(rest_handler.RESTHandler):
             # Everything worked, return accordingly
             return {
                 'payload': str(file_name), # Payload of the request.
-                'status': 200 # HTTP status code
+                'status': 200, # HTTP status code
+                'headers': {
+                    'Content-Type': 'application/octet' # Content Type
+                },
             }
-
         except (AuthorizationFailed, PermissionDeniedException):
             return self.render_error_json("You do not have permission to perform this operation", 403)
 
