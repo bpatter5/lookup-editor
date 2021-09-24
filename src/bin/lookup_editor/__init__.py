@@ -143,7 +143,47 @@ class LookupEditor(LookupBackups):
             lookup_contents.append(new_row)
 
         return lookup_contents
-
+    
+    def replace_null_byte(row: str) -> str:
+        """
+        Takes a row from a lookup file and returns the same row without null bytes
+        
+        Parameters
+        ----------
+        row: str
+            row from file as string
+        
+        Returns
+        -------
+        : str
+            row without null bytes
+        """
+        return row.replace("\x00", "")
+    
+    def clean_lookup(file_path: str) -> io.StringIO:
+        """
+        Takes an existing file path as string and returns a StringIO object without null bytes
+        
+        Parameters
+        ----------
+        file_path: str
+            existing file path as string
+        
+        Returns
+        -------
+        : io.StringIO
+        """
+        output_lookup = io.StringIO()
+        
+        with open(file_path, 'r', encoding='utf-8', errors='replace') as openf:
+            for row in openf:
+                if row.strip():
+                    output_lookup.write(replace_null_byte(row))
+        
+        output_lookup.seek(0)
+        return output_lookup
+                    
+    
     def get_lookup(self, session_key, lookup_file, namespace="lookup_editor", owner=None,
                    get_default_csv=True, version=None, throw_exception_if_too_big=False):
         """
@@ -179,7 +219,7 @@ class LookupEditor(LookupBackups):
         # Get the file handle
         # Note that we are assuming that the file is in UTF-8. Any characters that don't match
         # will be replaced.
-        return io.open(file_path, 'r', encoding='utf-8', errors='replace')
+        return clean_lookup(file_path) #io.open(file_path, 'r', encoding='utf-8', errors='replace')
 
 
     def resolve_lookup_filename(self, lookup_file, namespace="lookup_editor", owner=None,
