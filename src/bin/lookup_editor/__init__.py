@@ -21,6 +21,45 @@ from lookup_editor.shortcuts import flatten_dict, is_file_name_valid, is_lookup_
 from lookup_editor import lookupfiles
 from lookup_editor import settings
 
+def replace_null_byte(row: str) -> str:
+    """
+    Takes a row from a lookup file and returns the same row without null bytes
+
+    Parameters
+    ----------
+    row: str
+        row from file as string
+
+    Returns
+    -------
+    : str
+        row without null bytes
+    """
+    return row.replace("\x00", "")
+
+def clean_lookup(file_path: str) -> io.StringIO:
+    """
+    Takes an existing file path as string and returns a StringIO object without null bytes
+
+    Parameters
+    ----------
+    file_path: str
+        existing file path as string
+
+    Returns
+    -------
+    : io.StringIO
+    """
+    output_lookup = io.StringIO()
+
+    with open(file_path, 'r', encoding='utf-8', errors='replace') as openf:
+        for row in openf:
+            if row.strip():
+                output_lookup.write(replace_null_byte(row))
+
+    output_lookup.seek(0)
+    return output_lookup
+
 class LookupEditor(LookupBackups):
     """
     This class provides functions for editing lookup files. It is bundled in an instantiable class
@@ -143,45 +182,6 @@ class LookupEditor(LookupBackups):
             lookup_contents.append(new_row)
 
         return lookup_contents
-    
-    def replace_null_byte(row: str) -> str:
-        """
-        Takes a row from a lookup file and returns the same row without null bytes
-        
-        Parameters
-        ----------
-        row: str
-            row from file as string
-        
-        Returns
-        -------
-        : str
-            row without null bytes
-        """
-        return row.replace("\x00", "")
-    
-    def clean_lookup(file_path: str) -> io.StringIO:
-        """
-        Takes an existing file path as string and returns a StringIO object without null bytes
-        
-        Parameters
-        ----------
-        file_path: str
-            existing file path as string
-        
-        Returns
-        -------
-        : io.StringIO
-        """
-        output_lookup = io.StringIO()
-        
-        with open(file_path, 'r', encoding='utf-8', errors='replace') as openf:
-            for row in openf:
-                if row.strip():
-                    output_lookup.write(replace_null_byte(row))
-        
-        output_lookup.seek(0)
-        return output_lookup
                     
     
     def get_lookup(self, session_key, lookup_file, namespace="lookup_editor", owner=None,
